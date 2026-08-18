@@ -5,7 +5,7 @@ using MarketOtomasyon.Models.ViewModels;
 
 namespace MarketOtomasyon.Data.Repositories;
 
-public class BarkodRepository
+public class BarkodRepository : IBarkodRepository
 {
     private readonly IDbConnectionFactory _factory;
 

@@ -70,46 +70,46 @@ INSERT INTO #OrnekUrun
     (Kod, Ad, KategoriKod, Birim, KdvOrani, Tartili, MinStok, Fiyat, Barkod, KoliBarkod, KoliCarpan, AcilisStok)
 VALUES
     -- Gida (temel gida %1)
-    ('URN001', 'Sut 1 L',                  'GIDA', 'ADET',  1, 0, 12,  32.50, '8690000000017', '8690000000024', 12,  48),
+    ('URN001', 'Sut 1 L',                  'GIDA', 'ADET',  1, 0, 12,  32.50, '8690000000012', '8690000000029', 12,  48),
     ('URN002', 'Domates',                  'GIDA', 'KG',    1, 1,  5,  24.90, NULL,            NULL,          NULL,  35.500),
-    ('URN004', 'Ekmek 250 g',              'GIDA', 'ADET',  1, 0, 20,  15.00, '8690000000048', NULL,          NULL, 120),
-    ('URN005', 'Pirinc 1 kg',              'GIDA', 'ADET',  1, 0,  6,  78.90, '8690000000055', '8690000000062',  6,  30),
-    ('URN006', 'Makarna 500 g',            'GIDA', 'ADET',  1, 0, 12,  18.75, '8690000000079', '8690000000086', 24,  96),
-    ('URN007', 'Aycicek Yagi 1 L',         'GIDA', 'ADET',  1, 0,  8, 112.00, '8690000000093', '8690000000109', 12,  36),
+    ('URN004', 'Ekmek 250 g',              'GIDA', 'ADET',  1, 0, 20,  15.00, '8690000000043', NULL,          NULL, 120),
+    ('URN005', 'Pirinc 1 kg',              'GIDA', 'ADET',  1, 0,  6,  78.90, '8690000000050', '8690000000067',  6,  30),
+    ('URN006', 'Makarna 500 g',            'GIDA', 'ADET',  1, 0, 12,  18.75, '8690000000074', '8690000000081', 24,  96),
+    ('URN007', 'Aycicek Yagi 1 L',         'GIDA', 'ADET',  1, 0,  8, 112.00, '8690000000098', '8690000000104', 12,  36),
     ('URN008', 'Elma',                     'GIDA', 'KG',    1, 1, 10,  39.90, NULL,            NULL,          NULL,  62.250),
     ('URN009', 'Kiyma',                    'GIDA', 'KG',    1, 1,  3, 389.00, NULL,            NULL,          NULL,   8.400),
-    ('URN010', 'Yumurta 10 lu',            'GIDA', 'ADET',  1, 0, 10,  84.50, '8690000000116', NULL,          NULL,  45),
+    ('URN010', 'Yumurta 10 lu',            'GIDA', 'ADET',  1, 0, 10,  84.50, '8690000000111', NULL,          NULL,  45),
 
     -- Kahvaltilik
     ('URN011', 'Beyaz Peynir',             'KAHV', 'KG',    1, 1,  4, 289.00, NULL,            NULL,          NULL,  11.750),
     ('URN012', 'Kasar Peyniri',            'KAHV', 'KG',    1, 1,  4, 419.00, NULL,            NULL,          NULL,   6.300),
-    ('URN013', 'Tereyagi 250 g',           'KAHV', 'ADET',  1, 0,  6, 147.50, '8690000000123', NULL,          NULL,  24),
-    ('URN014', 'Bal 850 g',                'KAHV', 'ADET',  1, 0,  3, 265.00, '8690000000130', NULL,          NULL,  12),
-    ('URN015', 'Zeytin Siyah 400 g',       'KAHV', 'ADET',  1, 0,  6,  96.00, '8690000000147', '8690000000154', 12,  36),
-    ('URN016', 'Recel Visne 380 g',        'KAHV', 'ADET',  1, 0,  6,  67.50, '8690000000161', NULL,          NULL,  28),
+    ('URN013', 'Tereyagi 250 g',           'KAHV', 'ADET',  1, 0,  6, 147.50, '8690000000128', NULL,          NULL,  24),
+    ('URN014', 'Bal 850 g',                'KAHV', 'ADET',  1, 0,  3, 265.00, '8690000000135', NULL,          NULL,  12),
+    ('URN015', 'Zeytin Siyah 400 g',       'KAHV', 'ADET',  1, 0,  6,  96.00, '8690000000142', '8690000000159', 12,  36),
+    ('URN016', 'Recel Visne 380 g',        'KAHV', 'ADET',  1, 0,  6,  67.50, '8690000000166', NULL,          NULL,  28),
 
     -- Icecek (%10)
-    ('URN017', 'Su 5 L',                   'ICEC', 'ADET', 10, 0, 15,  29.90, '8690000000178', '8690000000185',  4,  60),
-    ('URN018', 'Kola 1 L',                 'ICEC', 'ADET', 10, 0, 12,  42.00, '8690000000192', '8690000000208', 12,  72),
-    ('URN019', 'Portakal Suyu 1 L',        'ICEC', 'ADET', 10, 0,  8,  54.90, '8690000000215', '8690000000222', 12,  48),
-    ('URN020', 'Ayran 300 ml',             'ICEC', 'ADET',  1, 0, 24,  14.50, '8690000000239', '8690000000246', 24,  96),
-    ('URN021', 'Maden Suyu 200 ml',        'ICEC', 'ADET', 10, 0, 24,  11.00, '8690000000253', '8690000000260', 24, 144),
+    ('URN017', 'Su 5 L',                   'ICEC', 'ADET', 10, 0, 15,  29.90, '8690000000173', '8690000000180',  4,  60),
+    ('URN018', 'Kola 1 L',                 'ICEC', 'ADET', 10, 0, 12,  42.00, '8690000000197', '8690000000203', 12,  72),
+    ('URN019', 'Portakal Suyu 1 L',        'ICEC', 'ADET', 10, 0,  8,  54.90, '8690000000210', '8690000000227', 12,  48),
+    ('URN020', 'Ayran 300 ml',             'ICEC', 'ADET',  1, 0, 24,  14.50, '8690000000234', '8690000000241', 24,  96),
+    ('URN021', 'Maden Suyu 200 ml',        'ICEC', 'ADET', 10, 0, 24,  11.00, '8690000000258', '8690000000265', 24, 144),
 
     -- Atistirmalik (%10)
-    ('URN022', 'Cikolata 80 g',            'ATIS', 'ADET', 10, 0, 20,  38.90, '8690000000277', '8690000000284', 24, 120),
-    ('URN023', 'Cips 110 g',               'ATIS', 'ADET', 10, 0, 15,  47.50, '8690000000291', NULL,          NULL,  60),
-    ('URN024', 'Biskuvi 200 g',            'ATIS', 'ADET', 10, 0, 18,  26.00, '8690000000307', '8690000000314', 24,  96),
+    ('URN022', 'Cikolata 80 g',            'ATIS', 'ADET', 10, 0, 20,  38.90, '8690000000272', '8690000000289', 24, 120),
+    ('URN023', 'Cips 110 g',               'ATIS', 'ADET', 10, 0, 15,  47.50, '8690000000296', NULL,          NULL,  60),
+    ('URN024', 'Biskuvi 200 g',            'ATIS', 'ADET', 10, 0, 18,  26.00, '8690000000302', '8690000000319', 24,  96),
     ('URN025', 'Kuruyemis Karisik',        'ATIS', 'KG',   10, 1,  3, 549.00, NULL,            NULL,          NULL,   7.800),
 
     -- Temizlik (%20)
-    ('URN003', 'Camasir Suyu 1 L',         'TEMZ', 'ADET', 20, 0,  8,  89.00, '8690000000031', NULL,          NULL,  32),
-    ('URN026', 'Bulasik Deterjani 750 ml', 'TEMZ', 'ADET', 20, 0,  8,  76.50, '8690000000321', '8690000000338', 12,  36),
-    ('URN027', 'Camasir Deterjani 3 kg',   'TEMZ', 'ADET', 20, 0,  5, 289.00, '8690000000345', NULL,          NULL,  20),
-    ('URN028', 'Tuvalet Kagidi 16 lu',     'TEMZ', 'ADET', 20, 0,  6, 219.00, '8690000000352', NULL,          NULL,  24),
+    ('URN003', 'Camasir Suyu 1 L',         'TEMZ', 'ADET', 20, 0,  8,  89.00, '8690000000036', NULL,          NULL,  32),
+    ('URN026', 'Bulasik Deterjani 750 ml', 'TEMZ', 'ADET', 20, 0,  8,  76.50, '8690000000326', '8690000000333', 12,  36),
+    ('URN027', 'Camasir Deterjani 3 kg',   'TEMZ', 'ADET', 20, 0,  5, 289.00, '8690000000340', NULL,          NULL,  20),
+    ('URN028', 'Tuvalet Kagidi 16 lu',     'TEMZ', 'ADET', 20, 0,  6, 219.00, '8690000000357', NULL,          NULL,  24),
 
     -- Kisisel bakim (%20)
-    ('URN029', 'Sampuan 500 ml',           'KBAK', 'ADET', 20, 0,  6, 134.90, '8690000000369', '8690000000376',  6,  18),
-    ('URN030', 'Dis Macunu 75 ml',         'KBAK', 'ADET', 20, 0,  8,  68.00, '8690000000383', NULL,          NULL,  40);
+    ('URN029', 'Sampuan 500 ml',           'KBAK', 'ADET', 20, 0,  6, 134.90, '8690000000364', '8690000000371',  6,  18),
+    ('URN030', 'Dis Macunu 75 ml',         'KBAK', 'ADET', 20, 0,  8,  68.00, '8690000000388', NULL,          NULL,  40);
 GO
 
 /* ---------- 1) Urun kartlari ---------- */
@@ -134,6 +134,25 @@ FROM #OrnekUrun o
 JOIN Urun u ON u.Kod = o.Kod
 WHERE o.KoliBarkod IS NOT NULL
   AND NOT EXISTS (SELECT 1 FROM UrunBarkod b WHERE b.Barkod = o.KoliBarkod);
+
+/* ---------- 3b) Terazi barkodlari (Tip 3) ----------
+   Marketteki terazi, tartilan urun icin 13 haneli bir barkod basar:
+     28 | 5 hane urun kodu | 5 hane gramaj | 1 kontrol hanesi
+   Gramaj her tartimda degistigi icin barkodun tamami veritabaninda
+   tutulamaz; sadece sabit onek + urun kodu (ilk 7 hane) kaydedilir.
+   Carpan burada anlamsizdir (miktar barkodun icinden okunur), 1 birakilir. */
+INSERT INTO UrunBarkod (UrunId, Barkod, Carpan, Tip)
+SELECT u.Id, v.TeraziKod, 1, 3
+FROM (VALUES
+    ('URN002', '2800001'),   -- Domates
+    ('URN008', '2800002'),   -- Elma
+    ('URN009', '2800003'),   -- Kiyma
+    ('URN011', '2800004'),   -- Beyaz Peynir
+    ('URN012', '2800005'),   -- Kasar Peyniri
+    ('URN025', '2800006')    -- Kuruyemis Karisik
+) AS v (UrunKod, TeraziKod)
+JOIN Urun u ON u.Kod = v.UrunKod
+WHERE NOT EXISTS (SELECT 1 FROM UrunBarkod b WHERE b.Barkod = v.TeraziKod);
 
 /* ---------- 4) Acilis fiyatlari ----------
    Yalnizca hic acik fiyati olmayan urunlere yazilir; mevcut

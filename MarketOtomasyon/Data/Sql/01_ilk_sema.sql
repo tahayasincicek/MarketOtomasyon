@@ -46,7 +46,7 @@ CREATE TABLE UrunBarkod (
     UrunId  INT           NOT NULL,
     Barkod  NVARCHAR(30)  NOT NULL,
     Carpan  DECIMAL(18,4) NOT NULL CONSTRAINT DF_Barkod_Carpan DEFAULT(1),
-    Tip     TINYINT       NOT NULL CONSTRAINT DF_Barkod_Tip DEFAULT(1),  -- 1: tekli, 2: koli
+    Tip     TINYINT       NOT NULL CONSTRAINT DF_Barkod_Tip DEFAULT(1),  -- 1: tekli, 2: koli, 3: terazi oneki
     CONSTRAINT UQ_UrunBarkod UNIQUE (Barkod),
     CONSTRAINT FK_Barkod_Urun FOREIGN KEY (UrunId) REFERENCES Urun(Id)
 );
