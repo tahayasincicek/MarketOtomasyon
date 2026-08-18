@@ -1,26 +1,49 @@
+using System.Globalization;
+using FluentValidation;
+using Microsoft.AspNetCore.Localization;
 using MarketOtomasyon.Data;
 using MarketOtomasyon.Data.Repositories;
+using MarketOtomasyon.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllersWithViews();
+// Dogrulama tek yerden yonetilsin: MVC'nin non-nullable alanlar icin urettigi
+// otomatik "required" mesajlari kapali, kurallar FluentValidation'da.
+builder.Services.AddControllersWithViews(o =>
+    o.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true);
 
 // Dapper baglanti fabrikasi - tum repository'ler bunu kullanir.
 builder.Services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
 
 // Repository'ler
 builder.Services.AddScoped<UrunRepository>();
+builder.Services.AddScoped<KategoriRepository>();
+builder.Services.AddScoped<FiyatRepository>();
+
+// Servisler
+builder.Services.AddScoped<UrunService>();
+
+// Dogrulayicilar (controller icinde elle cagriliyor)
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
+// HTML number alanlari ondalik ayirici olarak her zaman nokta gonderir.
+// Sunucu tr-TR kulturunde calisirsa nokta binlik ayirici sanilir ve 18.75 -> 1875 olur.
+// Bu yuzden model binding invariant kulturde yapilir; ekrandaki gosterim ayrica bicimlendirilir.
+var invariant = new List<CultureInfo> { CultureInfo.InvariantCulture };
+app.UseRequestLocalization(new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture(CultureInfo.InvariantCulture),
+    SupportedCultures = invariant,
+    SupportedUICultures = invariant
+});
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();

@@ -1,0 +1,111 @@
+@model MarketOtomasyon.Models.ViewModels.UrunListeVm
+@{
+    ViewData["Title"] = "Urunler";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Ürünler</h1>
+    <a class="btn btn-primary" asp-action="Ekle">Yeni Ürün</a>
+</div>
+
+@if (TempData["Mesaj"] is string mesaj)
+{
+    <div class="alert alert-success">@mesaj</div>
+}
+
+<form method="get" class="row g-2 align-items-end mb-3">
+    <div class="col-md-4">
+        <label class="form-label">Ara</label>
+        <input name="arama" value="@Model.Arama" class="form-control" placeholder="Kod veya ad" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Kategori</label>
+        <select name="kategoriId" class="form-select">
+            <option value="">(hepsi)</option>
+            @foreach (var k in Model.Kategoriler)
+            {
+                <option value="@k.Id" selected="@(Model.KategoriId == k.Id)">@k.Ad</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-3">
+        <div class="form-check">
+            <input type="checkbox" name="sadeceAktif" value="true" class="form-check-input" id="sadeceAktif" checked="@Model.SadeceAktif" />
+            <label class="form-check-label" for="sadeceAktif">Sadece aktif ürünler</label>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-outline-secondary w-100">Filtrele</button>
+    </div>
+</form>
+
+<table class="table table-striped table-hover align-middle">
+    <thead>
+        <tr>
+            <th>Kod</th>
+            <th>Ad</th>
+            <th>Kategori</th>
+            <th>Birim</th>
+            <th class="text-end">KDV</th>
+            <th class="text-end">Fiyat</th>
+            <th>Durum</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model.Satirlar.Count == 0)
+        {
+            <tr><td colspan="8" class="text-center text-muted py-4">Kayıt bulunamadı.</td></tr>
+        }
+        @foreach (var u in Model.Satirlar)
+        {
+            <tr>
+                <td><code>@u.Kod</code></td>
+                <td>@u.Ad @(u.Tartili ? Html.Raw("<span class=\"badge bg-info\">tartılı</span>") : null)</td>
+                <td>@u.KategoriAd</td>
+                <td>@u.Birim</td>
+                <td class="text-end">%@u.KdvOrani.ToString("0.##")</td>
+                <td class="text-end">@(u.GuncelFiyat?.ToString("N2") ?? "-")</td>
+                <td>
+                    @if (u.Aktif)
+                    {
+                        <span class="badge bg-success">aktif</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">pasif</span>
+                    }
+                </td>
+                <td class="text-end">
+                    <a class="btn btn-sm btn-outline-primary" asp-action="Duzenle" asp-route-id="@u.Id">Düzenle</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="d-flex justify-content-between align-items-center">
+    <small class="text-muted">
+        Toplam @Model.ToplamKayit kayıt &middot; sayfa @Model.Sayfa / @Model.ToplamSayfa
+    </small>
+    <nav>
+        <ul class="pagination pagination-sm mb-0">
+            <li class="page-item @(Model.OncekiVar ? "" : "disabled")">
+                <a class="page-link"
+                   asp-action="Index"
+                   asp-route-arama="@Model.Arama"
+                   asp-route-kategoriId="@Model.KategoriId"
+                   asp-route-sadeceAktif="@Model.SadeceAktif"
+                   asp-route-sayfa="@(Model.Sayfa - 1)">Önceki</a>
+            </li>
+            <li class="page-item @(Model.SonrakiVar ? "" : "disabled")">
+                <a class="page-link"
+                   asp-action="Index"
+                   asp-route-arama="@Model.Arama"
+                   asp-route-kategoriId="@Model.KategoriId"
+                   asp-route-sadeceAktif="@Model.SadeceAktif"
+                   asp-route-sayfa="@(Model.Sayfa + 1)">Sonraki</a>
+            </li>
+        </ul>
+    </nav>
+</div>
