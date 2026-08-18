@@ -1,0 +1,76 @@
+@model MarketOtomasyon.Models.ViewModels.StokListeVm
+@{
+    ViewData["Title"] = "Stok Durumu";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Stok Durumu</h1>
+    <a class="btn btn-primary" asp-action="Giris">Mal Kabul</a>
+</div>
+
+<form method="get" class="row g-2 align-items-end mb-3">
+    <div class="col-md-5">
+        <label class="form-label">Ara</label>
+        <input name="arama" value="@Model.Arama" class="form-control" placeholder="Kod veya ad" />
+    </div>
+    <div class="col-md-4">
+        <div class="form-check">
+            <input type="checkbox" name="sadeceKritik" value="true" class="form-check-input" id="sadeceKritik" checked="@Model.SadeceKritik" />
+            <label class="form-check-label" for="sadeceKritik">Sadece kritik seviyedekiler</label>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <button type="submit" class="btn btn-outline-secondary w-100">Filtrele</button>
+    </div>
+</form>
+
+<table class="table table-striped align-middle">
+    <thead>
+        <tr>
+            <th>Kod</th>
+            <th>Ürün</th>
+            <th>Birim</th>
+            <th class="text-end">Min. Stok</th>
+            <th class="text-end">Bakiye</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model.Satirlar.Count == 0)
+        {
+            <tr><td colspan="6" class="text-center text-muted py-4">Kayıt bulunamadı.</td></tr>
+        }
+        @foreach (var s in Model.Satirlar)
+        {
+            <tr class="@(s.Kritik ? "table-warning" : null)">
+                <td><code>@s.Kod</code></td>
+                <td>@s.Ad</td>
+                <td>@s.Birim</td>
+                <td class="text-end text-muted">@s.MinStokSeviyesi.ToString("0.###")</td>
+                <td class="text-end fw-semibold">@s.ToplamBakiye.ToString("0.###")</td>
+                <td>
+                    @if (s.Kritik)
+                    {
+                        <span class="badge bg-warning text-dark">kritik</span>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="d-flex justify-content-between align-items-center">
+    <small class="text-muted">Toplam @Model.ToplamKayit kayıt &middot; sayfa @Model.Sayfa / @Model.ToplamSayfa</small>
+    <nav>
+        <ul class="pagination pagination-sm mb-0">
+            <li class="page-item @(Model.OncekiVar ? "" : "disabled")">
+                <a class="page-link" asp-action="Index" asp-route-arama="@Model.Arama"
+                   asp-route-sadeceKritik="@Model.SadeceKritik" asp-route-sayfa="@(Model.Sayfa - 1)">Önceki</a>
+            </li>
+            <li class="page-item @(Model.SonrakiVar ? "" : "disabled")">
+                <a class="page-link" asp-action="Index" asp-route-arama="@Model.Arama"
+                   asp-route-sadeceKritik="@Model.SadeceKritik" asp-route-sayfa="@(Model.Sayfa + 1)">Sonraki</a>
+            </li>
+        </ul>
+    </nav>
+</div>

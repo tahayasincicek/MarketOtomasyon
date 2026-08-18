@@ -1,0 +1,107 @@
+@model MarketOtomasyon.Models.ViewModels.MalKabulVm
+@{
+    ViewData["Title"] = "Mal Kabul";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Mal Kabul</h1>
+    <a class="btn btn-link" asp-action="Index">Stok durumuna dön</a>
+</div>
+
+@if (TempData["Mesaj"] is string mesaj)
+{
+    <div class="alert alert-success">@mesaj</div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header">Giriş</div>
+            <div class="card-body">
+                <form method="post" asp-action="Giris" class="row g-3">
+                    @Html.AntiForgeryToken()
+
+                    <div asp-validation-summary="All" class="alert alert-danger @(ViewData.ModelState.IsValid ? "d-none" : "")"></div>
+
+                    <div class="col-12">
+                        <label class="form-label" asp-for="Barkod">Barkod</label>
+                        <input class="form-control" asp-for="Barkod" autocomplete="off" autofocus
+                               placeholder="Okutun veya elle girin" />
+                        <span class="text-danger small" asp-validation-for="Barkod"></span>
+                        <div class="form-text">Koli barkodu okutulsa da miktar aşağıdan girilir.</div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label" asp-for="DepoId">Depo</label>
+                        <select class="form-select" asp-for="DepoId">
+                            <option value="0">(seçiniz)</option>
+                            @foreach (var d in Model.Depolar)
+                            {
+                                <option value="@d.Id" selected="@(Model.DepoId == d.Id)">@d.Ad</option>
+                            }
+                        </select>
+                        <span class="text-danger small" asp-validation-for="DepoId"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label" asp-for="Miktar">Miktar</label>
+                        <input class="form-control" asp-for="Miktar" type="number" step="0.001" min="0" />
+                        <span class="text-danger small" asp-validation-for="Miktar"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label" asp-for="Aciklama">Açıklama</label>
+                        <input class="form-control" asp-for="Aciklama" placeholder="İrsaliye no, tedarikçi vb." />
+                    </div>
+
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">Girişi Kaydet</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header">Son hareketler</div>
+            <div class="card-body">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Tarih</th>
+                            <th>Ürün</th>
+                            <th>Depo</th>
+                            <th>Kaynak</th>
+                            <th class="text-end">Miktar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.SonHareketler.Count == 0)
+                        {
+                            <tr><td colspan="5" class="text-center text-muted py-3">Henüz hareket yok.</td></tr>
+                        }
+                        @foreach (var h in Model.SonHareketler)
+                        {
+                            <tr>
+                                <td class="text-muted small">@h.Tarih.ToLocalTime().ToString("dd.MM HH:mm")</td>
+                                <td>
+                                    <code class="small">@h.UrunKod</code> @h.UrunAd
+                                    @if (!string.IsNullOrWhiteSpace(h.Aciklama))
+                                    {
+                                        <div class="text-muted small">@h.Aciklama</div>
+                                    }
+                                </td>
+                                <td class="small">@h.DepoAd</td>
+                                <td><span class="badge bg-light text-dark">@h.KaynakAdi</span></td>
+                                <td class="text-end @(h.Yon == 1 ? "text-success" : "text-danger")">
+                                    @(h.Yon == 1 ? "+" : "-")@h.Miktar.ToString("0.###") @h.Birim
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

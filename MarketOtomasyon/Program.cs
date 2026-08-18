@@ -20,9 +20,14 @@ builder.Services.AddScoped<UrunRepository>();
 builder.Services.AddScoped<KategoriRepository>();
 builder.Services.AddScoped<FiyatRepository>();
 builder.Services.AddScoped<BarkodRepository>();
+builder.Services.AddScoped<IBarkodRepository>(sp => sp.GetRequiredService<BarkodRepository>());
+builder.Services.AddScoped<StokRepository>();
+builder.Services.AddScoped<DepoRepository>();
 
 // Servisler
 builder.Services.AddScoped<UrunService>();
+builder.Services.AddScoped<BarkodService>();
+builder.Services.AddScoped<StokService>();
 
 // Dogrulayicilar (controller icinde elle cagriliyor)
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
