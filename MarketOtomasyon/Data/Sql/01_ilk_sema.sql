@@ -210,22 +210,4 @@ GO
    WHERE b.Barkod = @barkod;
    ------------------------------------------------------- */
 
-/* ---------- Ornek veri ---------- */
-INSERT INTO Depo (Kod, Ad) VALUES ('MRK', 'Market Rafi'), ('DEP', 'Arka Depo');
-INSERT INTO Kategori (Kod, Ad) VALUES ('GIDA', 'Gida'), ('TEMZ', 'Temizlik');
-INSERT INTO Kullanici (KullaniciAdi, AdSoyad, SifreHash, Rol)
-VALUES ('kasiyer1', 'Test Kasiyer', 'DEGISTIR', 1),
-       ('mudur',    'Test Mudur',   'DEGISTIR', 2);
-
-INSERT INTO Urun (Kod, Ad, KategoriId, Birim, KdvOrani, Tartili)
-VALUES ('URN001', 'Sut 1 L',     1, 'ADET', 1,  0),
-       ('URN002', 'Domates',     1, 'KG',   1,  1),
-       ('URN003', 'Camasir Suyu',2, 'ADET', 20, 0);
-
-INSERT INTO UrunBarkod (UrunId, Barkod, Carpan, Tip)
-VALUES (1, '8690000000017', 1,  1),
-       (1, '8690000000024', 12, 2),   -- koli barkodu
-       (3, '8690000000031', 1,  1);
-
-INSERT INTO UrunFiyat (UrunId, Fiyat) VALUES (1, 32.50), (2, 24.90), (3, 89.00);
-GO
+/* Ornek/test verisi bu dosyada degil: Data/Sql/90_ornek_veri.sql */
