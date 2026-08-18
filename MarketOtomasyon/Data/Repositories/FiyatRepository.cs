@@ -1,5 +1,6 @@
 using System.Data;
 using Dapper;
+using MarketOtomasyon.Models.ViewModels;
 
 namespace MarketOtomasyon.Data.Repositories;
 
@@ -15,6 +16,13 @@ public class FiyatRepository
     private const string SqlGuncelFiyat = @"
 SELECT Fiyat FROM vw_GuncelFiyat WHERE UrunId = @urunId;";
 
+    // En yeni fiyat ustte: acik kayit (BitisTarihi NULL) her zaman ilk satir olur.
+    private const string SqlGecmis = @"
+SELECT Fiyat, BaslangicTarihi, BitisTarihi
+FROM UrunFiyat
+WHERE UrunId = @urunId
+ORDER BY BaslangicTarihi DESC, Id DESC;";
+
     private const string SqlAcikFiyatiKapat = @"
 UPDATE UrunFiyat
 SET BitisTarihi = SYSUTCDATETIME()
@@ -29,6 +37,14 @@ VALUES (@urunId, @fiyat);";
         using var conn = await _factory.CreateOpenConnectionAsync(ct);
         return await conn.QuerySingleOrDefaultAsync<decimal?>(
             new CommandDefinition(SqlGuncelFiyat, new { urunId }, cancellationToken: ct));
+    }
+
+    public async Task<IReadOnlyList<FiyatGecmisiSatirVm>> GecmisAsync(int urunId, CancellationToken ct = default)
+    {
+        using var conn = await _factory.CreateOpenConnectionAsync(ct);
+        var liste = await conn.QueryAsync<FiyatGecmisiSatirVm>(
+            new CommandDefinition(SqlGecmis, new { urunId }, cancellationToken: ct));
+        return liste.AsList();
     }
 
     public async Task AcikFiyatiKapatAsync(IDbConnection conn, IDbTransaction tx, int urunId, CancellationToken ct = default)

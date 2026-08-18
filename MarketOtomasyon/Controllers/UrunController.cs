@@ -1,5 +1,6 @@
 using FluentValidation;
 using MarketOtomasyon.Data.Repositories;
+using MarketOtomasyon.Models.Entities;
 using MarketOtomasyon.Models.ViewModels;
 using MarketOtomasyon.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -16,19 +17,25 @@ public class UrunController : Controller
     private readonly FiyatRepository _fiyatRepository;
     private readonly UrunService _urunService;
     private readonly IValidator<UrunFormVm> _validator;
+    private readonly BarkodRepository _barkodRepository;
+    private readonly IValidator<BarkodFormVm> _barkodValidator;
 
     public UrunController(
         UrunRepository urunRepository,
         KategoriRepository kategoriRepository,
         FiyatRepository fiyatRepository,
         UrunService urunService,
-        IValidator<UrunFormVm> validator)
+        IValidator<UrunFormVm> validator,
+        BarkodRepository barkodRepository,
+        IValidator<BarkodFormVm> barkodValidator)
     {
         _urunRepository = urunRepository;
         _kategoriRepository = kategoriRepository;
         _fiyatRepository = fiyatRepository;
         _urunService = urunService;
         _validator = validator;
+        _barkodRepository = barkodRepository;
+        _barkodValidator = barkodValidator;
     }
 
     public async Task<IActionResult> Index(string? arama, int? kategoriId, bool sadeceAktif = true, int sayfa = 1, CancellationToken ct = default)
@@ -126,5 +133,63 @@ public class UrunController : Controller
             ModelState.AddModelError(hata.PropertyName, hata.ErrorMessage);
 
         return false;
+    }
+
+    /// <summary>Barkod yonetimi ve fiyat gecmisi tek ekranda.</summary>
+    [HttpGet]
+    public async Task<IActionResult> Detay(int id, CancellationToken ct)
+    {
+        var vm = await DetayHazirlaAsync(id, null, ct);
+        return vm is null ? NotFound() : View(vm);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> BarkodEkle(BarkodFormVm form, CancellationToken ct)
+    {
+        var sonuc = await _barkodValidator.ValidateAsync(form, ct);
+        if (!sonuc.IsValid)
+        {
+            foreach (var hata in sonuc.Errors)
+                ModelState.AddModelError($"YeniBarkod.{hata.PropertyName}", hata.ErrorMessage);
+
+            var hataliVm = await DetayHazirlaAsync(form.UrunId, form, ct);
+            return hataliVm is null ? NotFound() : View("Detay", hataliVm);
+        }
+
+        await _barkodRepository.EkleAsync(new UrunBarkod
+        {
+            UrunId = form.UrunId,
+            Barkod = form.Barkod.Trim(),
+            Carpan = form.Carpan,
+            Tip = form.Tip
+        }, ct);
+
+        TempData["Mesaj"] = $"{form.Barkod} barkodu eklendi.";
+        return RedirectToAction(nameof(Detay), new { id = form.UrunId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> BarkodSil(int id, int urunId, CancellationToken ct)
+    {
+        var silinen = await _barkodRepository.SilAsync(id, urunId, ct);
+        TempData["Mesaj"] = silinen > 0 ? "Barkod silindi." : "Barkod bulunamadi.";
+        return RedirectToAction(nameof(Detay), new { id = urunId });
+    }
+
+    private async Task<UrunDetayVm?> DetayHazirlaAsync(int urunId, BarkodFormVm? form, CancellationToken ct)
+    {
+        var urun = await _urunRepository.GetirAsync(urunId, ct);
+        if (urun is null) return null;
+
+        return new UrunDetayVm
+        {
+            Urun = urun,
+            GuncelFiyat = await _fiyatRepository.GuncelFiyatAsync(urunId, ct),
+            Barkodlar = await _barkodRepository.UrunBarkodlariAsync(urunId, ct),
+            FiyatGecmisi = await _fiyatRepository.GecmisAsync(urunId, ct),
+            YeniBarkod = form ?? new BarkodFormVm { UrunId = urunId }
+        };
     }
 }

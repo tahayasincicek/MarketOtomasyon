@@ -19,6 +19,7 @@ builder.Services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
 builder.Services.AddScoped<UrunRepository>();
 builder.Services.AddScoped<KategoriRepository>();
 builder.Services.AddScoped<FiyatRepository>();
+builder.Services.AddScoped<BarkodRepository>();
 
 // Servisler
 builder.Services.AddScoped<UrunService>();
