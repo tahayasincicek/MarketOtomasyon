@@ -1,4 +1,5 @@
 using MarketOtomasyon.Data;
+using MarketOtomasyon.Data.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,6 +8,9 @@ builder.Services.AddControllersWithViews();
 
 // Dapper baglanti fabrikasi - tum repository'ler bunu kullanir.
 builder.Services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
+
+// Repository'ler
+builder.Services.AddScoped<UrunRepository>();
 
 var app = builder.Build();
 
