@@ -53,7 +53,8 @@
         secimiVurgula();
 
         document.getElementById("fis-no").textContent = sepet.fisNo || "—";
-        document.getElementById("indirim-satiri").hidden = sepet.toplamIndirim <= 0;
+        // Bootstrap d-flex, hidden ozniteligini ezer; gizleme d-none ile yapilir.
+        document.getElementById("indirim-satiri").classList.toggle("d-none", sepet.toplamIndirim <= 0);
         document.getElementById("toplam-indirim").textContent = "-" + paraBicimi.format(sepet.toplamIndirim);
         document.getElementById("ara-toplam").textContent = paraBicimi.format(sepet.araToplam);
         document.getElementById("toplam-kdv").textContent = paraBicimi.format(sepet.toplamKdv);
@@ -223,10 +224,10 @@
 
     document.getElementById("btn-iptal").addEventListener("click", fisiIptalEt);
 
-    document.getElementById("btn-odeme").addEventListener("click", function () {
-        uyariGoster("Ödeme ekranı henüz yazılmadı (Gün 8).");
-        odakla();
-    });
+    document.getElementById("btn-odeme").addEventListener("click", () => window.odeme.ac());
+
+    // Odeme penceresi bu ucları kullanir: sepeti yeniler, uyari gosterir, odagi geri verir.
+    window.kasa = { sepetiYenile: sepetiYukle, uyariGoster, odakla };
 
     async function fisiIptalEt() {
         if (!confirm("Fiş iptal edilecek, sepetteki tüm satırlar silinecek. Onaylıyor musunuz?")) {

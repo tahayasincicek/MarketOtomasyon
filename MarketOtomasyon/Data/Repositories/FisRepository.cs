@@ -73,6 +73,14 @@ SET AraToplam = @araToplam, ToplamIndirim = @toplamIndirim,
     ToplamKdv = @toplamKdv, GenelToplam = @genelToplam
 WHERE Id = @fisId;";
 
+    private const string SqlDurumGuncelle = @"
+UPDATE Fis SET Durum = @durum WHERE Id = @fisId;";
+
+    private const string SqlFisGetir = @"
+SELECT Id, FisNo, VardiyaId, KullaniciId, MusteriId, Tarih,
+       AraToplam, ToplamIndirim, ToplamKdv, GenelToplam, Durum
+FROM Fis WHERE Id = @fisId;";
+
     private const string SqlFisIptal = @"
 DELETE FROM FisSatir WHERE FisId = @fisId;
 UPDATE Fis SET Durum = 9, AraToplam = 0, ToplamIndirim = 0, ToplamKdv = 0, GenelToplam = 0
@@ -153,6 +161,17 @@ WHERE Id = @fisId AND Durum = 1;";
         => await conn.ExecuteAsync(new CommandDefinition(
             SqlToplamlariGuncelle,
             new { fisId, araToplam, toplamIndirim, toplamKdv, genelToplam }, tx, cancellationToken: ct));
+
+    public async Task DurumGuncelleAsync(
+        IDbConnection conn, IDbTransaction tx, int fisId, byte durum, CancellationToken ct = default)
+        => await conn.ExecuteAsync(new CommandDefinition(SqlDurumGuncelle, new { fisId, durum }, tx, cancellationToken: ct));
+
+    public async Task<Fis?> GetirAsync(int fisId, CancellationToken ct = default)
+    {
+        using var conn = await _factory.CreateOpenConnectionAsync(ct);
+        return await conn.QuerySingleOrDefaultAsync<Fis>(
+            new CommandDefinition(SqlFisGetir, new { fisId }, cancellationToken: ct));
+    }
 
     public async Task IptalEtAsync(IDbConnection conn, IDbTransaction tx, int fisId, CancellationToken ct = default)
         => await conn.ExecuteAsync(new CommandDefinition(SqlFisIptal, new { fisId }, tx, cancellationToken: ct));
