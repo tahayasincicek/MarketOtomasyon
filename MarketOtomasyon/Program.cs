@@ -25,6 +25,7 @@ builder.Services.AddScoped<StokRepository>();
 builder.Services.AddScoped<DepoRepository>();
 builder.Services.AddScoped<FisRepository>();
 builder.Services.AddScoped<VardiyaRepository>();
+builder.Services.AddScoped<KullaniciRepository>();
 
 // Servisler
 builder.Services.AddScoped<UrunService>();

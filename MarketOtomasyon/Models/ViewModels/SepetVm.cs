@@ -16,7 +16,13 @@ public class SepetSatirVm
     public decimal IndirimTutari { get; set; }
     public decimal KdvOrani { get; set; }
 
-    /// <summary>Miktar x birim fiyat - indirim. KDV dahildir.</summary>
+    /// <summary>KDV haric satir tutari (matrah): miktar x birim fiyat - indirim.</summary>
+    public decimal SatirNet { get; set; }
+
+    /// <summary>Net tutar uzerinden hesaplanan KDV.</summary>
+    public decimal SatirKdv { get; set; }
+
+    /// <summary>Musteriden alinacak satir tutari: net + KDV.</summary>
     public decimal SatirToplam { get; set; }
 }
 

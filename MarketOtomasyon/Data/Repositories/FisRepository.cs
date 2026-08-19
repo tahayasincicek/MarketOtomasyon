@@ -59,6 +59,11 @@ UPDATE FisSatir
 SET Miktar = @miktar, SatirToplam = @satirToplam
 WHERE Id = @satirId AND FisId = @fisId;";
 
+    private const string SqlSatirIndirimGuncelle = @"
+UPDATE FisSatir
+SET IndirimTutari = @indirim, SatirToplam = @satirToplam
+WHERE Id = @satirId AND FisId = @fisId;";
+
     private const string SqlSatirSil = @"
 DELETE FROM FisSatir WHERE Id = @satirId AND FisId = @fisId;";
 
@@ -129,6 +134,12 @@ WHERE Id = @fisId AND Durum = 1;";
         CancellationToken ct = default)
         => await conn.ExecuteAsync(new CommandDefinition(
             SqlSatirMiktarGuncelle, new { fisId, satirId, miktar, satirToplam }, tx, cancellationToken: ct));
+
+    public async Task<int> SatirIndirimGuncelleAsync(
+        IDbConnection conn, IDbTransaction tx, int fisId, int satirId, decimal indirim, decimal satirToplam,
+        CancellationToken ct = default)
+        => await conn.ExecuteAsync(new CommandDefinition(
+            SqlSatirIndirimGuncelle, new { fisId, satirId, indirim, satirToplam }, tx, cancellationToken: ct));
 
     public async Task<int> SatirSilAsync(
         IDbConnection conn, IDbTransaction tx, int fisId, int satirId, CancellationToken ct = default)

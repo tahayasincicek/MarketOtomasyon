@@ -5,30 +5,40 @@ namespace MarketOtomasyon.Services;
 /// <summary>
 /// Sepet tutarlarini hesaplar. Veritabani bilmez, saf hesaptir; dogrudan test edilebilir.
 ///
-/// Temel varsayim: raf fiyatlari KDV DAHILDIR (Turkiye perakende uygulamasi).
-/// Bu yuzden KDV toplamin uzerine eklenmez, icinden ayristirilir.
+/// Fiyat modeli: UrunFiyat'ta saklanan fiyat KDV HARICTIR.
+/// Satir once net tutara indirgenir (miktar x fiyat - indirim), KDV bu net
+/// tutarin uzerine eklenir. Ornek: 10 x 100 TL, %10 indirim, %20 KDV
+///   net  = 1000 - 100 = 900
+///   kdv  = 900 x 0,20 = 180
+///   toplam = 1080
 /// </summary>
 public static class SepetHesaplayici
 {
-    /// <summary>Satir tutari: miktar x birim fiyat, kurusa yuvarlanip indirim dusulur.</summary>
-    public static decimal SatirToplamHesapla(decimal miktar, decimal birimFiyat, decimal indirim = 0)
+    /// <summary>Satirin KDV haric tutari (matrah): miktar x birim fiyat - indirim.</summary>
+    public static decimal SatirNetHesapla(decimal miktar, decimal birimFiyat, decimal indirim = 0)
     {
         var brut = decimal.Round(miktar * birimFiyat, 2, MidpointRounding.AwayFromZero);
         var net = brut - indirim;
         return net < 0 ? 0 : net;
     }
 
-    /// <summary>
-    /// KDV dahil tutarin icindeki KDV: tutar - (tutar / (1 + oran/100)).
-    /// Ornek: 118 TL ve %18 icin 18 TL.
-    /// </summary>
-    public static decimal KdvAyristir(decimal kdvDahilTutar, decimal kdvOrani)
+    /// <summary>Net tutar uzerinden KDV.</summary>
+    public static decimal KdvHesapla(decimal netTutar, decimal kdvOrani)
     {
         if (kdvOrani <= 0) return 0;
-
-        var haric = kdvDahilTutar / (1 + kdvOrani / 100m);
-        return decimal.Round(kdvDahilTutar - haric, 2, MidpointRounding.AwayFromZero);
+        return decimal.Round(netTutar * kdvOrani / 100m, 2, MidpointRounding.AwayFromZero);
     }
+
+    /// <summary>Musteriden alinacak satir tutari: net + KDV.</summary>
+    public static decimal SatirToplamHesapla(decimal miktar, decimal birimFiyat, decimal kdvOrani, decimal indirim = 0)
+    {
+        var net = SatirNetHesapla(miktar, birimFiyat, indirim);
+        return net + KdvHesapla(net, kdvOrani);
+    }
+
+    /// <summary>Indirimsiz brut tutar. Indirim tavanini denetlemek icin kullanilir.</summary>
+    public static decimal BrutHesapla(decimal miktar, decimal birimFiyat)
+        => decimal.Round(miktar * birimFiyat, 2, MidpointRounding.AwayFromZero);
 
     /// <summary>
     /// Satirlari KDV oranina gore gruplar. Fis fisinde her oran icin ayri
@@ -42,15 +52,15 @@ public static class SepetHesaplayici
             .GroupBy(s => s.KdvOrani)
             .Select(g =>
             {
-                var toplam = g.Sum(s => SatirToplamHesapla(s.Miktar, s.BirimFiyat, s.IndirimTutari));
-                var kdv = KdvAyristir(toplam, g.Key);
+                var matrah = g.Sum(s => SatirNetHesapla(s.Miktar, s.BirimFiyat, s.IndirimTutari));
+                var kdv = g.Sum(s => KdvHesapla(SatirNetHesapla(s.Miktar, s.BirimFiyat, s.IndirimTutari), g.Key));
 
                 return new KdvKirilimVm
                 {
                     Oran = g.Key,
-                    Toplam = toplam,
+                    Matrah = matrah,
                     KdvTutari = kdv,
-                    Matrah = toplam - kdv
+                    Toplam = matrah + kdv
                 };
             })
             .OrderBy(k => k.Oran)
@@ -60,23 +70,55 @@ public static class SepetHesaplayici
     public static SepetVm Topla(List<SepetSatirVm> satirlar)
     {
         foreach (var satir in satirlar)
-            satir.SatirToplam = SatirToplamHesapla(satir.Miktar, satir.BirimFiyat, satir.IndirimTutari);
+        {
+            satir.SatirNet = SatirNetHesapla(satir.Miktar, satir.BirimFiyat, satir.IndirimTutari);
+            satir.SatirKdv = KdvHesapla(satir.SatirNet, satir.KdvOrani);
+            satir.SatirToplam = satir.SatirNet + satir.SatirKdv;
+        }
 
         var kirilim = KdvKirilimiHesapla(satirlar);
-
-        // Toplam KDV, oran gruplarindan toplanir; satir satir yuvarlayip
-        // toplamak grup toplamindan sapma uretebilirdi.
-        var toplamKdv = kirilim.Sum(k => k.KdvTutari);
-        var genelToplam = satirlar.Sum(s => s.SatirToplam);
 
         return new SepetVm
         {
             Satirlar = satirlar,
             KdvKirilimi = kirilim,
-            GenelToplam = genelToplam,
-            ToplamKdv = toplamKdv,
-            AraToplam = genelToplam - toplamKdv,
-            ToplamIndirim = satirlar.Sum(s => s.IndirimTutari)
+            AraToplam = satirlar.Sum(s => s.SatirNet),
+            ToplamKdv = satirlar.Sum(s => s.SatirKdv),
+            ToplamIndirim = satirlar.Sum(s => s.IndirimTutari),
+            GenelToplam = satirlar.Sum(s => s.SatirToplam)
         };
+    }
+
+    /// <summary>
+    /// Fis bazli indirimi satirlara brut tutarlari oraninda dagitir.
+    ///
+    /// Dagitmak sart: her satirin KDV orani farkli olabilir, indirim tek bir
+    /// yerde tutulursa hangi orandan ne kadar KDV dusecegi belirsiz kalir.
+    /// Yuvarlama artigi en buyuk satira eklenir; toplam birebir tutsun.
+    /// </summary>
+    public static Dictionary<int, decimal> FisIndiriminiDagit(
+        IReadOnlyList<SepetSatirVm> satirlar, decimal indirimTutari)
+    {
+        var dagitim = satirlar.ToDictionary(s => s.SatirId, _ => 0m);
+        if (indirimTutari <= 0 || satirlar.Count == 0) return dagitim;
+
+        var brutler = satirlar.ToDictionary(s => s.SatirId, s => BrutHesapla(s.Miktar, s.BirimFiyat));
+        var toplamBrut = brutler.Values.Sum();
+        if (toplamBrut <= 0) return dagitim;
+
+        if (indirimTutari > toplamBrut) indirimTutari = toplamBrut;
+
+        foreach (var satir in satirlar)
+            dagitim[satir.SatirId] = decimal.Round(indirimTutari * brutler[satir.SatirId] / toplamBrut, 2,
+                MidpointRounding.AwayFromZero);
+
+        var artik = indirimTutari - dagitim.Values.Sum();
+        if (artik != 0)
+        {
+            var enBuyuk = satirlar.OrderByDescending(s => brutler[s.SatirId]).First().SatirId;
+            dagitim[enBuyuk] += artik;
+        }
+
+        return dagitim;
     }
 }

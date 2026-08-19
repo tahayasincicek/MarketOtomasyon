@@ -8,6 +8,8 @@
         <kbd>Enter</kbd> ekle &nbsp;
         <kbd>F2</kbd> ödeme &nbsp;
         <kbd>F4</kbd> satır sil &nbsp;
+        <kbd>F5</kbd> satır indirimi &nbsp;
+        <kbd>F6</kbd> fiş indirimi &nbsp;
         <kbd>Esc</kbd> iptal
     </div>
 </div>
@@ -22,6 +24,36 @@
         </div>
 
         <div id="uyari" class="alert alert-danger py-2 d-none" role="alert"></div>
+
+        <!-- İndirim paneli. Tarayıcı diyalogu yerine satır içi: odak kaybolmasın. -->
+        <div id="indirim-paneli" class="card border-secondary mb-2 d-none">
+            <div class="card-body py-2">
+                <div class="row g-2 align-items-end">
+                    <div class="col-auto">
+                        <label class="form-label mb-0 small" id="indirim-baslik">İndirim</label>
+                        <div class="input-group input-group-sm">
+                            <input id="indirim-yuzde" type="text" class="form-control text-end" style="width:5rem" />
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <label class="form-label mb-0 small">Onaylayan</label>
+                        <select id="indirim-onaylayan" class="form-select form-select-sm">
+                            <option value="">(kasiyer)</option>
+                            <option value="2">Müdür onayı</option>
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <button type="button" id="btn-indirim-uygula" class="btn btn-sm btn-primary">Uygula</button>
+                        <button type="button" id="btn-indirim-kaldir" class="btn btn-sm btn-outline-secondary">Kaldır</button>
+                        <button type="button" id="btn-indirim-vazgec" class="btn btn-sm btn-link">Vazgeç</button>
+                    </div>
+                </div>
+                <div class="form-text">
+                    Kasiyer satırda en fazla %10, fişte en fazla %5 indirim verebilir; üstü müdür onayı ister.
+                </div>
+            </div>
+        </div>
 
         <div class="table-responsive border rounded">
             <table class="table table-hover align-middle mb-0">
@@ -64,6 +96,10 @@
                 <span id="fis-no" class="text-muted font-monospace small">—</span>
             </div>
             <div class="card-body py-2">
+                <div class="d-flex justify-content-between" id="indirim-satiri" hidden>
+                    <span class="text-muted">Toplam indirim</span>
+                    <span id="toplam-indirim" class="text-danger">0,00</span>
+                </div>
                 <div class="d-flex justify-content-between">
                     <span class="text-muted">Ara toplam (KDV hariç)</span>
                     <span id="ara-toplam">0,00</span>
@@ -90,6 +126,9 @@
         <div class="d-grid gap-2">
             <button type="button" id="btn-odeme" class="btn btn-primary btn-lg" disabled>
                 Ödeme Al (F2)
+            </button>
+            <button type="button" id="btn-fis-indirim" class="btn btn-outline-secondary">
+                Fişe İndirim (F6)
             </button>
             <button type="button" id="btn-iptal" class="btn btn-outline-danger">
                 Fişi İptal Et (Esc)
