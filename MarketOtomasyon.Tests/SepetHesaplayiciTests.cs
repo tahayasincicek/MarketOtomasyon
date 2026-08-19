@@ -14,24 +14,28 @@ public class SepetHesaplayiciTests
         IndirimTutari = indirim
     };
 
-    /// <summary>Yol haritasindaki kabul senaryosu.</summary>
+    /// <summary>
+    /// 10 adet x 100 TL, %10 indirim, %20 KDV senaryosu.
+    /// Fiyat KDV dahil oldugu icin musteriden 900 TL tahsil edilir;
+    /// 150 TL bu tutarin icinden ayristirilan KDV'dir.
+    /// </summary>
     [Fact]
-    public void KabulSenaryosu_OnAdetYuzElliTL_YuzdeOnIndirim_YuzdeYirmiKdv_BinSeksenDoner()
+    public void KabulSenaryosu_OnAdetYuzTL_YuzdeOnIndirim_YuzdeYirmiKdv()
     {
         var indirim = SepetHesaplayici.BrutHesapla(10, 100m) * 0.10m;   // 1000 x %10 = 100
 
         var sepet = SepetHesaplayici.Topla([Satir(10, 100m, 20, indirim)]);
 
-        Assert.Equal(900m, sepet.AraToplam);        // 1000 - 100
-        Assert.Equal(180m, sepet.ToplamKdv);        // 900 x %20
-        Assert.Equal(1080m, sepet.GenelToplam);     // 900 + 180
+        Assert.Equal(900m, sepet.GenelToplam);      // 1000 - 100
+        Assert.Equal(150m, sepet.ToplamKdv);        // 900 - 900/1,20
+        Assert.Equal(750m, sepet.AraToplam);        // matrah
         Assert.Equal(100m, sepet.ToplamIndirim);
 
         var kirilim = Assert.Single(sepet.KdvKirilimi);
         Assert.Equal(20m, kirilim.Oran);
-        Assert.Equal(900m, kirilim.Matrah);
-        Assert.Equal(180m, kirilim.KdvTutari);
-        Assert.Equal(1080m, kirilim.Toplam);
+        Assert.Equal(750m, kirilim.Matrah);
+        Assert.Equal(150m, kirilim.KdvTutari);
+        Assert.Equal(900m, kirilim.Toplam);
     }
 
     [Theory]
@@ -39,86 +43,86 @@ public class SepetHesaplayiciTests
     [InlineData(12, 32.50, 0, 390.00)]
     [InlineData(1.250, 24.90, 0, 31.13)]     // 31.125 -> yukari yuvarlanir
     [InlineData(3, 18.75, 6.25, 50.00)]      // 56.25 - 6.25 indirim
-    public void SatirNet_MiktarFiyatVeIndirimiDogruHesaplar(
+    public void SatirToplam_MiktarFiyatVeIndirimiDogruHesaplar(
         decimal miktar, decimal fiyat, decimal indirim, decimal beklenen)
     {
-        Assert.Equal(beklenen, SepetHesaplayici.SatirNetHesapla(miktar, fiyat, indirim));
+        Assert.Equal(beklenen, SepetHesaplayici.SatirToplamHesapla(miktar, fiyat, indirim));
     }
 
     [Fact]
-    public void SatirNet_IndirimTutardanBuyukseSifirDoner()
+    public void SatirToplam_IndirimTutardanBuyukseSifirDoner()
     {
-        Assert.Equal(0m, SepetHesaplayici.SatirNetHesapla(1, 10m, 25m));
+        Assert.Equal(0m, SepetHesaplayici.SatirToplamHesapla(1, 10m, 25m));
     }
 
     [Theory]
-    [InlineData(100, 20, 20)]
-    [InlineData(100, 10, 10)]
-    [InlineData(100, 1, 1)]
-    [InlineData(100, 0, 0)]        // KDV'siz urun
-    [InlineData(33.33, 20, 6.67)]  // 6.666 -> yukari yuvarlanir
-    public void Kdv_NetTutarUzerineEklenir(decimal net, decimal oran, decimal beklenen)
+    [InlineData(120, 20, 20)]      // 120 icindeki %20 KDV
+    [InlineData(110, 10, 10)]
+    [InlineData(101, 1, 1)]
+    [InlineData(118, 18, 18)]
+    [InlineData(50, 0, 0)]         // KDV'siz urun
+    public void KdvAyristir_KdvDahilTutarinIcindekiKdviBulur(decimal tutar, decimal oran, decimal beklenen)
     {
-        Assert.Equal(beklenen, SepetHesaplayici.KdvHesapla(net, oran));
+        Assert.Equal(beklenen, SepetHesaplayici.KdvAyristir(tutar, oran));
     }
 
     [Fact]
-    public void SatirToplam_NetVeKdvToplamidir()
+    public void Topla_SatirinToplamKdvVeNetAlanlariniDoldurur()
     {
-        // 2 x 60 = 120 net, %20 KDV = 24 -> 144
-        Assert.Equal(144m, SepetHesaplayici.SatirToplamHesapla(2, 60m, 20));
-    }
-
-    [Fact]
-    public void Topla_SatirinNetKdvVeToplamAlanlariniDoldurur()
-    {
-        var sepet = SepetHesaplayici.Topla([Satir(2, 60m, 20)]);
+        var sepet = SepetHesaplayici.Topla([Satir(2, 60m, 20)]);   // 120 TL KDV dahil
         var satir = sepet.Satirlar[0];
 
-        Assert.Equal(120m, satir.SatirNet);
-        Assert.Equal(24m, satir.SatirKdv);
-        Assert.Equal(144m, satir.SatirToplam);
+        Assert.Equal(120m, satir.SatirToplam);
+        Assert.Equal(20m, satir.SatirKdv);
+        Assert.Equal(100m, satir.SatirNet);
     }
 
     [Fact]
-    public void Topla_FarkliKdvOranlariAyriAyriHesaplanir()
+    public void Topla_ToplamlarBirbiriyleTutarli()
     {
-        // 100 TL %1 gida + 100 TL %20 temizlik
-        var sepet = SepetHesaplayici.Topla([Satir(1, 100m, 1), Satir(1, 100m, 20)]);
+        var sepet = SepetHesaplayici.Topla([Satir(2, 60m, 20)]);
 
-        Assert.Equal(200m, sepet.AraToplam);
-        Assert.Equal(21m, sepet.ToplamKdv);        // 1 + 20
+        Assert.Equal(sepet.GenelToplam, sepet.AraToplam + sepet.ToplamKdv);
+    }
+
+    [Fact]
+    public void Topla_FarkliKdvOranlariAyriAyriAyristirilir()
+    {
+        // 101 TL %1 gida + 120 TL %20 temizlik
+        var sepet = SepetHesaplayici.Topla([Satir(1, 101m, 1), Satir(1, 120m, 20)]);
+
         Assert.Equal(221m, sepet.GenelToplam);
-        Assert.Equal(sepet.AraToplam + sepet.ToplamKdv, sepet.GenelToplam);
+        Assert.Equal(21m, sepet.ToplamKdv);        // 1 + 20
+        Assert.Equal(200m, sepet.AraToplam);
     }
 
     [Fact]
     public void KdvKirilimi_AyniOrandakiSatirlariGruplar()
     {
         var kirilim = SepetHesaplayici.KdvKirilimiHesapla([
-            Satir(1, 100m, 1),
-            Satir(1, 200m, 1),
-            Satir(1, 100m, 20)
+            Satir(1, 101m, 1),
+            Satir(1, 202m, 1),
+            Satir(1, 120m, 20)
         ]);
 
         Assert.Equal(2, kirilim.Count);
 
         var birlik = kirilim.Single(k => k.Oran == 1);
-        Assert.Equal(300m, birlik.Matrah);
-        Assert.Equal(3m, birlik.KdvTutari);
         Assert.Equal(303m, birlik.Toplam);
+        Assert.Equal(3m, birlik.KdvTutari);
+        Assert.Equal(300m, birlik.Matrah);
 
         var yirmilik = kirilim.Single(k => k.Oran == 20);
-        Assert.Equal(100m, yirmilik.Matrah);
-        Assert.Equal(20m, yirmilik.KdvTutari);
         Assert.Equal(120m, yirmilik.Toplam);
+        Assert.Equal(20m, yirmilik.KdvTutari);
+        Assert.Equal(100m, yirmilik.Matrah);
     }
 
     [Fact]
     public void KdvKirilimi_OranaGoreSirali()
     {
         var kirilim = SepetHesaplayici.KdvKirilimiHesapla([
-            Satir(1, 100m, 20), Satir(1, 100m, 10), Satir(1, 100m, 1)
+            Satir(1, 120m, 20), Satir(1, 110m, 10), Satir(1, 101m, 1)
         ]);
 
         Assert.Equal([1m, 10m, 20m], kirilim.Select(k => k.Oran));
@@ -155,8 +159,8 @@ public class SepetHesaplayiciTests
 
         var sepet = SepetHesaplayici.Topla([satir]);
 
-        Assert.Equal(120m, sepet.Satirlar[0].SatirToplam);
-        Assert.Equal(120m, sepet.GenelToplam);
+        Assert.Equal(100m, sepet.Satirlar[0].SatirToplam);
+        Assert.Equal(100m, sepet.GenelToplam);
     }
 
     // ---------- Fis bazli indirimin dagitilmasi ----------
@@ -205,17 +209,19 @@ public class SepetHesaplayiciTests
     [Fact]
     public void FisIndirimi_DagitilanIndirimSonrasiKdvKirilimiTutarli()
     {
-        var satirlar = new List<SepetSatirVm> { Satir(1, 300m, 20, id: 1), Satir(1, 100m, 1, id: 2) };
-        var dagitim = SepetHesaplayici.FisIndiriminiDagit(satirlar, 40m);
+        var satirlar = new List<SepetSatirVm> { Satir(1, 300m, 20, id: 1), Satir(1, 101m, 1, id: 2) };
+        var dagitim = SepetHesaplayici.FisIndiriminiDagit(satirlar, 40.10m);
 
         foreach (var satir in satirlar)
             satir.IndirimTutari = dagitim[satir.SatirId];
 
         var sepet = SepetHesaplayici.Topla(satirlar);
 
-        Assert.Equal(360m, sepet.AraToplam);                       // 270 + 90
-        Assert.Equal(54m + 0.90m, sepet.ToplamKdv);                // 270x%20 + 90x%1
+        Assert.Equal(40.10m, sepet.ToplamIndirim);
+        Assert.Equal(360.90m, sepet.GenelToplam);                            // 401 - 40,10
         Assert.Equal(sepet.AraToplam + sepet.ToplamKdv, sepet.GenelToplam);
-        Assert.Equal(40m, sepet.ToplamIndirim);
+
+        foreach (var grup in sepet.KdvKirilimi)
+            Assert.Equal(grup.Toplam, grup.Matrah + grup.KdvTutari);
     }
 }

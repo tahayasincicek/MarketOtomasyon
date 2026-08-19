@@ -67,7 +67,7 @@ public class SepetService
             var yeniMiktar = mevcut.Miktar + cozum.Miktar;
 
             await _fisRepository.SatirMiktarGuncelleAsync(conn, tx, fisId, mevcutSatirId.Value, yeniMiktar,
-                SepetHesaplayici.SatirToplamHesapla(yeniMiktar, mevcut.BirimFiyat, mevcut.KdvOrani, mevcut.IndirimTutari), ct);
+                SepetHesaplayici.SatirToplamHesapla(yeniMiktar, mevcut.BirimFiyat, mevcut.IndirimTutari), ct);
         }
         else
         {
@@ -78,7 +78,7 @@ public class SepetService
                 Miktar = cozum.Miktar,
                 BirimFiyat = cozum.BirimFiyat,
                 KdvOrani = cozum.KdvOrani,
-                SatirToplam = SepetHesaplayici.SatirToplamHesapla(cozum.Miktar, cozum.BirimFiyat, cozum.KdvOrani)
+                SatirToplam = SepetHesaplayici.SatirToplamHesapla(cozum.Miktar, cozum.BirimFiyat)
             }, ct);
         }
 
@@ -109,7 +109,7 @@ public class SepetService
         else
         {
             await _fisRepository.SatirMiktarGuncelleAsync(conn, tx, fis.Id, satirId, miktar,
-                SepetHesaplayici.SatirToplamHesapla(miktar, satir.BirimFiyat, satir.KdvOrani, satir.IndirimTutari), ct);
+                SepetHesaplayici.SatirToplamHesapla(miktar, satir.BirimFiyat, satir.IndirimTutari), ct);
         }
 
         await ToplamlariYazAsync(conn, tx, fis.Id, ct);
@@ -161,7 +161,7 @@ public class SepetService
         using var tx = conn.BeginTransaction();
 
         await _fisRepository.SatirIndirimGuncelleAsync(conn, tx, fis.Id, satirId, indirim,
-            SepetHesaplayici.SatirToplamHesapla(satir.Miktar, satir.BirimFiyat, satir.KdvOrani, indirim), ct);
+            SepetHesaplayici.SatirToplamHesapla(satir.Miktar, satir.BirimFiyat, indirim), ct);
 
         await ToplamlariYazAsync(conn, tx, fis.Id, ct);
         tx.Commit();
@@ -199,7 +199,7 @@ public class SepetService
         {
             var pay = dagitim[satir.SatirId];
             await _fisRepository.SatirIndirimGuncelleAsync(conn, tx, fis.Id, satir.SatirId, pay,
-                SepetHesaplayici.SatirToplamHesapla(satir.Miktar, satir.BirimFiyat, satir.KdvOrani, pay), ct);
+                SepetHesaplayici.SatirToplamHesapla(satir.Miktar, satir.BirimFiyat, pay), ct);
         }
 
         await ToplamlariYazAsync(conn, tx, fis.Id, ct);
