@@ -5,35 +5,33 @@ namespace MarketOtomasyon.Services;
 /// <summary>
 /// Sepet tutarlarini hesaplar. Veritabani bilmez, saf hesaptir; dogrudan test edilebilir.
 ///
-/// Fiyat modeli: UrunFiyat'ta saklanan fiyat KDV HARICTIR.
-/// Satir once net tutara indirgenir (miktar x fiyat - indirim), KDV bu net
-/// tutarin uzerine eklenir. Ornek: 10 x 100 TL, %10 indirim, %20 KDV
-///   net  = 1000 - 100 = 900
-///   kdv  = 900 x 0,20 = 180
-///   toplam = 1080
+/// Fiyat modeli: UrunFiyat'ta saklanan fiyat KDV DAHILDIR (Turkiye perakende
+/// uygulamasi: musteri etiketteki tutari oder). KDV bu tutarin uzerine
+/// eklenmez, icinden ayristirilir. Ornek: 10 x 100 TL, %10 indirim, %20 KDV
+///   tahsil edilecek = 1000 - 100 = 900
+///   icindeki kdv    = 900 - 900/1,20 = 150
+///   matrah          = 750
 /// </summary>
 public static class SepetHesaplayici
 {
-    /// <summary>Satirin KDV haric tutari (matrah): miktar x birim fiyat - indirim.</summary>
-    public static decimal SatirNetHesapla(decimal miktar, decimal birimFiyat, decimal indirim = 0)
+    /// <summary>Musteriden alinacak satir tutari (KDV dahil): miktar x birim fiyat - indirim.</summary>
+    public static decimal SatirToplamHesapla(decimal miktar, decimal birimFiyat, decimal indirim = 0)
     {
         var brut = decimal.Round(miktar * birimFiyat, 2, MidpointRounding.AwayFromZero);
-        var net = brut - indirim;
-        return net < 0 ? 0 : net;
+        var toplam = brut - indirim;
+        return toplam < 0 ? 0 : toplam;
     }
 
-    /// <summary>Net tutar uzerinden KDV.</summary>
-    public static decimal KdvHesapla(decimal netTutar, decimal kdvOrani)
+    /// <summary>
+    /// KDV dahil tutarin icindeki KDV: tutar - (tutar / (1 + oran/100)).
+    /// 120 TL ve %20 icin 20 TL doner.
+    /// </summary>
+    public static decimal KdvAyristir(decimal kdvDahilTutar, decimal kdvOrani)
     {
         if (kdvOrani <= 0) return 0;
-        return decimal.Round(netTutar * kdvOrani / 100m, 2, MidpointRounding.AwayFromZero);
-    }
 
-    /// <summary>Musteriden alinacak satir tutari: net + KDV.</summary>
-    public static decimal SatirToplamHesapla(decimal miktar, decimal birimFiyat, decimal kdvOrani, decimal indirim = 0)
-    {
-        var net = SatirNetHesapla(miktar, birimFiyat, indirim);
-        return net + KdvHesapla(net, kdvOrani);
+        var haric = kdvDahilTutar / (1 + kdvOrani / 100m);
+        return decimal.Round(kdvDahilTutar - haric, 2, MidpointRounding.AwayFromZero);
     }
 
     /// <summary>Indirimsiz brut tutar. Indirim tavanini denetlemek icin kullanilir.</summary>
@@ -52,15 +50,17 @@ public static class SepetHesaplayici
             .GroupBy(s => s.KdvOrani)
             .Select(g =>
             {
-                var matrah = g.Sum(s => SatirNetHesapla(s.Miktar, s.BirimFiyat, s.IndirimTutari));
-                var kdv = g.Sum(s => KdvHesapla(SatirNetHesapla(s.Miktar, s.BirimFiyat, s.IndirimTutari), g.Key));
+                // KDV grup toplamindan ayristirilir: satir satir yuvarlayip toplamak
+                // grup toplamindan sapma uretebilirdi.
+                var toplam = g.Sum(s => SatirToplamHesapla(s.Miktar, s.BirimFiyat, s.IndirimTutari));
+                var kdv = KdvAyristir(toplam, g.Key);
 
                 return new KdvKirilimVm
                 {
                     Oran = g.Key,
-                    Matrah = matrah,
+                    Toplam = toplam,
                     KdvTutari = kdv,
-                    Toplam = matrah + kdv
+                    Matrah = toplam - kdv
                 };
             })
             .OrderBy(k => k.Oran)
@@ -71,21 +71,26 @@ public static class SepetHesaplayici
     {
         foreach (var satir in satirlar)
         {
-            satir.SatirNet = SatirNetHesapla(satir.Miktar, satir.BirimFiyat, satir.IndirimTutari);
-            satir.SatirKdv = KdvHesapla(satir.SatirNet, satir.KdvOrani);
-            satir.SatirToplam = satir.SatirNet + satir.SatirKdv;
+            satir.SatirToplam = SatirToplamHesapla(satir.Miktar, satir.BirimFiyat, satir.IndirimTutari);
+            satir.SatirKdv = KdvAyristir(satir.SatirToplam, satir.KdvOrani);
+            satir.SatirNet = satir.SatirToplam - satir.SatirKdv;
         }
 
         var kirilim = KdvKirilimiHesapla(satirlar);
+
+        // Toplam KDV ve matrah kirilimdan alinir; satir satir ayristirip toplamak
+        // yuvarlama yuzunden fisin oran dokumuyle bir kurus sapabilirdi.
+        var genelToplam = satirlar.Sum(s => s.SatirToplam);
+        var toplamKdv = kirilim.Sum(k => k.KdvTutari);
 
         return new SepetVm
         {
             Satirlar = satirlar,
             KdvKirilimi = kirilim,
-            AraToplam = satirlar.Sum(s => s.SatirNet),
-            ToplamKdv = satirlar.Sum(s => s.SatirKdv),
+            AraToplam = genelToplam - toplamKdv,
+            ToplamKdv = toplamKdv,
             ToplamIndirim = satirlar.Sum(s => s.IndirimTutari),
-            GenelToplam = satirlar.Sum(s => s.SatirToplam)
+            GenelToplam = genelToplam
         };
     }
 
