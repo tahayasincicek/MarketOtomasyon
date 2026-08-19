@@ -1,0 +1,103 @@
+@{
+    ViewData["Title"] = "Kasa";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Kasa</h1>
+    <div class="small text-muted">
+        <kbd>Enter</kbd> ekle &nbsp;
+        <kbd>F2</kbd> ödeme &nbsp;
+        <kbd>F4</kbd> satır sil &nbsp;
+        <kbd>Esc</kbd> iptal
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Sol sütun: barkod girişi ve sepet -->
+    <div class="col-lg-8">
+        <div class="input-group input-group-lg mb-2">
+            <span class="input-group-text">Barkod</span>
+            <input id="barkod" class="form-control font-monospace" autocomplete="off" autofocus
+                   placeholder="Okutun veya yazıp Enter'a basın" />
+        </div>
+
+        <div id="uyari" class="alert alert-danger py-2 d-none" role="alert"></div>
+
+        <div class="table-responsive border rounded">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:3rem">#</th>
+                        <th>Ürün</th>
+                        <th class="text-end" style="width:8rem">Miktar</th>
+                        <th class="text-end" style="width:8rem">Birim Fiyat</th>
+                        <th class="text-end" style="width:9rem">Tutar</th>
+                        <th style="width:3rem"></th>
+                    </tr>
+                </thead>
+                <tbody id="sepet-govde"></tbody>
+            </table>
+            <p id="bos-sepet" class="text-center text-muted py-5 mb-0">
+                Sepet boş — barkod okutarak başlayın.
+            </p>
+        </div>
+
+        <div class="form-text mt-2">
+            Satıra tıklayarak seçin, <kbd>F4</kbd> ile silin. Miktar kutusunu değiştirip
+            <kbd>Enter</kbd>'a basarak güncelleyin; 0 yazarsanız satır silinir.
+        </div>
+    </div>
+
+    <!-- Sağ sütun: özet ve toplam -->
+    <div class="col-lg-4">
+        <div class="card mb-3">
+            <div class="card-body py-2">
+                <div class="text-uppercase text-muted" style="font-size:.7rem;letter-spacing:.08em">Son okutulan</div>
+                <div id="son-ad" class="fs-5 fw-semibold">—</div>
+                <div id="son-detay" class="text-muted small"></div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header py-2 d-flex justify-content-between">
+                <span>Fiş</span>
+                <span id="fis-no" class="text-muted font-monospace small">—</span>
+            </div>
+            <div class="card-body py-2">
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Ara toplam (KDV hariç)</span>
+                    <span id="ara-toplam">0,00</span>
+                </div>
+                <div id="kdv-kirilimi" class="mt-1"></div>
+                <div class="d-flex justify-content-between border-top pt-1 mt-1">
+                    <span class="text-muted">Toplam KDV</span>
+                    <span id="toplam-kdv">0,00</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Satır</span>
+                    <span id="satir-sayisi">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card text-bg-success mb-3">
+            <div class="card-body text-end py-3">
+                <div class="text-uppercase" style="font-size:.7rem;letter-spacing:.12em;opacity:.85">Toplam</div>
+                <div id="genel-toplam" class="fw-bold" style="font-size:2.4rem;line-height:1.1">0,00 ₺</div>
+            </div>
+        </div>
+
+        <div class="d-grid gap-2">
+            <button type="button" id="btn-odeme" class="btn btn-primary btn-lg" disabled>
+                Ödeme Al (F2)
+            </button>
+            <button type="button" id="btn-iptal" class="btn btn-outline-danger">
+                Fişi İptal Et (Esc)
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/kasa.js" asp-append-version="true"></script>
+}
