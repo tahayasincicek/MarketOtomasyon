@@ -67,7 +67,7 @@ public class SepetService
             var yeniMiktar = mevcut.Miktar + cozum.Miktar;
 
             await _fisRepository.SatirMiktarGuncelleAsync(conn, tx, fisId, mevcutSatirId.Value, yeniMiktar,
-                SepetHesaplayici.SatirToplamHesapla(yeniMiktar, mevcut.BirimFiyat, mevcut.IndirimTutari), ct);
+                SepetHesaplayici.SatirToplamHesapla(yeniMiktar, mevcut.BirimFiyat, mevcut.KdvOrani, mevcut.IndirimTutari), ct);
         }
         else
         {
@@ -78,7 +78,7 @@ public class SepetService
                 Miktar = cozum.Miktar,
                 BirimFiyat = cozum.BirimFiyat,
                 KdvOrani = cozum.KdvOrani,
-                SatirToplam = SepetHesaplayici.SatirToplamHesapla(cozum.Miktar, cozum.BirimFiyat)
+                SatirToplam = SepetHesaplayici.SatirToplamHesapla(cozum.Miktar, cozum.BirimFiyat, cozum.KdvOrani)
             }, ct);
         }
 
@@ -109,7 +109,7 @@ public class SepetService
         else
         {
             await _fisRepository.SatirMiktarGuncelleAsync(conn, tx, fis.Id, satirId, miktar,
-                SepetHesaplayici.SatirToplamHesapla(miktar, satir.BirimFiyat, satir.IndirimTutari), ct);
+                SepetHesaplayici.SatirToplamHesapla(miktar, satir.BirimFiyat, satir.KdvOrani, satir.IndirimTutari), ct);
         }
 
         await ToplamlariYazAsync(conn, tx, fis.Id, ct);
@@ -132,6 +132,80 @@ public class SepetService
         tx.Commit();
 
         return (await GetirAsync(vardiyaId, ct), silinen > 0 ? null : "Satir bulunamadi.");
+    }
+
+    /// <summary>
+    /// Satira yuzde bazli manuel indirim uygular. Yuzde 0 verilirse indirim kaldirilir.
+    /// Onaylayan kullanici verilmezse islemi yapan kasiyerin yetkisine bakilir.
+    /// </summary>
+    public async Task<(SepetVm Sepet, string? Hata)> SatirIndirimiUygulaAsync(
+        int vardiyaId, int satirId, decimal yuzde, byte rol, CancellationToken ct = default)
+    {
+        var fis = await _fisRepository.AcikFisGetirAsync(vardiyaId, ct);
+        if (fis is null) return (new SepetVm(), "Acik sepet yok.");
+
+        var satirlar = await _fisRepository.SatirlariGetirAsync(fis.Id, ct);
+        var satir = satirlar.FirstOrDefault(s => s.SatirId == satirId);
+        if (satir is null) return (await GetirAsync(vardiyaId, ct), "Satir bulunamadi.");
+
+        if (yuzde != 0)
+        {
+            var (yeterli, hata) = IndirimYetkisi.SatirIndirimiKontrol(rol, yuzde);
+            if (!yeterli) return (await GetirAsync(vardiyaId, ct), hata);
+        }
+
+        var brut = SepetHesaplayici.BrutHesapla(satir.Miktar, satir.BirimFiyat);
+        var indirim = decimal.Round(brut * yuzde / 100m, 2, MidpointRounding.AwayFromZero);
+
+        using var conn = await _factory.CreateOpenConnectionAsync(ct);
+        using var tx = conn.BeginTransaction();
+
+        await _fisRepository.SatirIndirimGuncelleAsync(conn, tx, fis.Id, satirId, indirim,
+            SepetHesaplayici.SatirToplamHesapla(satir.Miktar, satir.BirimFiyat, satir.KdvOrani, indirim), ct);
+
+        await ToplamlariYazAsync(conn, tx, fis.Id, ct);
+        tx.Commit();
+
+        return (await GetirAsync(vardiyaId, ct), null);
+    }
+
+    /// <summary>
+    /// Fis geneline yuzde bazli indirim uygular. Indirim satirlara brut tutarlari
+    /// oraninda dagitilir; boylece her KDV orani kendi payini dogru dusurur.
+    /// </summary>
+    public async Task<(SepetVm Sepet, string? Hata)> FisIndirimiUygulaAsync(
+        int vardiyaId, decimal yuzde, byte rol, CancellationToken ct = default)
+    {
+        var fis = await _fisRepository.AcikFisGetirAsync(vardiyaId, ct);
+        if (fis is null) return (new SepetVm(), "Acik sepet yok.");
+
+        var satirlar = await _fisRepository.SatirlariGetirAsync(fis.Id, ct);
+        if (satirlar.Count == 0) return (await GetirAsync(vardiyaId, ct), "Sepet bos.");
+
+        if (yuzde != 0)
+        {
+            var (yeterli, hata) = IndirimYetkisi.FisIndirimiKontrol(rol, yuzde);
+            if (!yeterli) return (await GetirAsync(vardiyaId, ct), hata);
+        }
+
+        var toplamBrut = satirlar.Sum(s => SepetHesaplayici.BrutHesapla(s.Miktar, s.BirimFiyat));
+        var indirimTutari = decimal.Round(toplamBrut * yuzde / 100m, 2, MidpointRounding.AwayFromZero);
+        var dagitim = SepetHesaplayici.FisIndiriminiDagit(satirlar, indirimTutari);
+
+        using var conn = await _factory.CreateOpenConnectionAsync(ct);
+        using var tx = conn.BeginTransaction();
+
+        foreach (var satir in satirlar)
+        {
+            var pay = dagitim[satir.SatirId];
+            await _fisRepository.SatirIndirimGuncelleAsync(conn, tx, fis.Id, satir.SatirId, pay,
+                SepetHesaplayici.SatirToplamHesapla(satir.Miktar, satir.BirimFiyat, satir.KdvOrani, pay), ct);
+        }
+
+        await ToplamlariYazAsync(conn, tx, fis.Id, ct);
+        tx.Commit();
+
+        return (await GetirAsync(vardiyaId, ct), null);
     }
 
     /// <summary>Sepeti bosaltir: fis iptal edilir (Durum 9), satirlari silinir.</summary>

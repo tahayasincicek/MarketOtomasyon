@@ -53,6 +53,8 @@
         secimiVurgula();
 
         document.getElementById("fis-no").textContent = sepet.fisNo || "—";
+        document.getElementById("indirim-satiri").hidden = sepet.toplamIndirim <= 0;
+        document.getElementById("toplam-indirim").textContent = "-" + paraBicimi.format(sepet.toplamIndirim);
         document.getElementById("ara-toplam").textContent = paraBicimi.format(sepet.araToplam);
         document.getElementById("toplam-kdv").textContent = paraBicimi.format(sepet.toplamKdv);
         document.getElementById("satir-sayisi").textContent = sepet.satirSayisi;
@@ -73,11 +75,15 @@
 
         const kg = satir.birim === "KG";
 
+        const indirimRozeti = satir.indirimTutari > 0
+            ? ' <span class="badge bg-danger">-' + paraBicimi.format(satir.indirimTutari) + "</span>"
+            : "";
+
         tr.innerHTML =
             '<td class="text-muted">' + satir.satirNo + "</td>" +
             "<td>" + metniKacir(satir.ad) +
                 '<span class="d-block text-muted font-monospace small">' + metniKacir(satir.kod) +
-                (kg ? ' <span class="badge bg-warning text-dark">kg</span>' : "") + "</span></td>" +
+                (kg ? ' <span class="badge bg-warning text-dark">kg</span>' : "") + indirimRozeti + "</span></td>" +
             '<td class="text-end"></td>' +
             '<td class="text-end">' + paraBicimi.format(satir.birimFiyat) + "</td>" +
             '<td class="text-end fw-semibold">' + paraBicimi.format(satir.satirToplam) + "</td>" +
@@ -232,6 +238,72 @@
         document.getElementById("son-detay").textContent = "";
     }
 
+    // ---------- Indirim paneli ----------
+
+    const indirimPaneli = document.getElementById("indirim-paneli");
+    const indirimYuzde = document.getElementById("indirim-yuzde");
+    const indirimOnaylayan = document.getElementById("indirim-onaylayan");
+
+    // "satir" veya "fis"; panel kapaliyken null.
+    let indirimKapsami = null;
+
+    function indirimAc(kapsam) {
+        if (kapsam === "satir" && seciliSatirId === null) {
+            uyariGoster("Önce indirim uygulanacak satırı seçin.");
+            odakla();
+            return;
+        }
+
+        indirimKapsami = kapsam;
+        document.getElementById("indirim-baslik").textContent =
+            kapsam === "satir" ? "Seçili satıra indirim" : "Fiş geneline indirim";
+
+        indirimPaneli.classList.remove("d-none");
+        indirimYuzde.value = "";
+        indirimYuzde.focus();
+    }
+
+    function indirimKapat() {
+        indirimKapsami = null;
+        indirimPaneli.classList.add("d-none");
+        odakla();
+    }
+
+    async function indirimUygula(yuzde) {
+        const onaylayan = indirimOnaylayan.value;
+        const veri = onaylayan ? { yuzde: yuzde, onaylayanKullaniciId: onaylayan } : { yuzde: yuzde };
+
+        if (indirimKapsami === "satir") veri.satirId = seciliSatirId;
+
+        const yol = indirimKapsami === "satir" ? "/Kasa/SatirIndirimi" : "/Kasa/FisIndirimi";
+        const kapsam = indirimKapsami;
+
+        indirimKapat();
+        await islet(() => gonder(yol, veri));
+
+        // Yetki reddi gibi durumlarda panel yeniden acilir; kasiyer onay secebilsin.
+        if (!uyari.classList.contains("d-none")) {
+            indirimKapsami = kapsam;
+            indirimPaneli.classList.remove("d-none");
+        }
+    }
+
+    document.getElementById("btn-indirim-uygula").addEventListener("click", function () {
+        const yuzde = parseFloat(indirimYuzde.value.replace(",", "."));
+        if (isNaN(yuzde) || yuzde <= 0) { uyariGoster("Geçerli bir indirim oranı girin."); return; }
+        indirimUygula(yuzde);
+    });
+
+    // Indirimi kaldirmak icin yuzde 0 gonderilir; yetki kontrolu aranmaz.
+    document.getElementById("btn-indirim-kaldir").addEventListener("click", () => indirimUygula(0));
+    document.getElementById("btn-indirim-vazgec").addEventListener("click", indirimKapat);
+    document.getElementById("btn-fis-indirim").addEventListener("click", () => indirimAc("fis"));
+
+    indirimYuzde.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") { e.preventDefault(); document.getElementById("btn-indirim-uygula").click(); }
+        if (e.key === "Escape") { e.preventDefault(); indirimKapat(); }
+    });
+
     // Kisayollar sayfanin herhangi bir yerinde calisir.
     document.addEventListener("keydown", async function (e) {
         if (e.key === "F2") {
@@ -241,9 +313,16 @@
             e.preventDefault();
             if (seciliSatirId === null) { uyariGoster("Önce silinecek satırı seçin."); odakla(); return; }
             await islet(() => gonder("/Kasa/SatirSil", { satirId: seciliSatirId }));
+        } else if (e.key === "F5") {
+            e.preventDefault();
+            indirimAc("satir");
+        } else if (e.key === "F6") {
+            e.preventDefault();
+            indirimAc("fis");
         } else if (e.key === "Escape") {
             e.preventDefault();
-            fisiIptalEt();
+            // Indirim paneli acikken Esc once paneli kapatir, fisi iptal etmez.
+            if (indirimKapsami !== null) indirimKapat(); else fisiIptalEt();
         }
     });
 
