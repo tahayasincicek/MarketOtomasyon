@@ -26,12 +26,14 @@ builder.Services.AddScoped<DepoRepository>();
 builder.Services.AddScoped<FisRepository>();
 builder.Services.AddScoped<VardiyaRepository>();
 builder.Services.AddScoped<KullaniciRepository>();
+builder.Services.AddScoped<OdemeRepository>();
 
 // Servisler
 builder.Services.AddScoped<UrunService>();
 builder.Services.AddScoped<BarkodService>();
 builder.Services.AddScoped<StokService>();
 builder.Services.AddScoped<SepetService>();
+builder.Services.AddScoped<OdemeService>();
 
 // Dogrulayicilar (controller icinde elle cagriliyor)
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();

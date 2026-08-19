@@ -96,7 +96,7 @@
                 <span id="fis-no" class="text-muted font-monospace small">—</span>
             </div>
             <div class="card-body py-2">
-                <div class="d-flex justify-content-between" id="indirim-satiri" hidden>
+                <div class="d-flex justify-content-between d-none" id="indirim-satiri">
                     <span class="text-muted">Toplam indirim</span>
                     <span id="toplam-indirim" class="text-danger">0,00</span>
                 </div>
@@ -137,6 +137,97 @@
     </div>
 </div>
 
+<!-- Ödeme penceresi -->
+<div class="modal fade" id="odeme-modal" tabindex="-1" data-bs-backdrop="static" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header py-2">
+                <h5 class="modal-title">Ödeme <span id="odeme-fis-no" class="text-muted font-monospace small ms-2"></span></h5>
+            </div>
+
+            <div class="modal-body">
+                <div id="odeme-uyari" class="alert alert-danger py-2 d-none" role="alert"></div>
+
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Fiş toplamı</span>
+                            <span id="odeme-genel-toplam">0,00</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Ödenen</span>
+                            <span id="odeme-odenen">0,00</span>
+                        </div>
+                        <div class="d-flex justify-content-between border-top pt-2 mt-2">
+                            <span class="fw-semibold">KALAN</span>
+                            <span id="odeme-kalan" class="fs-4 fw-bold text-danger">0,00</span>
+                        </div>
+
+                        <div id="para-ustu-kutusu" class="alert alert-warning mt-3 mb-0 py-2 d-none">
+                            <div class="small">Para üstü</div>
+                            <div id="para-ustu" class="fs-3 fw-bold">0,00</div>
+                        </div>
+
+                        <div id="odeme-tamam" class="alert alert-success mt-3 mb-0 py-2 d-none">
+                            Ödeme tamamlandı, fiş kapandı.
+                        </div>
+                    </div>
+
+                    <div class="col-md-7">
+                        <div class="btn-group w-100 mb-2" role="group">
+                            <input type="radio" class="btn-check" name="odeme-tip" id="tip-nakit" value="1" checked />
+                            <label class="btn btn-outline-primary" for="tip-nakit">Nakit</label>
+
+                            <input type="radio" class="btn-check" name="odeme-tip" id="tip-kart" value="2" />
+                            <label class="btn btn-outline-primary" for="tip-kart">Kart</label>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label mb-0 small">Mahsup edilecek tutar</label>
+                            <input id="odeme-tutar" type="text" class="form-control text-end" autocomplete="off" />
+                            <div class="form-text">Kalanın tamamı için boş bırakabilirsiniz.</div>
+                        </div>
+
+                        <div class="mb-2" id="alinan-kutusu">
+                            <label class="form-label mb-0 small">Müşteriden alınan</label>
+                            <input id="odeme-alinan" type="text" class="form-control text-end" autocomplete="off" />
+                        </div>
+
+                        <div class="mb-2 d-none" id="onay-kutusu">
+                            <label class="form-label mb-0 small">POS onay kodu</label>
+                            <input id="odeme-onay" type="text" class="form-control" autocomplete="off" />
+                        </div>
+
+                        <button type="button" id="btn-odeme-ekle" class="btn btn-primary w-100">Ödemeyi Ekle</button>
+                    </div>
+                </div>
+
+                <table class="table table-sm mt-3 mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Tip</th>
+                            <th class="text-end">Tutar</th>
+                            <th class="text-end">Alınan</th>
+                            <th class="text-end">Para üstü</th>
+                            <th>Onay</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="odeme-listesi"></tbody>
+                </table>
+            </div>
+
+            <div class="modal-footer py-2">
+                <button type="button" id="btn-odeme-vazgec" class="btn btn-outline-secondary">
+                    Vazgeç ve sepete dön
+                </button>
+                <button type="button" id="btn-odeme-kapat" class="btn btn-success d-none">Yeni Fiş</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script src="~/js/kasa.js" asp-append-version="true"></script>
+    <script src="~/js/odeme.js" asp-append-version="true"></script>
 }
