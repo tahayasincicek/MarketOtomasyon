@@ -24,6 +24,10 @@ public class KasaController : Controller
         _vardiyaRepository = vardiyaRepository;
     }
 
+    [HttpGet("/Kasa")]
+    [HttpGet]
+    public IActionResult Index() => View();
+
     [HttpGet]
     public async Task<IActionResult> Sepet(CancellationToken ct)
         => Ok(await _sepetService.GetirAsync(await VardiyaIdAsync(ct), ct));
