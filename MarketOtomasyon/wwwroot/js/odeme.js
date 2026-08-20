@@ -125,8 +125,18 @@
     async function odemeEkle() {
         const tutar = sayiOku(tutarGirdi) ?? sonDurum.kalan;
 
-        // Alinan bos birakilirsa musteri tam parayi vermis sayilir.
-        const veri = { tip: TipNakit, tutar: tutar, alinanTutar: sayiOku(alinanGirdi) ?? tutar };
+        // Alinan tutar zorunlu: kasiyer musterinin ne kadar verdigini
+        // acikca girmeden odeme tamamlanamaz. Bos birakip Enter'a basmak
+        // "musteri tam parayi verdi" saymamali - bu kasiyerin karar
+        // verecegi bir sey, varsayilan degil.
+        const alinan = sayiOku(alinanGirdi);
+        if (alinan === null) {
+            uyariGoster("Müşteriden alınan tutarı girin.");
+            alinanGirdi.focus();
+            return;
+        }
+
+        const veri = { tip: TipNakit, tutar: tutar, alinanTutar: alinan };
 
         const { durum, hata } = await gonder("/Odeme/Ekle", veri);
         if (hata) uyariGoster(hata); else uyariGizle();
