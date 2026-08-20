@@ -9,6 +9,15 @@ public static class OdemeHesaplayici
     public const byte TipKart = 2;
     public const byte TipPuan = 3;
 
+    /// <summary>
+    /// Su an kabul edilen odeme tipleri. Kart ve puan, POS entegrasyonu
+    /// yazilana kadar kapali; acmak icin tipi bu listeye eklemek yeterli.
+    /// Veri modeli ve cok odemeli fis yapisi kart icin zaten hazir.
+    /// </summary>
+    private static readonly byte[] AcikTipler = [TipNakit];
+
+    public static bool TipAcikMi(byte tip) => AcikTipler.Contains(tip);
+
     /// <summary>Nakitte para ustu: alinan - mahsup edilen. Negatif olamaz.</summary>
     public static decimal ParaUstuHesapla(decimal tutar, decimal alinanTutar)
     {
@@ -29,6 +38,9 @@ public static class OdemeHesaplayici
     {
         if (tip is not (TipNakit or TipKart or TipPuan))
             return (false, "Gecersiz odeme tipi.");
+
+        if (!TipAcikMi(tip))
+            return (false, "Su an yalnizca nakit odeme alinabiliyor.");
 
         if (tutar <= 0)
             return (false, "Odeme tutari sifirdan buyuk olmalidir.");

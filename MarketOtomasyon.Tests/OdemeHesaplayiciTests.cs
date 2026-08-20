@@ -6,6 +6,7 @@ public class OdemeHesaplayiciTests
 {
     private const byte Nakit = OdemeHesaplayici.TipNakit;
     private const byte Kart = OdemeHesaplayici.TipKart;
+    private const byte Puan = OdemeHesaplayici.TipPuan;
 
     [Theory]
     [InlineData(40, 50, 10)]        // 40 TL nakit, musteri 50 verdi
@@ -30,6 +31,36 @@ public class OdemeHesaplayiciTests
     public void Kalan_GenelToplamdanOdeneniDuser(decimal genelToplam, decimal odenen, decimal beklenen)
     {
         Assert.Equal(beklenen, OdemeHesaplayici.KalanHesapla(genelToplam, odenen));
+    }
+
+    // ---------- Acik odeme tipleri ----------
+
+    [Fact]
+    public void Nakit_Aciktir()
+    {
+        Assert.True(OdemeHesaplayici.TipAcikMi(Nakit));
+    }
+
+    [Theory]
+    [InlineData(Kart)]
+    [InlineData(Puan)]
+    public void KartVePuan_HenuzKapali(byte tip)
+    {
+        Assert.False(OdemeHesaplayici.TipAcikMi(tip));
+
+        var (gecerli, hata) = OdemeHesaplayici.Dogrula(tip, 60m, null, 100m);
+
+        Assert.False(gecerli);
+        Assert.Contains("yalnizca nakit", hata!);
+    }
+
+    [Fact]
+    public void GecersizOdemeTipiReddedilir()
+    {
+        var (gecerli, hata) = OdemeHesaplayici.Dogrula(9, 10m, null, 100m);
+
+        Assert.False(gecerli);
+        Assert.Contains("Gecersiz odeme tipi", hata!);
     }
 
     // ---------- Dogrulama kurallari ----------
@@ -59,15 +90,9 @@ public class OdemeHesaplayiciTests
     }
 
     [Fact]
-    public void Kart_AlinanTutarAranmaz()
-    {
-        Assert.True(OdemeHesaplayici.Dogrula(Kart, 60m, null, 60m).Gecerli);
-    }
-
-    [Fact]
     public void OdemeTutari_KalanBorcuAsamaz()
     {
-        var (gecerli, hata) = OdemeHesaplayici.Dogrula(Kart, 150m, null, 100m);
+        var (gecerli, hata) = OdemeHesaplayici.Dogrula(Nakit, 150m, 150m, 100m);
 
         Assert.False(gecerli);
         Assert.Contains("kalan borcu", hata!);
@@ -78,39 +103,36 @@ public class OdemeHesaplayiciTests
     [InlineData(-10)]
     public void OdemeTutari_PozitifOlmali(decimal tutar)
     {
-        Assert.False(OdemeHesaplayici.Dogrula(Kart, tutar, null, 100m).Gecerli);
+        Assert.False(OdemeHesaplayici.Dogrula(Nakit, tutar, tutar, 100m).Gecerli);
     }
 
     [Fact]
     public void OdenmisFise_YeniOdemeAlinmaz()
     {
-        var (gecerli, hata) = OdemeHesaplayici.Dogrula(Kart, 10m, null, 0m);
+        var (gecerli, hata) = OdemeHesaplayici.Dogrula(Nakit, 10m, 10m, 0m);
 
         Assert.False(gecerli);
         Assert.Contains("bakiyesi yok", hata!);
     }
 
+    /// <summary>
+    /// Parcali odeme: 100 TL'lik fis iki ayri odemeyle kapanir.
+    /// Kart acildiginda ikinci odeme kartla da alinabilecek; akis aynidir.
+    /// </summary>
     [Fact]
-    public void GecersizOdemeTipiReddedilir()
-    {
-        Assert.False(OdemeHesaplayici.Dogrula(9, 10m, null, 100m).Gecerli);
-    }
-
-    /// <summary>Yol haritasindaki kabul senaryosu: 100 TL'nin 40'i nakit, 60'i kart.</summary>
-    [Fact]
-    public void KabulSenaryosu_KarisikOdeme_KalanSifirlanir()
+    public void ParcaliOdeme_IkiOdemeIleKalanSifirlanir()
     {
         const decimal genelToplam = 100m;
 
-        // 1. odeme: 40 TL nakit, musteri 50 TL verdi
+        // 1. odeme: 40 TL, musteri 50 TL verdi -> 10 TL para ustu
         var kalan = OdemeHesaplayici.KalanHesapla(genelToplam, 0m);
         Assert.True(OdemeHesaplayici.Dogrula(Nakit, 40m, 50m, kalan).Gecerli);
         Assert.Equal(10m, OdemeHesaplayici.ParaUstuHesapla(40m, 50m));
 
-        // 2. odeme: kalan 60 TL kart
+        // 2. odeme: kalan 60 TL
         kalan = OdemeHesaplayici.KalanHesapla(genelToplam, 40m);
         Assert.Equal(60m, kalan);
-        Assert.True(OdemeHesaplayici.Dogrula(Kart, 60m, null, kalan).Gecerli);
+        Assert.True(OdemeHesaplayici.Dogrula(Nakit, 60m, 60m, kalan).Gecerli);
 
         // Fis kapanir
         Assert.Equal(0m, OdemeHesaplayici.KalanHesapla(genelToplam, 100m));

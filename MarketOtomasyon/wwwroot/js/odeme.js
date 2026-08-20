@@ -11,7 +11,6 @@
     const uyari = document.getElementById("odeme-uyari");
     const tutarGirdi = document.getElementById("odeme-tutar");
     const alinanGirdi = document.getElementById("odeme-alinan");
-    const onayGirdi = document.getElementById("odeme-onay");
 
     let sonDurum = null;
 
@@ -22,13 +21,8 @@
         return metin === "" ? null : parseFloat(metin);
     }
 
-    function secilenTip() {
-        return document.querySelector('input[name="odeme-tip"]:checked').value;
-    }
-
-    function nakitMi() {
-        return secilenTip() === "1";
-    }
+    // Su an yalnizca nakit acik; kart POS entegrasyonuyla eklenecek.
+    const TipNakit = 1;
 
     function uyariGoster(mesaj) {
         uyari.textContent = mesaj;
@@ -75,7 +69,6 @@
         if (!durum.tamamlandi) {
             tutarGirdi.value = durum.kalan > 0 ? paraBicimi.format(durum.kalan) : "";
             alinanGirdi.value = "";
-            onayGirdi.value = "";
             tutarGirdi.focus();
             tutarGirdi.select();
         }
@@ -92,10 +85,9 @@
                 '<td class="text-end">' + paraBicimi.format(o.tutar) + "</td>" +
                 '<td class="text-end">' + (o.alinanTutar != null ? paraBicimi.format(o.alinanTutar) : "—") + "</td>" +
                 '<td class="text-end">' + (o.paraUstu != null ? paraBicimi.format(o.paraUstu) : "—") + "</td>" +
-                "<td>" + (o.onayKodu || "") + "</td>" +
                 '<td class="text-end"></td>';
 
-            if (!durum.tamamlandi) tr.children[5].appendChild(iptalDugmesi(o.id));
+            if (!durum.tamamlandi) tr.children[4].appendChild(iptalDugmesi(o.id));
             govde.appendChild(tr);
         });
     }
@@ -131,17 +123,10 @@
     }
 
     async function odemeEkle() {
-        const tip = secilenTip();
         const tutar = sayiOku(tutarGirdi) ?? sonDurum.kalan;
-        const veri = { tip: tip, tutar: tutar };
 
-        if (nakitMi()) {
-            // Alinan bos birakilirsa musteri tam parayi vermis sayilir.
-            veri.alinanTutar = sayiOku(alinanGirdi) ?? tutar;
-        } else {
-            const onay = onayGirdi.value.trim();
-            if (onay) veri.onayKodu = onay;
-        }
+        // Alinan bos birakilirsa musteri tam parayi vermis sayilir.
+        const veri = { tip: TipNakit, tutar: tutar, alinanTutar: sayiOku(alinanGirdi) ?? tutar };
 
         const { durum, hata } = await gonder("/Odeme/Ekle", veri);
         if (hata) uyariGoster(hata); else uyariGizle();
@@ -166,15 +151,7 @@
         window.kasa.sepetiYenile();
     });
 
-    // Nakit/kart secimine gore alanlar degisir.
-    document.querySelectorAll('input[name="odeme-tip"]').forEach(function (girdi) {
-        girdi.addEventListener("change", function () {
-            document.getElementById("alinan-kutusu").classList.toggle("d-none", !nakitMi());
-            document.getElementById("onay-kutusu").classList.toggle("d-none", nakitMi());
-        });
-    });
-
-    [tutarGirdi, alinanGirdi, onayGirdi].forEach(function (girdi) {
+    [tutarGirdi, alinanGirdi].forEach(function (girdi) {
         girdi.addEventListener("keydown", function (e) {
             if (e.key === "Enter") { e.preventDefault(); odemeEkle(); }
         });

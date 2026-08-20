@@ -174,12 +174,9 @@
                     </div>
 
                     <div class="col-md-7">
-                        <div class="btn-group w-100 mb-2" role="group">
-                            <input type="radio" class="btn-check" name="odeme-tip" id="tip-nakit" value="1" checked />
-                            <label class="btn btn-outline-primary" for="tip-nakit">Nakit</label>
-
-                            <input type="radio" class="btn-check" name="odeme-tip" id="tip-kart" value="2" />
-                            <label class="btn btn-outline-primary" for="tip-kart">Kart</label>
+                        <div class="alert alert-secondary py-2 small mb-2">
+                            Şu an yalnızca <strong>nakit</strong> ödeme alınabiliyor.
+                            Kart ödemesi POS entegrasyonu yapıldığında açılacak.
                         </div>
 
                         <div class="mb-2">
@@ -188,14 +185,9 @@
                             <div class="form-text">Kalanın tamamı için boş bırakabilirsiniz.</div>
                         </div>
 
-                        <div class="mb-2" id="alinan-kutusu">
+                        <div class="mb-2">
                             <label class="form-label mb-0 small">Müşteriden alınan</label>
                             <input id="odeme-alinan" type="text" class="form-control text-end" autocomplete="off" />
-                        </div>
-
-                        <div class="mb-2 d-none" id="onay-kutusu">
-                            <label class="form-label mb-0 small">POS onay kodu</label>
-                            <input id="odeme-onay" type="text" class="form-control" autocomplete="off" />
                         </div>
 
                         <button type="button" id="btn-odeme-ekle" class="btn btn-primary w-100">Ödemeyi Ekle</button>
@@ -209,7 +201,6 @@
                             <th class="text-end">Tutar</th>
                             <th class="text-end">Alınan</th>
                             <th class="text-end">Para üstü</th>
-                            <th>Onay</th>
                             <th></th>
                         </tr>
                     </thead>
