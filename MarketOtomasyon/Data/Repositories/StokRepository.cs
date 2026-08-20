@@ -44,6 +44,10 @@ WHERE u.Aktif = 1
 ORDER BY u.Ad
 OFFSET @atla ROWS FETCH NEXT @adet ROWS ONLY;";
 
+    // Satis geri alinirken o fisin dusurdugu stok da geri alinir.
+    private const string SqlSatisHareketleriniSil = @"
+DELETE FROM StokHareket WHERE KaynakTip = 1 AND KaynakId = @fisId;";
+
     private const string SqlSonHareketler = @"
 SELECT TOP (@adet)
        h.Id, h.Tarih, h.Yon, h.Miktar, h.KaynakTip, h.Aciklama,
@@ -62,6 +66,16 @@ ORDER BY h.Id DESC;";
         return await conn.ExecuteScalarAsync<decimal>(
             new CommandDefinition(SqlBakiye, new { urunId, depoId }, cancellationToken: ct));
     }
+
+    /// <summary>
+    /// Acik transaction icinden bakiye okur. Satis tamamlanirken stok
+    /// kontrolu ile hareket yazimi ayni transaction icinde olmali;
+    /// aksi halde iki kasa ayni son urunu ayni anda satabilir.
+    /// </summary>
+    public async Task<decimal> BakiyeAsync(
+        IDbConnection conn, IDbTransaction tx, int urunId, int depoId, CancellationToken ct = default)
+        => await conn.ExecuteScalarAsync<decimal>(
+            new CommandDefinition(SqlBakiye, new { urunId, depoId }, tx, cancellationToken: ct));
 
     public async Task<(IReadOnlyList<StokSatirVm> Satirlar, int ToplamKayit)> BakiyeListesiAsync(
         string? arama, bool sadeceKritik, int sayfa, int sayfaBoyutu, CancellationToken ct = default)
@@ -82,6 +96,11 @@ ORDER BY h.Id DESC;";
         var satirlar = (await sonuc.ReadAsync<StokSatirVm>()).AsList();
         return (satirlar, toplam);
     }
+
+    public async Task<int> SatisHareketleriniSilAsync(
+        IDbConnection conn, IDbTransaction tx, int fisId, CancellationToken ct = default)
+        => await conn.ExecuteAsync(
+            new CommandDefinition(SqlSatisHareketleriniSil, new { fisId }, tx, cancellationToken: ct));
 
     public async Task<IReadOnlyList<StokHareketSatirVm>> SonHareketlerAsync(int adet, CancellationToken ct = default)
     {

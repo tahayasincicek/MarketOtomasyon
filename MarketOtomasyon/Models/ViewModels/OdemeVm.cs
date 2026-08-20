@@ -39,4 +39,7 @@ public class OdemeDurumVm
 
     /// <summary>Son nakit odemede musteriye verilecek para ustu.</summary>
     public decimal ToplamParaUstu { get; set; }
+
+    /// <summary>Satis kapanirken olusan stok uyarilari (varsa).</summary>
+    public List<string> Uyarilar { get; set; } = [];
 }

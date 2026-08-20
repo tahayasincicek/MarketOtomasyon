@@ -9,6 +9,8 @@
         <kbd>F4</kbd> satır sil &nbsp;
         <kbd>F5</kbd> satır indirimi &nbsp;
         <kbd>F6</kbd> fiş indirimi &nbsp;
+        <kbd>F7</kbd> askıya al &nbsp;
+        <kbd>F8</kbd> bekleyenler &nbsp;
         <kbd>Esc</kbd> iptal
     </div>
 </div>
@@ -129,9 +131,51 @@
             <button type="button" id="btn-fis-indirim" class="btn btn-outline-secondary">
                 <i class="bi bi-percent"></i> Fişe İndirim (F6)
             </button>
+            <div class="d-flex gap-2">
+                <button type="button" id="btn-askiya-al" class="btn btn-outline-secondary flex-fill">
+                    <i class="bi bi-pause-circle"></i> Askıya Al (F7)
+                </button>
+                <button type="button" id="btn-bekleyenler" class="btn btn-outline-secondary flex-fill position-relative">
+                    <i class="bi bi-list-check"></i> Bekleyenler (F8)
+                    <span id="bekleyen-sayisi" class="badge bg-warning text-dark position-absolute top-0 start-100 translate-middle d-none">0</span>
+                </button>
+            </div>
             <button type="button" id="btn-iptal" class="btn btn-outline-danger">
                 <i class="bi bi-x-circle"></i> Fişi İptal Et (Esc)
             </button>
+        </div>
+    </div>
+</div>
+
+<!-- Bekleyen (askıdaki) fişler -->
+<div class="modal fade" id="bekleyenler-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header py-2">
+                <h5 class="modal-title">Bekleyen Fişler</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-text mb-2">
+                    Askıya alınmış sepetler stoğu etkilemez. Geri çağırdığınızda kasadaki dolu sepet
+                    otomatik olarak askıya alınır.
+                </div>
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Fiş No</th>
+                            <th>Saat</th>
+                            <th class="text-end">Satır</th>
+                            <th class="text-end">Tutar</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="bekleyenler-govde"></tbody>
+                </table>
+                <p id="bekleyen-yok" class="text-center text-muted py-4 mb-0 d-none">
+                    Askıda bekleyen fiş yok.
+                </p>
+            </div>
         </div>
     </div>
 </div>
@@ -168,8 +212,10 @@
                         </div>
 
                         <div id="odeme-tamam" class="alert alert-success mt-3 mb-0 py-2 d-none">
-                            Ödeme tamamlandı, fiş kapandı.
+                            Ödeme tamamlandı, fiş kapandı ve stok düşüldü.
                         </div>
+
+                        <div id="stok-uyari" class="alert alert-warning mt-3 mb-0 py-2 small d-none"></div>
                     </div>
 
                     <div class="col-md-7">
@@ -211,6 +257,9 @@
                 <button type="button" id="btn-odeme-vazgec" class="btn btn-outline-secondary">
                     Vazgeç ve sepete dön
                 </button>
+                <a id="btn-fis-yazdir" class="btn btn-outline-secondary d-none" target="_blank" href="#">
+                    <i class="bi bi-printer"></i> Fişi Yazdır
+                </a>
                 <button type="button" id="btn-odeme-kapat" class="btn btn-success d-none">Yeni Fiş</button>
             </div>
         </div>
@@ -220,4 +269,5 @@
 @section Scripts {
     <script src="~/js/kasa.js" asp-append-version="true"></script>
     <script src="~/js/odeme.js" asp-append-version="true"></script>
+    <script src="~/js/askiya-alma.js" asp-append-version="true"></script>
 }

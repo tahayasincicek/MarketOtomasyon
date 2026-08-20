@@ -18,12 +18,21 @@ public class OdemeService
     private readonly IDbConnectionFactory _factory;
     private readonly FisRepository _fisRepository;
     private readonly OdemeRepository _odemeRepository;
+    private readonly SatisService _satisService;
+    private readonly StokRepository _stokRepository;
 
-    public OdemeService(IDbConnectionFactory factory, FisRepository fisRepository, OdemeRepository odemeRepository)
+    public OdemeService(
+        IDbConnectionFactory factory,
+        FisRepository fisRepository,
+        OdemeRepository odemeRepository,
+        SatisService satisService,
+        StokRepository stokRepository)
     {
         _factory = factory;
         _fisRepository = fisRepository;
         _odemeRepository = odemeRepository;
+        _satisService = satisService;
+        _stokRepository = stokRepository;
     }
 
     /// <summary>Vardiyadaki acik fisin odeme durumu; acik fis yoksa bos doner.</summary>
@@ -91,8 +100,25 @@ public class OdemeService
         var yeniOdenen = await _odemeRepository.OdenenToplamAsync(conn, tx, fis.Id, ct);
         var yeniKalan = OdemeHesaplayici.KalanHesapla(fis.GenelToplam, yeniOdenen);
 
+        // Borc kapandiysa satis ayni transaction icinde tamamlanir: stok
+        // hareketleri ve fis durumu bu son odemeyle birlikte gecer. Stok
+        // kontrolu takilirsa odeme de geri alinir.
         if (yeniKalan <= 0)
-            await _fisRepository.DurumGuncelleAsync(conn, tx, fis.Id, DurumTamamlandi, ct);
+        {
+            var satisSonuc = await _satisService.TamamlaAsync(conn, tx, fis, ct);
+            if (!satisSonuc.Basarili)
+            {
+                tx.Rollback();
+                return (await DurumAsync(fis, ct), satisSonuc.Hata);
+            }
+
+            tx.Commit();
+
+            var kapananFis = await _fisRepository.GetirAsync(fis.Id, ct);
+            var durum = await DurumAsync(kapananFis!, ct);
+            durum.Uyarilar = satisSonuc.Uyarilar;
+            return (durum, null);
+        }
 
         tx.Commit();
 
@@ -120,6 +146,11 @@ public class OdemeService
             return (await DurumAsync(fis, ct), "Odeme bulunamadi.");
         }
 
+        // Fis kapanmissa satis geri aliniyor demektir: dusurulen stok da
+        // geri verilir, yoksa iptal edilen satisin urunleri stokta eksik kalir.
+        if (fis.Durum == DurumTamamlandi)
+            await _stokRepository.SatisHareketleriniSilAsync(conn, tx, fisId, ct);
+
         await _fisRepository.DurumGuncelleAsync(conn, tx, fisId, DurumBeklemede, ct);
         tx.Commit();
 
@@ -140,6 +171,10 @@ public class OdemeService
         using var tx = conn.BeginTransaction();
 
         await _odemeRepository.TumunuSilAsync(conn, tx, fisId, ct);
+
+        if (fis.Durum == DurumTamamlandi)
+            await _stokRepository.SatisHareketleriniSilAsync(conn, tx, fisId, ct);
+
         await _fisRepository.DurumGuncelleAsync(conn, tx, fisId, DurumBeklemede, ct);
         tx.Commit();
 
