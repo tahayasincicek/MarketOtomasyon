@@ -1,0 +1,199 @@
+@model MarketOtomasyon.Models.ViewModels.FisYazdirVm
+@{
+    Layout = null;
+    var tr = new System.Globalization.CultureInfo("tr-TR");
+    string Para(decimal d) => d.ToString("N2", tr);
+}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <title>Fiş @Model.Fis.FisNo</title>
+    <style>
+        /* 80 mm termal yazici genisligi. Ekranda da ayni genislikte
+           gosterilir ki kasiyer ciktinin nasil gelecegini gorsun. */
+        :root { --fis-genislik: 80mm; }
+
+        body {
+            margin: 0;
+            padding: 1rem;
+            background: #e5e7eb;
+            font-family: "Consolas", "Courier New", monospace;
+            font-size: 12px;
+            color: #000;
+        }
+
+        .fis {
+            width: var(--fis-genislik);
+            margin: 0 auto;
+            background: #fff;
+            padding: 6mm 4mm;
+            box-shadow: 0 .25rem 1rem rgba(0,0,0,.15);
+        }
+
+        .orta { text-align: center; }
+        .sag { text-align: right; }
+        .kalin { font-weight: 700; }
+        .buyuk { font-size: 15px; }
+
+        .baslik { font-size: 14px; font-weight: 700; letter-spacing: .05em; }
+        .kucuk { font-size: 11px; }
+
+        hr {
+            border: none;
+            border-top: 1px dashed #000;
+            margin: 4px 0;
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+        td { padding: 1px 0; vertical-align: top; }
+
+        .satir-ad { }
+        .satir-detay { padding-left: 4px; }
+
+        .toplam-satiri td { padding-top: 2px; }
+
+        .yazdir-cubugu {
+            width: var(--fis-genislik);
+            margin: 0 auto .75rem;
+            display: flex;
+            gap: .5rem;
+        }
+
+        .yazdir-cubugu button, .yazdir-cubugu a {
+            flex: 1;
+            padding: .5rem;
+            font-family: system-ui, sans-serif;
+            font-size: 13px;
+            border: 1px solid #9ca3af;
+            border-radius: .25rem;
+            background: #fff;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            color: #111;
+        }
+
+        /* Yazdirirken ekrana ait her sey gizlenir; kagida yalnizca fis gider. */
+        @@media print {
+            body { background: #fff; padding: 0; }
+            .fis { box-shadow: none; width: auto; padding: 0; }
+            .yazdir-cubugu { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="yazdir-cubugu">
+        <button type="button" onclick="window.print()">Yazdır</button>
+        <a href="/Kasa">Kasaya dön</a>
+    </div>
+
+    <div class="fis">
+        <div class="orta baslik">MARKET OTOMASYONU</div>
+        <div class="orta kucuk">Örnek Mah. Test Cad. No:1</div>
+        <div class="orta kucuk">Tel: 0212 000 00 00</div>
+        <hr />
+
+        <table class="kucuk">
+            <tr>
+                <td>Fiş No</td>
+                <td class="sag kalin">@Model.Fis.FisNo</td>
+            </tr>
+            <tr>
+                <td>Tarih</td>
+                <td class="sag">@Model.Fis.Tarih.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+            </tr>
+            <tr>
+                <td>Kasiyer</td>
+                <td class="sag">@Model.KasiyerAdi</td>
+            </tr>
+        </table>
+
+        <hr />
+
+        <table>
+            @foreach (var s in Model.Satirlar)
+            {
+                <tr>
+                    <td colspan="2" class="satir-ad">@s.Ad</td>
+                </tr>
+                <tr>
+                    <td class="satir-detay kucuk">
+                        @s.Miktar.ToString("0.###", tr) @s.Birim x @Para(s.BirimFiyat)
+                        <span class="kucuk">(%@s.KdvOrani.ToString("0.##", tr))</span>
+                    </td>
+                    <td class="sag">@Para(s.SatirToplam)</td>
+                </tr>
+                @if (s.IndirimTutari > 0)
+                {
+                    <tr>
+                        <td class="satir-detay kucuk">İndirim</td>
+                        <td class="sag kucuk">-@Para(s.IndirimTutari)</td>
+                    </tr>
+                }
+            }
+        </table>
+
+        <hr />
+
+        <table>
+            @if (Model.Fis.ToplamIndirim > 0)
+            {
+                <tr>
+                    <td>TOPLAM İNDİRİM</td>
+                    <td class="sag">-@Para(Model.Fis.ToplamIndirim)</td>
+                </tr>
+            }
+            <tr>
+                <td>ARA TOPLAM</td>
+                <td class="sag">@Para(Model.Fis.AraToplam)</td>
+            </tr>
+            @foreach (var k in Model.KdvKirilimi)
+            {
+                <tr class="kucuk">
+                    <td>KDV %@k.Oran.ToString("0.##", tr) (matrah @Para(k.Matrah))</td>
+                    <td class="sag">@Para(k.KdvTutari)</td>
+                </tr>
+            }
+            <tr>
+                <td>TOPLAM KDV</td>
+                <td class="sag">@Para(Model.Fis.ToplamKdv)</td>
+            </tr>
+            <tr class="toplam-satiri kalin buyuk">
+                <td>TOPLAM</td>
+                <td class="sag">@Para(Model.Fis.GenelToplam)</td>
+            </tr>
+        </table>
+
+        <hr />
+
+        <table class="kucuk">
+            @foreach (var o in Model.Odemeler)
+            {
+                <tr>
+                    <td>@o.TipAdi</td>
+                    <td class="sag">@Para(o.Tutar)</td>
+                </tr>
+                @if (o.AlinanTutar is not null)
+                {
+                    <tr>
+                        <td class="satir-detay">Alınan</td>
+                        <td class="sag">@Para(o.AlinanTutar.Value)</td>
+                    </tr>
+                }
+            }
+            @if (Model.ToplamParaUstu > 0)
+            {
+                <tr class="kalin">
+                    <td>PARA ÜSTÜ</td>
+                    <td class="sag">@Para(Model.ToplamParaUstu)</td>
+                </tr>
+            }
+        </table>
+
+        <hr />
+        <div class="orta kalin">@Model.DurumAdi</div>
+        <div class="orta kucuk">Bizi tercih ettiğiniz için teşekkürler</div>
+    </div>
+</body>
+</html>

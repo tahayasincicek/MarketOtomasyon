@@ -34,6 +34,10 @@ builder.Services.AddScoped<BarkodService>();
 builder.Services.AddScoped<StokService>();
 builder.Services.AddScoped<SepetService>();
 builder.Services.AddScoped<OdemeService>();
+builder.Services.AddScoped<SatisService>();
+
+// Isletmeye gore degisen satis kurallari
+builder.Services.Configure<SatisAyarlari>(builder.Configuration.GetSection("Satis"));
 
 // Dogrulayicilar (controller icinde elle cagriliyor)
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();

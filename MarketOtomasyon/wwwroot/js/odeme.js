@@ -64,6 +64,18 @@
         document.getElementById("btn-odeme-kapat").classList.toggle("d-none", !durum.tamamlandi);
         document.getElementById("btn-odeme-vazgec").classList.toggle("d-none", durum.tamamlandi);
 
+        const yazdir = document.getElementById("btn-fis-yazdir");
+        yazdir.classList.toggle("d-none", !durum.tamamlandi);
+        if (durum.tamamlandi) yazdir.href = "/Satis/Fis/" + durum.fisId;
+
+        // Stok bakiyesini asan satirlar varsa satis gecti ama kasiyer bilsin.
+        const stokUyari = document.getElementById("stok-uyari");
+        const uyarilar = durum.uyarilar || [];
+        stokUyari.classList.toggle("d-none", uyarilar.length === 0);
+        stokUyari.textContent = uyarilar.length
+            ? "Stok uyarısı — " + uyarilar.join(" · ")
+            : "";
+
         odemeleriCiz(durum);
 
         if (!durum.tamamlandi) {
@@ -142,7 +154,10 @@
         if (hata) uyariGoster(hata); else uyariGizle();
         ciz(durum);
 
-        if (durum.tamamlandi) window.kasa.sepetiYenile();
+        if (durum.tamamlandi) {
+            window.kasa.sepetiYenile();
+            window.bekleyenler.rozetiGuncelle();
+        }
     }
 
     async function vazgec() {

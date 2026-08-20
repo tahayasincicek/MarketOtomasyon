@@ -26,12 +26,23 @@ INSERT INTO Fis (FisNo, VardiyaId, KullaniciId, Durum)
 OUTPUT INSERTED.Id, INSERTED.FisNo
 VALUES (@fisNo, @vardiyaId, @kullaniciId, 1);";
 
+    // Askida olmayan beklemedeki fis = kasada acik olan sepet.
     private const string SqlAcikFis = @"
 SELECT TOP 1 Id, FisNo, VardiyaId, KullaniciId, MusteriId, Tarih,
        AraToplam, ToplamIndirim, ToplamKdv, GenelToplam, Durum
 FROM Fis
-WHERE VardiyaId = @vardiyaId AND Durum = 1
+WHERE VardiyaId = @vardiyaId AND Durum = 1 AND Askida = 0
 ORDER BY Id DESC;";
+
+    private const string SqlBekleyenler = @"
+SELECT f.Id AS FisId, f.FisNo, f.Tarih, f.GenelToplam,
+       (SELECT COUNT(*) FROM FisSatir WHERE FisId = f.Id) AS SatirSayisi
+FROM Fis f
+WHERE f.VardiyaId = @vardiyaId AND f.Durum = 1 AND f.Askida = 1
+ORDER BY f.Id DESC;";
+
+    private const string SqlAskidaGuncelle = @"
+UPDATE Fis SET Askida = @askida WHERE Id = @fisId AND Durum = 1;";
 
     private const string SqlSatirlar = @"
 SELECT fs.Id AS SatirId, fs.SatirNo, fs.UrunId, u.Kod, u.Ad, u.Birim,
@@ -172,6 +183,19 @@ WHERE Id = @fisId AND Durum = 1;";
         return await conn.QuerySingleOrDefaultAsync<Fis>(
             new CommandDefinition(SqlFisGetir, new { fisId }, cancellationToken: ct));
     }
+
+    public async Task<List<BekleyenFisVm>> BekleyenleriGetirAsync(int vardiyaId, CancellationToken ct = default)
+    {
+        using var conn = await _factory.CreateOpenConnectionAsync(ct);
+        var liste = await conn.QueryAsync<BekleyenFisVm>(
+            new CommandDefinition(SqlBekleyenler, new { vardiyaId }, cancellationToken: ct));
+        return liste.AsList();
+    }
+
+    public async Task<int> AskidaGuncelleAsync(
+        IDbConnection conn, IDbTransaction tx, int fisId, bool askida, CancellationToken ct = default)
+        => await conn.ExecuteAsync(new CommandDefinition(
+            SqlAskidaGuncelle, new { fisId, askida }, tx, cancellationToken: ct));
 
     public async Task IptalEtAsync(IDbConnection conn, IDbTransaction tx, int fisId, CancellationToken ct = default)
         => await conn.ExecuteAsync(new CommandDefinition(SqlFisIptal, new { fisId }, tx, cancellationToken: ct));
