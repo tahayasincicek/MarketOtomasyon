@@ -14,6 +14,12 @@ public class SepetSatirVm
     public decimal Miktar { get; set; }
     public decimal BirimFiyat { get; set; }
     public decimal IndirimTutari { get; set; }
+
+    /// <summary>Indirim bir kampanyadan geldiyse dolu; elle indirimde bos.</summary>
+    public int? KampanyaId { get; set; }
+
+    /// <summary>Kasada satirin altinda gosterilecek kampanya adi.</summary>
+    public string? KampanyaAdi { get; set; }
     public decimal KdvOrani { get; set; }
 
     /// <summary>KDV haric satir tutari (matrah): miktar x birim fiyat - indirim.</summary>

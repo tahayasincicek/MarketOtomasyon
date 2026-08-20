@@ -15,12 +15,18 @@ public class SepetService
     private readonly IDbConnectionFactory _factory;
     private readonly FisRepository _fisRepository;
     private readonly BarkodService _barkodService;
+    private readonly KampanyaService _kampanyaService;
 
-    public SepetService(IDbConnectionFactory factory, FisRepository fisRepository, BarkodService barkodService)
+    public SepetService(
+        IDbConnectionFactory factory,
+        FisRepository fisRepository,
+        BarkodService barkodService,
+        KampanyaService kampanyaService)
     {
         _factory = factory;
         _fisRepository = fisRepository;
         _barkodService = barkodService;
+        _kampanyaService = kampanyaService;
     }
 
     /// <summary>Vardiyadaki acik sepeti getirir; yoksa bos sepet doner.</summary>
@@ -224,12 +230,18 @@ public class SepetService
     }
 
     /// <summary>
-    /// Fis basligindaki toplamlari satirlardan yeniden hesaplayip yazar.
+    /// Once kampanyalari uygular, sonra fis basligindaki toplamlari yeniden yazar.
+    ///
+    /// Kampanyalar her sepet degisikliginde bastan hesaplanir: bir satirin
+    /// eklenmesi baska bir satirin kampanyasini degistirebilir (orn. tutar
+    /// baraji asilinca sepete indirim gelir, satir silinince kalkar).
     /// Toplamlar fiste de saklanir; raporlar her seferinde satirlari toplamasin.
     /// </summary>
     private async Task ToplamlariYazAsync(
         System.Data.IDbConnection conn, System.Data.IDbTransaction tx, int fisId, CancellationToken ct)
     {
+        await _kampanyaService.UygulaAsync(conn, tx, fisId, ct);
+
         var satirlar = await _fisRepository.SatirlariGetirAsync(conn, tx, fisId, ct);
         var sepet = SepetHesaplayici.Topla(satirlar);
 

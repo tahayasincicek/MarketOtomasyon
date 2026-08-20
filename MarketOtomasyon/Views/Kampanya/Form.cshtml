@@ -1,0 +1,206 @@
+@model MarketOtomasyon.Models.ViewModels.KampanyaFormVm
+@using MarketOtomasyon.Models.ViewModels
+@{
+    var yeniKayit = Model.Id == 0;
+    ViewData["Title"] = yeniKayit ? "Yeni Kampanya" : "Kampanya Düzenle";
+}
+
+<div class="d-flex justify-content-end align-items-center mb-3">
+    <a class="btn btn-link" asp-action="Index"><i class="bi bi-arrow-left"></i> Listeye dön</a>
+</div>
+
+<form method="post" asp-action="@(yeniKayit ? "Ekle" : "Duzenle")" class="row g-3" style="max-width: 900px;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+
+    <div asp-validation-summary="All" class="alert alert-danger @(ViewData.ModelState.IsValid ? "d-none" : "")"></div>
+
+    <div class="col-md-3">
+        <label class="form-label" asp-for="Kod">Kod</label>
+        <input class="form-control" asp-for="Kod" />
+        <span class="text-danger small" asp-validation-for="Kod"></span>
+    </div>
+
+    <div class="col-md-9">
+        <label class="form-label" asp-for="Ad">Kampanya adı</label>
+        <input class="form-control" asp-for="Ad" placeholder="Kasa ekranında ve fişte bu ad görünür" />
+        <span class="text-danger small" asp-validation-for="Ad"></span>
+    </div>
+
+    <!-- Kampanya tipi: seçime göre alttaki alanlar değişir -->
+    <div class="col-12">
+        <label class="form-label">Kampanya tipi</label>
+        <div class="btn-group w-100" role="group">
+            <input type="radio" class="btn-check" name="KampanyaTipi" id="tip-yuzde"
+                   value="@KampanyaFormVm.TipYuzdeIndirim" checked="@(Model.KampanyaTipi == KampanyaFormVm.TipYuzdeIndirim)" />
+            <label class="btn btn-outline-primary" for="tip-yuzde">Yüzde indirim</label>
+
+            <input type="radio" class="btn-check" name="KampanyaTipi" id="tip-tutar"
+                   value="@KampanyaFormVm.TipTutarIndirimi" checked="@(Model.KampanyaTipi == KampanyaFormVm.TipTutarIndirimi)" />
+            <label class="btn btn-outline-primary" for="tip-tutar">Tutar indirimi</label>
+
+            <input type="radio" class="btn-check" name="KampanyaTipi" id="tip-nalm"
+                   value="@KampanyaFormVm.TipNAlMOde" checked="@(Model.KampanyaTipi == KampanyaFormVm.TipNAlMOde)" />
+            <label class="btn btn-outline-primary" for="tip-nalm">N al M öde</label>
+
+            <input type="radio" class="btn-check" name="KampanyaTipi" id="tip-baraj"
+                   value="@KampanyaFormVm.TipTutarBaraji" checked="@(Model.KampanyaTipi == KampanyaFormVm.TipTutarBaraji)" />
+            <label class="btn btn-outline-primary" for="tip-baraj">Tutar barajı</label>
+        </div>
+    </div>
+
+    <!-- Kapsam: tutar barajı dışındaki tiplerde görünür -->
+    <div class="col-12 kapsam-alani">
+        <div class="card">
+            <div class="card-body py-3">
+                <label class="form-label">Hangi ürünlere uygulanacak?</label>
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-3">
+                        <select class="form-select" asp-for="Kapsam" id="kapsam-secim">
+                            <option value="@KampanyaFormVm.KapsamUrun">Tek ürün</option>
+                            <option value="@KampanyaFormVm.KapsamKategori">Kategori</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 kapsam-urun">
+                        <select class="form-select" asp-for="UrunId">
+                            <option value="">(ürün seçiniz)</option>
+                            @foreach (var u in Model.Urunler)
+                            {
+                                <option value="@u.Id" selected="@(Model.UrunId == u.Id)">@u.Kod — @u.Ad</option>
+                            }
+                        </select>
+                        <span class="text-danger small" asp-validation-for="UrunId"></span>
+                    </div>
+
+                    <div class="col-md-6 kapsam-kategori">
+                        <select class="form-select" asp-for="KategoriId">
+                            <option value="">(kategori seçiniz)</option>
+                            @foreach (var k in Model.Kategoriler)
+                            {
+                                <option value="@k.Id" selected="@(Model.KategoriId == k.Id)">@k.Ad</option>
+                            }
+                        </select>
+                        <span class="text-danger small" asp-validation-for="KategoriId"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tipe özel alanlar -->
+    <div class="col-md-4 alan-yuzde">
+        <label class="form-label" asp-for="Yuzde">İndirim oranı (%)</label>
+        <input class="form-control" asp-for="Yuzde" type="number" step="0.01" min="0" max="100" />
+        <span class="text-danger small" asp-validation-for="Yuzde"></span>
+    </div>
+
+    <div class="col-md-4 alan-tutar">
+        <label class="form-label" asp-for="Tutar">İndirim tutarı (TL)</label>
+        <input class="form-control" asp-for="Tutar" type="number" step="0.01" min="0" />
+        <span class="text-danger small" asp-validation-for="Tutar"></span>
+    </div>
+
+    <div class="col-md-4 alan-nalm">
+        <label class="form-label" asp-for="AlinacakMiktar">Alınacak (N)</label>
+        <input class="form-control" asp-for="AlinacakMiktar" type="number" step="1" min="2" />
+        <span class="text-danger small" asp-validation-for="AlinacakMiktar"></span>
+    </div>
+
+    <div class="col-md-4 alan-nalm">
+        <label class="form-label" asp-for="OdenecekMiktar">Ödenecek (M)</label>
+        <input class="form-control" asp-for="OdenecekMiktar" type="number" step="1" min="1" />
+        <span class="text-danger small" asp-validation-for="OdenecekMiktar"></span>
+        <div class="form-text">3 al 2 öde için N=3, M=2</div>
+    </div>
+
+    <div class="col-md-4 alan-baraj">
+        <label class="form-label" asp-for="MinSepetTutari">Baraj tutarı (TL)</label>
+        <input class="form-control" asp-for="MinSepetTutari" type="number" step="0.01" min="0" />
+        <span class="text-danger small" asp-validation-for="MinSepetTutari"></span>
+        <div class="form-text">Sepet bu tutarı geçince indirim uygulanır</div>
+    </div>
+
+    <!-- Geçerlilik ve öncelik -->
+    <div class="col-12"><hr class="my-1" /></div>
+
+    <div class="col-md-3">
+        <label class="form-label" asp-for="BaslangicTarihi">Başlangıç</label>
+        <input class="form-control" asp-for="BaslangicTarihi" type="date" />
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label" asp-for="BitisTarihi">Bitiş</label>
+        <input class="form-control" asp-for="BitisTarihi" type="date" />
+        <div class="form-text">Boş bırakılırsa süresiz</div>
+        <span class="text-danger small" asp-validation-for="BitisTarihi"></span>
+    </div>
+
+    <div class="col-md-2">
+        <label class="form-label" asp-for="Oncelik">Öncelik</label>
+        <input class="form-control" asp-for="Oncelik" type="number" step="1" />
+        <div class="form-text">Küçük olan önce</div>
+    </div>
+
+    <div class="col-md-4 d-flex align-items-center gap-4 pt-4">
+        <div class="form-check">
+            <input class="form-check-input" asp-for="Aktif" />
+            <label class="form-check-label" asp-for="Aktif">Aktif</label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" asp-for="DigerleriyleBirlesir" />
+            <label class="form-check-label" asp-for="DigerleriyleBirlesir">Diğerleriyle birleşir</label>
+        </div>
+    </div>
+
+    <div class="col-12">
+        <div class="form-text mb-2">
+            "Diğerleriyle birleşir" işaretlenirse, bu kampanyanın uygulandığı satıra sepet barajı
+            indirimi de eklenebilir. İşaretlenmezse o satır yalnızca bu kampanyayı alır.
+        </div>
+        <button type="submit" class="btn btn-primary">Kaydet</button>
+        <a class="btn btn-link" asp-action="Index">Vazgeç</a>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        // Kampanya tipine gore ilgisiz alanlar gizlenir; kullanici yalnizca
+        // secilen tip icin anlamli olan alanlari gorur.
+        (function () {
+            "use strict";
+
+            const TIP_YUZDE = "@KampanyaFormVm.TipYuzdeIndirim";
+            const TIP_TUTAR = "@KampanyaFormVm.TipTutarIndirimi";
+            const TIP_NALM = "@KampanyaFormVm.TipNAlMOde";
+            const TIP_BARAJ = "@KampanyaFormVm.TipTutarBaraji";
+
+            function goster(secici, gorunur) {
+                document.querySelectorAll(secici).forEach(e => e.classList.toggle("d-none", !gorunur));
+            }
+
+            function tipDegisti() {
+                const tip = document.querySelector('input[name="KampanyaTipi"]:checked').value;
+
+                goster(".kapsam-alani", tip !== TIP_BARAJ);
+                goster(".alan-yuzde", tip === TIP_YUZDE || tip === TIP_BARAJ);
+                goster(".alan-tutar", tip === TIP_TUTAR);
+                goster(".alan-nalm", tip === TIP_NALM);
+                goster(".alan-baraj", tip === TIP_BARAJ);
+            }
+
+            function kapsamDegisti() {
+                const kapsam = document.getElementById("kapsam-secim").value;
+                goster(".kapsam-urun", kapsam === "@KampanyaFormVm.KapsamUrun");
+                goster(".kapsam-kategori", kapsam === "@KampanyaFormVm.KapsamKategori");
+            }
+
+            document.querySelectorAll('input[name="KampanyaTipi"]')
+                .forEach(g => g.addEventListener("change", tipDegisti));
+            document.getElementById("kapsam-secim").addEventListener("change", kapsamDegisti);
+
+            tipDegisti();
+            kapsamDegisti();
+        })();
+    </script>
+}
