@@ -4,8 +4,6 @@
     ViewData["Title"] = yeniKayit ? "Yeni Ürün" : "Ürün Düzenle";
 }
 
-<h1 class="h3 mb-3">@ViewData["Title"]</h1>
-
 <form method="post" asp-action="@(yeniKayit ? "Ekle" : "Duzenle")" class="row g-3" style="max-width: 720px;">
     @Html.AntiForgeryToken()
     <input type="hidden" asp-for="Id" />

@@ -1,22 +1,203 @@
 html {
-  font-size: 14px;
+    font-size: 14px;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+    html {
+        font-size: 16px;
+    }
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
-html {
-  position: relative;
-  min-height: 100%;
+html, body {
+    height: 100%;
+    margin: 0;
 }
 
-body {
-  margin-bottom: 60px;
+/* =========================================================
+   Sol menulu yerlesim
+   Menu sabit kalir, yalnizca icerik kayar; kasiyer sayfayi
+   kaydirdiginda menu gozden kaybolmasin.
+   ========================================================= */
+
+:root {
+    --menu-genislik: 15rem;
+    --menu-zemin: #1f2937;
+    --menu-zemin-koyu: #161f2b;
+    --menu-metin: #cbd5e1;
+    --menu-metin-acik: #f8fafc;
+    --menu-vurgu: #2563eb;
+}
+
+.yerlesim {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ---------- Sol menu ---------- */
+
+.yan-menu {
+    width: var(--menu-genislik);
+    flex-shrink: 0;
+    background: var(--menu-zemin);
+    color: var(--menu-metin);
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+}
+
+.marka {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: 1rem 1.1rem;
+    color: var(--menu-metin-acik);
+    text-decoration: none;
+    background: var(--menu-zemin-koyu);
+}
+
+.marka-kisa {
+    display: inline-grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: .4rem;
+    background: var(--menu-vurgu);
+    font-weight: 700;
+    font-size: .85rem;
+    flex-shrink: 0;
+}
+
+.marka-ad {
+    font-weight: 600;
+    font-size: .95rem;
+    line-height: 1.15;
+}
+
+.menu {
+    padding: .75rem 0;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.menu-baslik {
+    padding: .75rem 1.1rem .35rem;
+    font-size: .68rem;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: #7c8ba1;
+}
+
+.menu-oge {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    padding: .55rem 1.1rem;
+    color: var(--menu-metin);
+    text-decoration: none;
+    border-left: 3px solid transparent;
+    font-size: .95rem;
+}
+
+.menu-oge:hover {
+    background: rgba(255, 255, 255, .06);
+    color: var(--menu-metin-acik);
+}
+
+.menu-oge.aktif {
+    background: rgba(37, 99, 235, .18);
+    border-left-color: var(--menu-vurgu);
+    color: var(--menu-metin-acik);
+    font-weight: 600;
+}
+
+.menu-ikon {
+    width: 1.25rem;
+    text-align: center;
+    font-size: 1rem;
+}
+
+.menu-alt {
+    border-top: 1px solid rgba(255, 255, 255, .08);
+    padding: .8rem 1.1rem;
+}
+
+.menu-kullanici-ad {
+    color: var(--menu-metin-acik);
+    font-size: .9rem;
+    font-weight: 600;
+}
+
+.menu-kullanici-rol {
+    font-size: .78rem;
+    color: #7c8ba1;
+    font-family: monospace;
+}
+
+/* ---------- Icerik ---------- */
+
+.icerik {
+    flex: 1;
+    min-width: 0;          /* genis tablolar tasmasin */
+    display: flex;
+    flex-direction: column;
+    background: #f6f7f9;
+}
+
+.ust-serit {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .6rem 1.25rem;
+    background: #fff;
+    border-bottom: 1px solid #e3e6ea;
+}
+
+.sayfa-basligi {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+.menu-dugmesi {
+    display: none;
+    background: none;
+    border: 1px solid #d7dbe0;
+    border-radius: .35rem;
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: .3rem .55rem;
+    cursor: pointer;
+}
+
+.sayfa {
+    padding: 1.25rem;
+    flex: 1;
+}
+
+/* ---------- Dar ekran: menu gizlenir, dugmeyle acilir ---------- */
+
+@media (max-width: 991.98px) {
+    .yan-menu {
+        position: fixed;
+        left: 0;
+        top: 0;
+        z-index: 1045;
+        transform: translateX(-100%);
+        transition: transform .2s ease;
+        box-shadow: 0 0 2rem rgba(0, 0, 0, .35);
+    }
+
+    .yan-menu.acik {
+        transform: translateX(0);
+    }
+
+    .menu-dugmesi {
+        display: inline-block;
+    }
 }
