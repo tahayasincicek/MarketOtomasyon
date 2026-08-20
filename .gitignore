@@ -484,3 +484,6 @@ $RECYCLE.BIN/
 # Yerel ayarlar
 appsettings.Development.json
 *.user
+
+# Staj defteri dosyalari repoya girmez
+staj-defteri*.md
