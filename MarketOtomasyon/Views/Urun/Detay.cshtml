@@ -20,8 +20,8 @@
         </div>
     </div>
     <div>
-        <a class="btn btn-outline-primary" asp-action="Duzenle" asp-route-id="@Model.Urun.Id">Düzenle</a>
-        <a class="btn btn-link" asp-action="Index">Listeye dön</a>
+        <a class="btn btn-outline-primary" asp-action="Duzenle" asp-route-id="@Model.Urun.Id"><i class="bi bi-pencil"></i> Düzenle</a>
+        <a class="btn btn-link" asp-action="Index"><i class="bi bi-arrow-left"></i> Listeye dön</a>
     </div>
 </div>
 
@@ -69,7 +69,7 @@
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@b.Id" />
                                         <input type="hidden" name="urunId" value="@Model.Urun.Id" />
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">Sil</button>
+                                        <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
                                     </form>
                                 </td>
                             </tr>

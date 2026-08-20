@@ -96,7 +96,7 @@
         const dugme = document.createElement("button");
         dugme.type = "button";
         dugme.className = "btn btn-sm btn-outline-danger";
-        dugme.textContent = "×";
+        dugme.innerHTML = '<i class="bi bi-x-lg"></i>';
         dugme.title = "Bu ödemeyi iptal et";
         dugme.addEventListener("click", async function () {
             const { durum, hata } = await gonder("/Odeme/Iptal", { fisId: sonDurum.fisId, odemeId: odemeId });
