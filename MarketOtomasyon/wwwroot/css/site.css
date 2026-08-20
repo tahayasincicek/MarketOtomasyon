@@ -1,5 +1,57 @@
+/* =========================================================
+   Yazi tipi: Inter
+   Perakende/kasa arayuzlerinde yaygin kullanilan yazi ailesi -
+   yuksek okunabilirlik, dar ekranlarda bile net rakam ayrimi.
+   CDN'e degil projeye gomulu: kasa terminali internetsiz de
+   dogru fontla acilsin (Bootstrap Icons ile ayni gerekce).
+   ========================================================= */
+@font-face {
+    font-family: "Inter";
+    src: url("/fonts/inter-regular.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Inter";
+    src: url("/fonts/inter-500.woff2") format("woff2");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Inter";
+    src: url("/fonts/inter-600.woff2") format("woff2");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Inter";
+    src: url("/fonts/inter-700.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
 html {
     font-size: 14px;
+    font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+body {
+    /* Font-face yuklenene kadar da metin okunabilir kalsin. */
+    font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+/* Tutar ve miktar gosterilen her yerde rakamlar sabit genislikte
+   dizilir; 1 ile 8 ayni yeri kaplamazsa fiyat sutunlari kayar. */
+.tutar, td.text-end, .fs-4, .fw-bold, #genel-toplam, #odeme-kalan,
+table.table td.text-end, .font-monospace {
+    font-variant-numeric: tabular-nums;
 }
 
 @media (min-width: 768px) {
