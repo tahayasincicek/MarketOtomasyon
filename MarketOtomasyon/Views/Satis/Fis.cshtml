@@ -62,7 +62,7 @@
 
         .yazdir-cubugu button, .yazdir-cubugu a {
             flex: 1;
-            padding: .5rem;
+            padding: .55rem;
             font-family: system-ui, sans-serif;
             font-size: 13px;
             border: 1px solid #9ca3af;
@@ -72,6 +72,14 @@
             text-align: center;
             text-decoration: none;
             color: #111;
+        }
+
+        /* Kasaya donus tek cikis yolu; vurgulu gosterilir. */
+        .yazdir-cubugu .geri {
+            background: #27272a;
+            border-color: #27272a;
+            color: #fff;
+            font-weight: 600;
         }
 
         /* Yazdirirken ekrana ait her sey gizlenir; kagida yalnizca fis gider. */
@@ -85,7 +93,7 @@
 <body>
     <div class="yazdir-cubugu">
         <button type="button" onclick="window.print()">Yazdır</button>
-        <a href="/Kasa">Kasaya dön</a>
+        <a class="geri" href="/Kasa">Kasaya dön</a>
     </div>
 
     <div class="fis">
