@@ -120,7 +120,7 @@
         const dugme = document.createElement("button");
         dugme.type = "button";
         dugme.className = "btn btn-sm btn-outline-danger";
-        dugme.textContent = "×";
+        dugme.innerHTML = '<i class="bi bi-trash"></i>';
         dugme.title = "Satırı sil";
         dugme.addEventListener("click", async function (e) {
             e.stopPropagation();

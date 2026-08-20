@@ -119,12 +119,24 @@ html, body {
 .menu-ikon {
     width: 1.25rem;
     text-align: center;
-    font-size: 1.15rem;
+    font-size: 1.05rem;
+    line-height: 1;
 }
 
 .menu-alt {
     border-top: 1px solid rgba(255, 255, 255, .08);
     padding: .8rem 1.1rem;
+}
+
+.menu-kullanici {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+}
+
+.menu-kullanici-ikon {
+    font-size: 1.6rem;
+    color: #7c8ba1;
 }
 
 .menu-kullanici-ad {

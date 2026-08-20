@@ -10,6 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - MarketOtomasyon</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/MarketOtomasyon.styles.css" asp-append-version="true" />
 </head>
@@ -24,29 +25,32 @@
             <nav class="menu">
                 <div class="menu-baslik">Satış</div>
                 <a class="menu-oge @Aktif("Kasa")" asp-controller="Kasa" asp-action="Index">
-                    <span class="menu-ikon">🧾</span> Kasa
+                    <i class="menu-ikon bi bi-cash-stack"></i> Kasa
                 </a>
 
                 <div class="menu-baslik">Yönetim</div>
                 <a class="menu-oge @Aktif("Urun")" asp-controller="Urun" asp-action="Index">
-                    <span class="menu-ikon">📦</span> Ürünler
+                    <i class="menu-ikon bi bi-box-seam"></i> Ürünler
                 </a>
                 <a class="menu-oge @Aktif("Stok")" asp-controller="Stok" asp-action="Index">
-                    <span class="menu-ikon">🏷️</span> Stok
+                    <i class="menu-ikon bi bi-clipboard-data"></i> Stok
                 </a>
             </nav>
 
             <div class="menu-alt">
                 <div class="menu-kullanici">
-                    <div class="menu-kullanici-ad">Test Kasiyer</div>
-                    <div class="menu-kullanici-rol">kasiyer1</div>
+                    <i class="bi bi-person-circle menu-kullanici-ikon"></i>
+                    <div>
+                        <div class="menu-kullanici-ad">Test Kasiyer</div>
+                        <div class="menu-kullanici-rol">kasiyer1</div>
+                    </div>
                 </div>
             </div>
         </aside>
 
         <div class="icerik">
             <header class="ust-serit">
-                <button type="button" class="menu-dugmesi" id="menu-dugmesi" aria-label="Menüyü aç/kapat">☰</button>
+                <button type="button" class="menu-dugmesi" id="menu-dugmesi" aria-label="Menüyü aç/kapat"><i class="bi bi-list"></i></button>
                 <span class="sayfa-basligi">@ViewData["Title"]</span>
             </header>
 

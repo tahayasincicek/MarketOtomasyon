@@ -4,7 +4,7 @@
 }
 
 <div class="d-flex justify-content-end align-items-center mb-3">
-    <a class="btn btn-primary" asp-action="Ekle">Yeni Ürün</a>
+    <a class="btn btn-primary" asp-action="Ekle"><i class="bi bi-plus-lg"></i> Yeni Ürün</a>
 </div>
 
 @if (TempData["Mesaj"] is string mesaj)
@@ -34,7 +34,7 @@
         </div>
     </div>
     <div class="col-md-2">
-        <button type="submit" class="btn btn-outline-secondary w-100">Filtrele</button>
+        <button type="submit" class="btn btn-outline-secondary w-100"><i class="bi bi-search"></i> Filtrele</button>
     </div>
 </form>
 
@@ -76,8 +76,8 @@
                     }
                 </td>
                 <td class="text-end">
-                    <a class="btn btn-sm btn-outline-secondary" asp-action="Detay" asp-route-id="@u.Id">Detay</a>
-                    <a class="btn btn-sm btn-outline-primary" asp-action="Duzenle" asp-route-id="@u.Id">Düzenle</a>
+                    <a class="btn btn-sm btn-outline-secondary" asp-action="Detay" asp-route-id="@u.Id"><i class="bi bi-list-ul"></i> Detay</a>
+                    <a class="btn btn-sm btn-outline-primary" asp-action="Duzenle" asp-route-id="@u.Id"><i class="bi bi-pencil"></i> Düzenle</a>
                 </td>
             </tr>
         }
