@@ -132,7 +132,6 @@ html, body {
     padding: .8rem 1.1rem;
     color: var(--menu-metin);
     text-decoration: none;
-    border-left: 3px solid transparent;
     font-size: 1.15rem;
 }
 
@@ -142,8 +141,7 @@ html, body {
 }
 
 .menu-oge.aktif {
-    background: var(--menu-vurgu-zemin);
-    border-left-color: var(--menu-vurgu);
+    background: var(--menu-zemin-hover);
     color: var(--menu-metin-acik);
     font-weight: 600;
 }
@@ -156,9 +154,12 @@ html, body {
     color: #71717a;
 }
 
-.menu-oge.aktif .menu-ikon,
 .menu-oge:hover .menu-ikon {
     color: inherit;
+}
+
+.menu-oge.aktif .menu-ikon {
+    color: var(--menu-vurgu);
 }
 
 .menu-alt {
