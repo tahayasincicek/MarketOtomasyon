@@ -46,16 +46,24 @@ UPDATE Fis SET Askida = @askida WHERE Id = @fisId AND Durum = 1;";
 
     private const string SqlSatirlar = @"
 SELECT fs.Id AS SatirId, fs.SatirNo, fs.UrunId, u.Kod, u.Ad, u.Birim,
-       fs.Miktar, fs.BirimFiyat, fs.IndirimTutari, fs.KdvOrani, fs.SatirToplam
+       fs.Miktar, fs.BirimFiyat, fs.IndirimTutari, fs.KdvOrani, fs.SatirToplam,
+       fs.KampanyaId, kmp.Ad AS KampanyaAdi
 FROM FisSatir fs
 JOIN Urun u ON u.Id = fs.UrunId
+LEFT JOIN Kampanya kmp ON kmp.Id = fs.KampanyaId
 WHERE fs.FisId = @fisId
 ORDER BY fs.SatirNo;";
 
     // Ayni urun sepette varsa yeni satir acilmaz, mevcut satirin miktari artar.
+    //
+    // Elle indirimli satir birlestirilmez: kasiyer o satira bilerek indirim
+    // vermistir, miktarin sessizce artmasi indirimi de buyutur. Kampanya
+    // indirimli satir ise birlestirilebilir; kampanya zaten her degisiklikten
+    // sonra yeni miktara gore bastan hesaplanir.
     private const string SqlAyniUrunSatiri = @"
 SELECT TOP 1 Id FROM FisSatir
-WHERE FisId = @fisId AND UrunId = @urunId AND IndirimTutari = 0;";
+WHERE FisId = @fisId AND UrunId = @urunId
+  AND (IndirimTutari = 0 OR KampanyaId IS NOT NULL);";
 
     private const string SqlSonrakiSatirNo = @"
 SELECT ISNULL(MAX(SatirNo), 0) + 1 FROM FisSatir WHERE FisId = @fisId;";
@@ -70,9 +78,14 @@ UPDATE FisSatir
 SET Miktar = @miktar, SatirToplam = @satirToplam
 WHERE Id = @satirId AND FisId = @fisId;";
 
+    private const string SqlSatirKampanyaGuncelle = @"
+UPDATE FisSatir
+SET IndirimTutari = @indirim, KampanyaId = @kampanyaId, SatirToplam = @satirToplam
+WHERE Id = @satirId AND FisId = @fisId;";
+
     private const string SqlSatirIndirimGuncelle = @"
 UPDATE FisSatir
-SET IndirimTutari = @indirim, SatirToplam = @satirToplam
+SET IndirimTutari = @indirim, KampanyaId = NULL, SatirToplam = @satirToplam
 WHERE Id = @satirId AND FisId = @fisId;";
 
     private const string SqlSatirSil = @"
@@ -154,6 +167,13 @@ WHERE Id = @fisId AND Durum = 1;";
         => await conn.ExecuteAsync(new CommandDefinition(
             SqlSatirMiktarGuncelle, new { fisId, satirId, miktar, satirToplam }, tx, cancellationToken: ct));
 
+    public async Task<int> SatirKampanyaGuncelleAsync(
+        IDbConnection conn, IDbTransaction tx, int fisId, int satirId,
+        decimal indirim, int? kampanyaId, decimal satirToplam, CancellationToken ct = default)
+        => await conn.ExecuteAsync(new CommandDefinition(
+            SqlSatirKampanyaGuncelle, new { fisId, satirId, indirim, kampanyaId, satirToplam }, tx, cancellationToken: ct));
+
+    /// <summary>Elle indirim; KampanyaId temizlenir cunku kaynak kasiyerdir.</summary>
     public async Task<int> SatirIndirimGuncelleAsync(
         IDbConnection conn, IDbTransaction tx, int fisId, int satirId, decimal indirim, decimal satirToplam,
         CancellationToken ct = default)

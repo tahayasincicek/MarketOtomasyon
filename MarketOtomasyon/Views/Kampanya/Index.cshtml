@@ -1,0 +1,80 @@
+@model List<MarketOtomasyon.Models.ViewModels.KampanyaListeSatirVm>
+@{
+    ViewData["Title"] = "Kampanyalar";
+}
+
+<div class="d-flex justify-content-end align-items-center mb-3">
+    <a class="btn btn-primary" asp-action="Ekle"><i class="bi bi-plus-lg"></i> Yeni Kampanya</a>
+</div>
+
+@if (TempData["Mesaj"] is string mesaj)
+{
+    <div class="alert alert-success">@mesaj</div>
+}
+
+<div class="alert alert-light border small">
+    Kampanyalar kasada otomatik uygulanır; kasiyerin bir şey yapması gerekmez.
+    Bir satıra birden fazla kampanya uyuyorsa <strong>müşteri lehine en yüksek indirim</strong> seçilir,
+    eşitlik hâlinde önceliği küçük olan kazanır. Elle indirim verilmiş satıra kampanya uygulanmaz.
+</div>
+
+<table class="table table-striped align-middle">
+    <thead>
+        <tr>
+            <th>Kod</th>
+            <th>Ad</th>
+            <th>Tip</th>
+            <th>Kapsam</th>
+            <th class="text-end">Öncelik</th>
+            <th>Geçerlilik</th>
+            <th>Durum</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model.Count == 0)
+        {
+            <tr><td colspan="8" class="text-center text-muted py-4">Henüz kampanya tanımlanmamış.</td></tr>
+        }
+        @foreach (var k in Model)
+        {
+            <tr>
+                <td><code>@k.Kod</code></td>
+                <td>@k.Ad</td>
+                <td>@k.TipAdi</td>
+                <td class="text-muted">@k.KapsamAdi</td>
+                <td class="text-end">@k.Oncelik</td>
+                <td class="small text-muted">
+                    @k.BaslangicTarihi.ToLocalTime().ToString("dd.MM.yyyy")
+                    @if (k.BitisTarihi.HasValue)
+                    {
+                        <text>— @k.BitisTarihi.Value.ToLocalTime().ToString("dd.MM.yyyy")</text>
+                    }
+                    else
+                    {
+                        <text>— süresiz</text>
+                    }
+                </td>
+                <td>
+                    @if (k.SuAnGecerli)
+                    {
+                        <span class="badge bg-success">yürürlükte</span>
+                    }
+                    else if (!k.Aktif)
+                    {
+                        <span class="badge bg-secondary">pasif</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning text-dark">tarih dışı</span>
+                    }
+                </td>
+                <td class="text-end">
+                    <a class="btn btn-sm btn-outline-primary" asp-action="Duzenle" asp-route-id="@k.Id">
+                        <i class="bi bi-pencil"></i> Düzenle
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

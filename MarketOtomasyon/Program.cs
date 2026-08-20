@@ -27,6 +27,7 @@ builder.Services.AddScoped<FisRepository>();
 builder.Services.AddScoped<VardiyaRepository>();
 builder.Services.AddScoped<KullaniciRepository>();
 builder.Services.AddScoped<OdemeRepository>();
+builder.Services.AddScoped<KampanyaRepository>();
 
 // Servisler
 builder.Services.AddScoped<UrunService>();
@@ -35,6 +36,7 @@ builder.Services.AddScoped<StokService>();
 builder.Services.AddScoped<SepetService>();
 builder.Services.AddScoped<OdemeService>();
 builder.Services.AddScoped<SatisService>();
+builder.Services.AddScoped<KampanyaService>();
 
 // Isletmeye gore degisen satis kurallari
 builder.Services.Configure<SatisAyarlari>(builder.Configuration.GetSection("Satis"));

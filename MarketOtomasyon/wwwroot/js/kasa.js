@@ -76,15 +76,22 @@
 
         const kg = satir.birim === "KG";
 
+        // Kampanya indirimi mavi, elle indirim kirmizi rozetle gosterilir;
+        // kasiyer indirimin nereden geldigini bir bakista ayirt etsin.
         const indirimRozeti = satir.indirimTutari > 0
-            ? ' <span class="badge bg-danger">-' + paraBicimi.format(satir.indirimTutari) + "</span>"
+            ? ' <span class="badge ' + (satir.kampanyaId ? "bg-primary" : "bg-danger") + '">-'
+              + paraBicimi.format(satir.indirimTutari) + "</span>"
+            : "";
+
+        const kampanyaEtiketi = satir.kampanyaAdi
+            ? '<span class="d-block text-primary small">' + metniKacir(satir.kampanyaAdi) + "</span>"
             : "";
 
         tr.innerHTML =
             '<td class="text-muted">' + satir.satirNo + "</td>" +
             "<td>" + metniKacir(satir.ad) +
                 '<span class="d-block text-muted font-monospace small">' + metniKacir(satir.kod) +
-                (kg ? ' <span class="badge bg-warning text-dark">kg</span>' : "") + indirimRozeti + "</span></td>" +
+                (kg ? ' <span class="badge bg-warning text-dark">kg</span>' : "") + indirimRozeti + "</span>" + kampanyaEtiketi + "</td>" +
             '<td class="text-end"></td>' +
             '<td class="text-end">' + paraBicimi.format(satir.birimFiyat) + "</td>" +
             '<td class="text-end fw-semibold">' + paraBicimi.format(satir.satirToplam) + "</td>" +

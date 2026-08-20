@@ -37,6 +37,13 @@ WHERE (@arama IS NULL OR u.Ad LIKE '%' + @arama + '%' OR u.Kod LIKE '%' + @arama
 ORDER BY u.Ad
 OFFSET @atla ROWS FETCH NEXT @adet ROWS ONLY;";
 
+    // Kampanya formundaki urun secim listesi icin; sayfalama gerekmez.
+    private const string SqlAktifListe = @"
+SELECT Id, Kod, Ad, KategoriId, Birim, KdvOrani, MinStokSeviyesi, Tartili, Aktif, OlusturmaTarihi
+FROM Urun
+WHERE Aktif = 1
+ORDER BY Ad;";
+
     private const string SqlGetir = @"
 SELECT Id, Kod, Ad, KategoriId, Birim, KdvOrani, MinStokSeviyesi, Tartili, Aktif, OlusturmaTarihi
 FROM Urun
@@ -84,6 +91,13 @@ WHERE Id = @Id;";
         var toplam = await sonuc.ReadSingleAsync<int>();
         var satirlar = (await sonuc.ReadAsync<UrunListeSatirVm>()).AsList();
         return (satirlar, toplam);
+    }
+
+    public async Task<IReadOnlyList<Urun>> AktifleriGetirAsync(CancellationToken ct = default)
+    {
+        using var conn = await _factory.CreateOpenConnectionAsync(ct);
+        var liste = await conn.QueryAsync<Urun>(new CommandDefinition(SqlAktifListe, cancellationToken: ct));
+        return liste.AsList();
     }
 
     public async Task<Urun?> GetirAsync(int id, CancellationToken ct = default)
