@@ -77,11 +77,12 @@ html, body {
 
 :root {
     --menu-genislik: 16.5rem;
-    --menu-zemin: #1f2937;
-    --menu-zemin-koyu: #161f2b;
-    --menu-metin: #cbd5e1;
-    --menu-metin-acik: #f8fafc;
-    --menu-vurgu: #2563eb;
+    --menu-zemin: #ffffff;
+    --menu-metin: #4b5563;
+    --menu-metin-acik: #111827;
+    --menu-vurgu: #1a56db;
+    --menu-vurgu-zemin: #eff6ff;
+    --menu-cizgi: #e5e7eb;
 }
 
 .yerlesim {
@@ -89,7 +90,11 @@ html, body {
     min-height: 100vh;
 }
 
-/* ---------- Sol menu ---------- */
+/* ---------- Sol menu ----------
+   Gercek perakende/POS yazilimlarinda (Odoo, Square vb.) sol menu
+   genelde koyu degil, beyaz zeminli ve ince gri cizgili olur; mağaza
+   isiginda okunabilirlik onceliklidir. Koyu tema burada bilerek
+   kullanilmadi. */
 
 .yan-menu {
     width: var(--menu-genislik);
@@ -101,6 +106,7 @@ html, body {
     position: sticky;
     top: 0;
     height: 100vh;
+    border-right: 1px solid var(--menu-cizgi);
 }
 
 .menu {
@@ -111,44 +117,51 @@ html, body {
 
 .menu-baslik {
     padding: .75rem 1.1rem .35rem;
-    font-size: .85rem;
+    font-size: .8rem;
     text-transform: uppercase;
-    letter-spacing: .1em;
-    color: #7c8ba1;
+    letter-spacing: .08em;
+    font-weight: 600;
+    color: #9ca3af;
 }
 
 .menu-oge {
     display: flex;
     align-items: center;
     gap: .75rem;
-    padding: .85rem 1.1rem;
+    padding: .8rem 1.1rem;
     color: var(--menu-metin);
     text-decoration: none;
     border-left: 3px solid transparent;
-    font-size: 1.25rem;
+    font-size: 1.15rem;
 }
 
 .menu-oge:hover {
-    background: rgba(255, 255, 255, .06);
+    background: #f9fafb;
     color: var(--menu-metin-acik);
 }
 
 .menu-oge.aktif {
-    background: rgba(37, 99, 235, .18);
+    background: var(--menu-vurgu-zemin);
     border-left-color: var(--menu-vurgu);
-    color: var(--menu-metin-acik);
+    color: var(--menu-vurgu);
     font-weight: 600;
 }
 
 .menu-ikon {
     width: 1.5rem;
     text-align: center;
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     line-height: 1;
+    color: #9ca3af;
+}
+
+.menu-oge.aktif .menu-ikon,
+.menu-oge:hover .menu-ikon {
+    color: inherit;
 }
 
 .menu-alt {
-    border-top: 1px solid rgba(255, 255, 255, .08);
+    border-top: 1px solid var(--menu-cizgi);
     padding: .8rem 1.1rem;
 }
 
@@ -160,18 +173,18 @@ html, body {
 
 .menu-kullanici-ikon {
     font-size: 1.6rem;
-    color: #7c8ba1;
+    color: #9ca3af;
 }
 
 .menu-kullanici-ad {
     color: var(--menu-metin-acik);
-    font-size: 1.05rem;
+    font-size: 1rem;
     font-weight: 600;
 }
 
 .menu-kullanici-rol {
-    font-size: .85rem;
-    color: #7c8ba1;
+    font-size: .82rem;
+    color: #9ca3af;
     font-family: monospace;
 }
 
@@ -226,7 +239,7 @@ html, body {
         z-index: 1045;
         transform: translateX(-100%);
         transition: transform .2s ease;
-        box-shadow: 0 0 2rem rgba(0, 0, 0, .35);
+        box-shadow: 0 0 2rem rgba(0, 0, 0, .15);
     }
 
     .yan-menu.acik {
