@@ -1,0 +1,44 @@
+@model IReadOnlyList<MarketOtomasyon.Models.ViewModels.StokHareketSatirVm>
+
+<div class="panel">
+    <div class="panel-baslik">
+        <span><i class="bi bi-clock-history"></i> Son sayım ve zayi hareketleri</span>
+    </div>
+    <div class="izgara-sarmal" style="max-height:22rem">
+        <table class="izgara">
+            <thead>
+                <tr>
+                    <th style="width:8rem">Tarih</th>
+                    <th>Ürün</th>
+                    <th style="width:9rem">Depo</th>
+                    <th style="width:7rem">Kaynak</th>
+                    <th class="sayi" style="width:9rem">Hareket</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var hareket in Model)
+                {
+                    <tr>
+                        <td class="text-muted">@hareket.Tarih.ToLocalTime().ToString("dd.MM HH:mm")</td>
+                        <td style="white-space:normal">
+                            <span class="kod">@hareket.UrunKod</span> @hareket.UrunAd
+                            @if (!string.IsNullOrWhiteSpace(hareket.Aciklama))
+                            {
+                                <div class="ipucu">@hareket.Aciklama</div>
+                            }
+                        </td>
+                        <td>@hareket.DepoAd</td>
+                        <td><span class="rozet rozet-notr">@hareket.KaynakAdi</span></td>
+                        <td class="sayi @(hareket.Yon == 1 ? "text-success" : "text-danger")">
+                            @(hareket.Yon == 1 ? "+" : "−")@hareket.Miktar.ToString("0.###") @hareket.Birim
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        @if (Model.Count == 0)
+        {
+            <p class="veri-yok">Henüz sayım veya zayi hareketi yok.</p>
+        }
+    </div>
+</div>

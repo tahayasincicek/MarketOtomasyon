@@ -32,6 +32,7 @@ builder.Services.AddScoped<KampanyaRepository>();
 builder.Services.AddScoped<IadeRepository>();
 builder.Services.AddScoped<OzetRepository>();
 builder.Services.AddScoped<UrunResimRepository>();
+builder.Services.AddScoped<SayimRepository>();
 
 // Servisler
 builder.Services.AddScoped<UrunService>();
@@ -44,6 +45,7 @@ builder.Services.AddScoped<KampanyaService>();
 builder.Services.AddScoped<IadeService>();
 builder.Services.AddScoped<VardiyaService>();
 builder.Services.AddScoped<UrunResimService>();
+builder.Services.AddScoped<SayimService>();
 
 // Isletmeye gore degisen satis kurallari
 builder.Services.Configure<SatisAyarlari>(builder.Configuration.GetSection("Satis"));

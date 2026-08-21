@@ -521,6 +521,18 @@ table.izgara tbody tr.table-active:hover {
 .bildirim-olumsuz { background: #fef2f2; border-color: #fca5a5; color: #b91c1c; }
 .bildirim-bilgi   { background: #f8fafc; border-color: var(--izgara-cizgi); color: #4b5563; }
 
+/* Uzun sayim tablosunun altindan kaydedilince sonuc her zaman gorunsun. */
+.bildirim-sabit {
+    position: fixed;
+    top: 3.75rem;
+    right: 1rem;
+    z-index: 1080;
+    max-width: min(38rem, calc(100vw - 2rem));
+    border: 1px solid;
+    border-radius: .35rem;
+    box-shadow: 0 .4rem 1.2rem rgb(15 23 42 / 18%);
+}
+
 /* ---------- Form ekranlari ----------
    Etiket solda sabit sutunda, alan sagda. Kayit ekranlarinda goz
    tek bir dikey hat boyunca iner; kutucuk icinde dolasmaz. */
