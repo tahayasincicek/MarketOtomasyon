@@ -28,6 +28,7 @@ builder.Services.AddScoped<VardiyaRepository>();
 builder.Services.AddScoped<KullaniciRepository>();
 builder.Services.AddScoped<OdemeRepository>();
 builder.Services.AddScoped<KampanyaRepository>();
+builder.Services.AddScoped<IadeRepository>();
 
 // Servisler
 builder.Services.AddScoped<UrunService>();
@@ -37,9 +38,11 @@ builder.Services.AddScoped<SepetService>();
 builder.Services.AddScoped<OdemeService>();
 builder.Services.AddScoped<SatisService>();
 builder.Services.AddScoped<KampanyaService>();
+builder.Services.AddScoped<IadeService>();
 
 // Isletmeye gore degisen satis kurallari
 builder.Services.Configure<SatisAyarlari>(builder.Configuration.GetSection("Satis"));
+builder.Services.Configure<IadeAyarlari>(builder.Configuration.GetSection("Iade"));
 
 // Dogrulayicilar (controller icinde elle cagriliyor)
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
