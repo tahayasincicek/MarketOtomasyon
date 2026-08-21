@@ -58,6 +58,16 @@ JOIN Urun u ON u.Id = h.UrunId
 JOIN Depo d ON d.Id = h.DepoId
 ORDER BY h.Id DESC;";
 
+    private const string SqlSonSayimVeZayiHareketleri = @"
+SELECT TOP (@adet)
+       h.Id, h.Tarih, h.Yon, h.Miktar, h.KaynakTip, h.Aciklama,
+       u.Kod AS UrunKod, u.Ad AS UrunAd, u.Birim, d.Ad AS DepoAd
+FROM StokHareket h
+JOIN Urun u ON u.Id = h.UrunId
+JOIN Depo d ON d.Id = h.DepoId
+WHERE h.KaynakTip IN (4, 5)
+ORDER BY h.Id DESC;";
+
     public async Task HareketEkleAsync(IDbConnection conn, IDbTransaction tx, StokHareket hareket, CancellationToken ct = default)
         => await conn.ExecuteAsync(new CommandDefinition(SqlHareketEkle, hareket, tx, cancellationToken: ct));
 
@@ -108,6 +118,15 @@ ORDER BY h.Id DESC;";
         using var conn = await _factory.CreateOpenConnectionAsync(ct);
         var liste = await conn.QueryAsync<StokHareketSatirVm>(
             new CommandDefinition(SqlSonHareketler, new { adet }, cancellationToken: ct));
+        return liste.AsList();
+    }
+
+    public async Task<IReadOnlyList<StokHareketSatirVm>> SonSayimVeZayiHareketleriAsync(
+        int adet, CancellationToken ct = default)
+    {
+        using var conn = await _factory.CreateOpenConnectionAsync(ct);
+        var liste = await conn.QueryAsync<StokHareketSatirVm>(
+            new CommandDefinition(SqlSonSayimVeZayiHareketleri, new { adet }, cancellationToken: ct));
         return liste.AsList();
     }
 }

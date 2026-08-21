@@ -1,0 +1,178 @@
+@model MarketOtomasyon.Models.ViewModels.SayimEkranVm
+@{
+    ViewData["Title"] = "Sayım ve Zayi";
+}
+
+<div class="ekran">
+    <div class="arac-cubugu">
+        <a class="btn btn-primary" asp-action="Index"><i class="bi bi-clipboard-check"></i> Sayım</a>
+        <a class="btn btn-outline-secondary" asp-action="Zayi"><i class="bi bi-trash3"></i> Zayi / Fire</a>
+        <span class="arac-ayrac"></span>
+        <span class="ipucu">Boş bıraktığınız ürünler bu sayıma dahil edilmez.</span>
+    </div>
+
+    @if (TempData["Mesaj"] is string mesaj)
+    {
+        <div class="bildirim bildirim-olumlu bildirim-sabit" role="status">
+            <i class="bi bi-check-circle"></i> @mesaj
+        </div>
+    }
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="bildirim bildirim-olumsuz">
+            <i class="bi bi-exclamation-triangle"></i>
+            <div asp-validation-summary="All" class="mb-0"></div>
+        </div>
+    }
+
+    <div class="panel">
+        <div class="panel-baslik"><span><i class="bi bi-building"></i> Sayım deposu</span></div>
+        <div class="panel-govde">
+            <form method="get" asp-action="Index" class="d-flex gap-2 align-items-center">
+                <select class="form-select orta-genislik" name="depoId" onchange="this.form.submit()">
+                    <option value="0">(depo seçiniz)</option>
+                    @foreach (var depo in Model.Depolar)
+                    {
+                        <option value="@depo.Id" selected="@(Model.DepoId == depo.Id)">@depo.Ad</option>
+                    }
+                </select>
+                <noscript><button class="btn btn-outline-secondary" type="submit">Yükle</button></noscript>
+            </form>
+        </div>
+    </div>
+
+    @if (Model.DepoId > 0)
+    {
+        <form method="post" asp-action="Kaydet" id="sayim-formu">
+            <input type="hidden" asp-for="DepoId" />
+
+            <div class="panel mt-3">
+                <div class="panel-baslik">
+                    <span><i class="bi bi-list-check"></i> Sayım satırları</span>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="sistemle-doldur">
+                        Sistem miktarlarını doldur
+                    </button>
+                </div>
+                <div class="izgara-sarmal" style="max-height:31rem">
+                    <table class="izgara">
+                        <thead>
+                            <tr>
+                                <th style="width:8rem">Kod</th>
+                                <th>Ürün</th>
+                                <th style="width:6rem">Birim</th>
+                                <th class="sayi" style="width:10rem">Sistem</th>
+                                <th class="sayi" style="width:11rem">Sayılan</th>
+                                <th class="sayi" style="width:9rem">Fark</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (var i = 0; i < Model.Satirlar.Count; i++)
+                            {
+                                var satir = Model.Satirlar[i];
+                                <tr>
+                                    <td class="kod">
+                                        @satir.Kod
+                                        <input type="hidden" asp-for="Satirlar[i].UrunId" />
+                                        <input type="hidden" asp-for="Satirlar[i].SistemMiktari" />
+                                    </td>
+                                    <td>@satir.Ad</td>
+                                    <td>@satir.Birim</td>
+                                    <td class="sayi sistem-miktari" data-sistem="@satir.SistemMiktari.ToString(System.Globalization.CultureInfo.InvariantCulture)">
+                                        @satir.SistemMiktari.ToString("0.###")
+                                    </td>
+                                    <td class="sayi">
+                                        <input class="form-control dar text-end sayilan-miktar" asp-for="Satirlar[i].SayilanMiktar"
+                                               type="number" min="0" step="0.0001" placeholder="—" />
+                                    </td>
+                                    <td class="sayi fw-semibold fark-hucresi">—</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="panel-govde border-top">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="bildirim bildirim-olumsuz mb-3" role="alert">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <div asp-validation-summary="All" class="mb-0"></div>
+                        </div>
+                    }
+                    <div id="sayim-form-hatasi" class="bildirim bildirim-olumsuz mb-3 d-none"
+                         role="alert" aria-live="assertive"></div>
+                    <div class="alan">
+                        <label asp-for="Aciklama">Açıklama</label>
+                        <div class="deger">
+                            <input class="form-control" asp-for="Aciklama" maxlength="200"
+                                   placeholder="Raf sayımı, dönem sonu sayımı vb." />
+                        </div>
+                    </div>
+                    <div class="alan">
+                        <label></label>
+                        <div class="deger">
+                            <button type="submit" class="btn btn-primary" id="sayim-kaydet">
+                                <i class="bi bi-check-lg"></i> Sayımı Kaydet ve Stoku Düzelt
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    }
+
+    <div class="mt-3">
+        <partial name="_Hareketler" model="Model.SonHareketler" />
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+            const satirGuncelle = input => {
+                const satir = input.closest('tr');
+                const sistem = Number(satir.querySelector('.sistem-miktari').dataset.sistem);
+                const hucre = satir.querySelector('.fark-hucresi');
+                if (input.value === '') {
+                    hucre.textContent = '—';
+                    hucre.className = 'sayi fw-semibold fark-hucresi';
+                    return;
+                }
+                const fark = Number(input.value) - sistem;
+                hucre.textContent = `${fark > 0 ? '+' : ''}${fark.toLocaleString('tr-TR', { maximumFractionDigits: 3 })}`;
+                hucre.className = `sayi fw-semibold fark-hucresi ${fark > 0 ? 'text-success' : fark < 0 ? 'text-danger' : 'text-muted'}`;
+            };
+
+            document.querySelectorAll('.sayilan-miktar').forEach(input => {
+                input.addEventListener('input', () => satirGuncelle(input));
+                satirGuncelle(input);
+            });
+
+            document.getElementById('sistemle-doldur')?.addEventListener('click', () => {
+                document.querySelectorAll('.sayilan-miktar').forEach(input => {
+                    input.value = input.closest('tr').querySelector('.sistem-miktari').dataset.sistem;
+                    satirGuncelle(input);
+                });
+            });
+
+            document.getElementById('sayim-formu')?.addEventListener('submit', event => {
+                const girilenVar = [...document.querySelectorAll('.sayilan-miktar')]
+                    .some(input => input.value.trim() !== '');
+                const hata = document.getElementById('sayim-form-hatasi');
+
+                if (!girilenVar) {
+                    event.preventDefault();
+                    hata.innerHTML = '<i class="bi bi-exclamation-triangle"></i> En az bir ürünün sayılan miktarını girin.';
+                    hata.classList.remove('d-none');
+                    document.querySelector('.sayilan-miktar')?.focus();
+                    return;
+                }
+
+                hata.classList.add('d-none');
+                const dugme = document.getElementById('sayim-kaydet');
+                dugme.disabled = true;
+                dugme.innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Kaydediliyor...';
+            });
+        })();
+    </script>
+}

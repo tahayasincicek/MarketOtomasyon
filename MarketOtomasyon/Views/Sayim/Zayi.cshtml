@@ -1,0 +1,97 @@
+@model MarketOtomasyon.Models.ViewModels.ZayiEkranVm
+@{
+    ViewData["Title"] = "Zayi / Fire Girişi";
+}
+
+<div class="ekran">
+    <div class="arac-cubugu">
+        <a class="btn btn-outline-secondary" asp-action="Index"><i class="bi bi-clipboard-check"></i> Sayım</a>
+        <a class="btn btn-primary" asp-action="Zayi"><i class="bi bi-trash3"></i> Zayi / Fire</a>
+        <span class="arac-ayrac"></span>
+        <span class="ipucu">Zayi kaydı stoktan çıkış yapar; sebep alanı zorunludur.</span>
+    </div>
+
+    @if (TempData["Mesaj"] is string mesaj)
+    {
+        <div class="bildirim bildirim-olumlu"><i class="bi bi-check-circle"></i> @mesaj</div>
+    }
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="bildirim bildirim-olumsuz">
+            <i class="bi bi-exclamation-triangle"></i>
+            <div asp-validation-summary="All" class="mb-0"></div>
+        </div>
+    }
+
+    <div class="panel-serit" style="align-items:stretch">
+        <div class="panel" style="flex:1 1 28rem">
+            <div class="panel-baslik"><span><i class="bi bi-trash3"></i> Yeni zayi / fire</span></div>
+            <div class="panel-govde">
+                <form method="post" asp-action="Zayi">
+                    <div class="alan">
+                        <label asp-for="Barkod">Barkod</label>
+                        <div class="deger">
+                            <input class="form-control font-monospace" asp-for="Barkod"
+                                   autocomplete="off" autofocus placeholder="Okutun veya ürün seçin" />
+                            <span class="hata" asp-validation-for="Barkod"></span>
+                        </div>
+                    </div>
+                    <div class="alan">
+                        <label asp-for="UrunId">Ürün</label>
+                        <div class="deger">
+                            <select class="form-select" asp-for="UrunId">
+                                <option value="0">(barkod okutun veya seçiniz)</option>
+                                @foreach (var urun in Model.Urunler)
+                                {
+                                    <option value="@urun.Id" selected="@(Model.UrunId == urun.Id)">@urun.Kod · @urun.Ad</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="alan">
+                        <label asp-for="DepoId">Depo</label>
+                        <div class="deger">
+                            <select class="form-select orta-genislik" asp-for="DepoId">
+                                <option value="0">(seçiniz)</option>
+                                @foreach (var depo in Model.Depolar)
+                                {
+                                    <option value="@depo.Id" selected="@(Model.DepoId == depo.Id)">@depo.Ad</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="alan">
+                        <label asp-for="Miktar">Miktar</label>
+                        <div class="deger">
+                            <input class="form-control dar text-end" asp-for="Miktar" type="number" min="0" step="0.001" />
+                        </div>
+                    </div>
+                    <div class="alan">
+                        <label asp-for="Sebep">Sebep</label>
+                        <div class="deger">
+                            <textarea class="form-control" asp-for="Sebep" rows="3" maxlength="200"
+                                      placeholder="Son kullanma tarihi, kırılma, bozulma vb."></textarea>
+                        </div>
+                    </div>
+                    <div class="alan">
+                        <label></label>
+                        <div class="deger">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-check-lg"></i> Zayiyi Kaydet
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div style="flex:2 1 34rem">
+            <partial name="_Hareketler" model="Model.SonHareketler" />
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
