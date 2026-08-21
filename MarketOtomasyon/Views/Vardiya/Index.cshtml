@@ -1,0 +1,242 @@
+@model MarketOtomasyon.Models.ViewModels.VardiyaEkranVm
+@using System.Globalization
+@{
+    ViewData["Title"] = "Vardiya";
+    var tr = new CultureInfo("tr-TR");
+    string Para(decimal deger) => deger.ToString("N2", tr);
+
+    // Kapanista sayilan tutar bu kurlarla otomatik toplanir. Turk Lirasi tedavul seti.
+    var kupurler = new (decimal Deger, string Etiket)[]
+    {
+        (200m, "200 ₺"), (100m, "100 ₺"), (50m, "50 ₺"), (20m, "20 ₺"),
+        (10m, "10 ₺"), (5m, "5 ₺"), (1m, "1 ₺"),
+        (0.50m, "50 kr"), (0.25m, "25 kr"), (0.10m, "10 kr"), (0.05m, "5 kr")
+    };
+}
+
+<div class="ekran">
+    @if (TempData["Mesaj"] is string mesaj)
+    {
+        <div class="bildirim bildirim-olumlu"><i class="bi bi-check-circle"></i> @mesaj</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.Hata))
+    {
+        <div class="bildirim bildirim-olumsuz"><i class="bi bi-exclamation-triangle"></i> @Model.Hata</div>
+    }
+
+    @if (Model.Acik is null)
+    {
+        <div class="bildirim bildirim-bilgi">
+            <i class="bi bi-info-circle"></i>
+            <span>Vardiya kapalı. Kasada satış yapılabilmesi için önce vardiya açılmalıdır.</span>
+        </div>
+
+        <form method="post" asp-action="Ac">
+            <div class="arac-cubugu">
+                <span class="arac-etiket">Açılış tutarı</span>
+                <input type="number" step="0.01" min="0" class="form-control text-end"
+                       style="width:9rem" id="acilisTutari" name="acilisTutari"
+                       value="@Model.AcilisTutari.ToString(CultureInfo.InvariantCulture)"
+                       autocomplete="off" autofocus required aria-label="Açılış tutarı" />
+                <span class="arac-etiket">₺</span>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-unlock"></i> Vardiyayı Aç
+                </button>
+                <span class="ipucu ms-2">Çekmecedeki başlangıç nakdi (bozukluk dahil).</span>
+            </div>
+        </form>
+
+        <div class="bolum">
+            <div class="bolum-baslik">Vardiya nasıl işler?</div>
+            <ol class="mb-0 ps-3 text-muted" style="font-size:.86rem">
+                <li>Çekmecedeki başlangıç nakdini sayıp açılış tutarına yazarsınız.</li>
+                <li>Vardiya boyunca kesilen her fiş bu vardiyaya bağlanır.</li>
+                <li>Kapanışta beklenen tutar hesaplanır:
+                    <span class="font-monospace text-dark">açılış + nakit satış − nakit iade</span>.
+                </li>
+                <li>Saydığınız tutarla arasındaki fark kasa fazlası veya kasa açığı olarak raporlanır.</li>
+            </ol>
+        </div>
+    }
+    else
+    {
+        var acik = Model.Acik;
+
+        <div class="arac-cubugu">
+            <span class="arac-etiket">Vardiya</span>
+            <strong>#@acik.VardiyaId</strong>
+            <span class="arac-ayrac"></span>
+            <span class="arac-etiket">Kasiyer</span>
+            <strong>@acik.KasiyerAdi</strong>
+            <span class="arac-ayrac"></span>
+            <span class="arac-etiket">Açılış</span>
+            <strong>@acik.AcilisTarihi.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</strong>
+            <span class="arac-ayrac"></span>
+            <span class="arac-etiket">Süre</span>
+            <strong id="vardiya-sure"
+                    data-baslangic="@acik.AcilisTarihi.ToUniversalTime().ToString("o")">—</strong>
+
+            <div class="arac-sag">
+                <a class="btn btn-outline-secondary" asp-action="Rapor" asp-route-id="@acik.VardiyaId">
+                    <i class="bi bi-file-earmark-text"></i> Ara Rapor (X)
+                </a>
+            </div>
+        </div>
+
+        <form method="post" asp-action="Kapat" style="flex:1; display:flex; flex-direction:column; min-height:0">
+            <div class="panel-serit" style="flex:1; min-height:0; align-items:stretch">
+
+                @* Sol: cekmecede olmasi gereken. Koyu zemin, buyuk rakam --
+                   kasiyerin bir metre uzaktan okuyacagi tek sayi budur. *@
+                <div class="panel" style="flex:1 1 17rem">
+                    <div class="panel-baslik"><span><i class="bi bi-safe2"></i> Çekmece</span></div>
+                    <div class="cekmece">
+                        <div class="cekmece-satir">
+                            <span>Açılış</span><span>@Para(acik.AcilisTutari)</span>
+                        </div>
+                        <div class="cekmece-satir">
+                            <span>+ Nakit satış</span><span>@Para(acik.NakitSatis)</span>
+                        </div>
+                        <div class="cekmece-satir eksi">
+                            <span>− Nakit iade</span><span>@Para(acik.NakitIade)</span>
+                        </div>
+
+                        @* Kart tahsilati cekmeceye para koymaz; buraya girmez. *@
+                        <div class="cekmece-toplam">
+                            <div class="cekmece-toplam-etiket">Olması gereken</div>
+                            <div class="cekmece-toplam-tutar" id="beklenen-tutar"
+                                 data-beklenen="@acik.BeklenenTutar.ToString(CultureInfo.InvariantCulture)">
+                                @Para(acik.BeklenenTutar) ₺
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Orta: banknot sayim foyu -->
+                <div class="panel" style="flex:1 1 19rem">
+                    <div class="panel-baslik">
+                        <span><i class="bi bi-cash-stack"></i> Para sayım föyü</span>
+                        <button type="button" class="btn btn-link btn-sm p-0" id="sayim-temizle">Temizle</button>
+                    </div>
+                    <div class="izgara-sarmal">
+                        <table class="izgara">
+                            <thead>
+                                <tr>
+                                    <th>Kupür</th>
+                                    <th class="sayi" style="width:6rem">Adet</th>
+                                    <th class="sayi" style="width:7rem">Tutar</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var kupur in kupurler)
+                                {
+                                    <tr>
+                                        <td class="fw-semibold">@kupur.Etiket</td>
+                                        <td class="sayi">
+                                            <input type="number" min="0" step="1" class="sayim-adet"
+                                                   data-deger="@kupur.Deger.ToString(CultureInfo.InvariantCulture)"
+                                                   autocomplete="off" placeholder="0"
+                                                   aria-label="@kupur.Etiket adedi" />
+                                        </td>
+                                        <td class="sayi sayim-tutar">0,00</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Sag: sayilan tutar, canli fark, kapat -->
+                <div class="panel" style="flex:1 1 19rem">
+                    <div class="panel-baslik"><span><i class="bi bi-calculator"></i> Kapanış</span></div>
+                    <div class="panel-govde">
+                        <div class="arac-etiket mb-1">Sayılan tutar</div>
+                        <div class="input-group mb-3">
+                            <input type="number" step="0.01" min="0" class="form-control sayilan-girdi"
+                                   id="sayilanTutar" name="sayilanTutar"
+                                   value="@Model.SayilanTutar.ToString(CultureInfo.InvariantCulture)"
+                                   autocomplete="off" autofocus required aria-label="Sayılan tutar" />
+                            <span class="input-group-text">₺</span>
+                        </div>
+
+                        <div class="fark-kutu denk mb-3" id="fark-kutu">
+                            <div class="arac-etiket" id="fark-etiket">Fark</div>
+                            <div class="fark-tutar" id="fark-tutar">0,00 ₺</div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-danger btn-lg">
+                                <i class="bi bi-lock"></i> Vardiyayı Kapat
+                            </button>
+                        </div>
+                        <div class="ipucu text-center mt-2">Kapatılan vardiya yeniden açılamaz.</div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    }
+
+    @if (Model.SonKapananlar.Count > 0)
+    {
+        <div class="panel-baslik"><span><i class="bi bi-clock-history"></i> Geçmiş vardiyalar</span></div>
+        <div class="izgara-sarmal" style="max-height:14rem; flex:none">
+            <table class="izgara">
+                <thead>
+                    <tr>
+                        <th style="width:4rem">#</th>
+                        <th>Kapanış</th>
+                        <th class="sayi" style="width:8rem">Beklenen</th>
+                        <th class="sayi" style="width:8rem">Sayılan</th>
+                        <th class="sayi" style="width:8rem">Fark</th>
+                        <th class="islem"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var vardiya in Model.SonKapananlar)
+                    {
+                        var fark = vardiya.Fark ?? 0;
+                        <tr>
+                            <td class="kod">@vardiya.Id</td>
+                            <td>@vardiya.KapanisTarihi?.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                            <td class="sayi">@Para(vardiya.BeklenenTutar ?? 0)</td>
+                            <td class="sayi">@Para(vardiya.SayilanTutar ?? 0)</td>
+                            <td class="sayi">
+                                @if (fark == 0)
+                                {
+                                    <span class="rozet rozet-olumlu">denk</span>
+                                }
+                                else
+                                {
+                                    <span class="rozet @(fark < 0 ? "rozet-olumsuz" : "rozet-uyari")">@Para(fark)</span>
+                                }
+                            </td>
+                            <td class="islem">
+                                <a class="btn btn-outline-secondary" asp-action="Rapor" asp-route-id="@vardiya.Id">
+                                    <i class="bi bi-printer"></i> Z raporu
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    <div class="durum-cubugu">
+        @if (Model.Acik is not null)
+        {
+            <span>Föye adet girdikçe sayılan tutar otomatik dolar; doğrudan da yazabilirsiniz.</span>
+            <span class="fkey"><b>Enter</b> sonraki kupür</span>
+        }
+        else
+        {
+            <span>Vardiya kapalı.</span>
+        }
+        <span class="arac-sag">@Model.SonKapananlar.Count geçmiş vardiya listeleniyor</span>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/vardiya.js" asp-append-version="true"></script>
+}

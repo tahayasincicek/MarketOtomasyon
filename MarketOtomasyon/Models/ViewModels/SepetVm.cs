@@ -11,6 +11,10 @@ public class SepetSatirVm
     public string Kod { get; set; } = string.Empty;
     public string Ad { get; set; } = string.Empty;
     public string Birim { get; set; } = string.Empty;
+
+    /// <summary>Resmi cekilmemis urunlerde null; kasa ekrani yer tutucu gosterir.</summary>
+    public string? ResimYolu { get; set; }
+
     public decimal Miktar { get; set; }
     public decimal BirimFiyat { get; set; }
     public decimal IndirimTutari { get; set; }
@@ -63,6 +67,14 @@ public class SepetVm
 
     /// <summary>Musteriden alinacak tutar (KDV dahil).</summary>
     public decimal GenelToplam { get; set; }
+
+    /// <summary>
+    /// Bu istekte okutulan urun. Kasa ekrani "son okutulan" panelini buna gore
+    /// doldurur. Sepetin son satirina bakmak yanlis olur: okutulan urun sepette
+    /// zaten varsa mevcut satirina eklenir ve son satir bambaska bir urundur.
+    /// Okutma disindaki isteklerde (miktar guncelleme, satir silme) null.
+    /// </summary>
+    public int? SonOkutulanUrunId { get; set; }
 
     public int SatirSayisi => Satirlar.Count;
     public bool Bos => Satirlar.Count == 0;

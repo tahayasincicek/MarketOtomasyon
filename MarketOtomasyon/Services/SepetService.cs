@@ -91,7 +91,9 @@ public class SepetService
         await ToplamlariYazAsync(conn, tx, fisId, ct);
         tx.Commit();
 
-        return (await GetirAsync(vardiyaId, ct), null);
+        var sepet = await GetirAsync(vardiyaId, ct);
+        sepet.SonOkutulanUrunId = cozum.UrunId;
+        return (sepet, null);
     }
 
     /// <summary>Miktar sifir veya negatif verilirse satir silinir.</summary>

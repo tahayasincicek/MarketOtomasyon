@@ -1,0 +1,21 @@
+@model MarketOtomasyon.Models.ViewModels.UrunResmiVm
+
+@*
+    Ortak urun gorseli. Resmi olmayan urunler cogunluktadir (tartili urunler,
+    temizlik urunleri, acik veritabaninda kaydi olmayanlar) -- bu yuzden yer
+    tutucu istisna degil, normal durumdur ve bos kutu gibi gorunmemelidir.
+    Urun adinin bas harfi ve kategori ikonu ile tanimlanabilir kalir.
+*@
+
+@if (Model.VarMi)
+{
+    <img class="urun-resim @Model.BoyutSinifi" src="@Model.Yol" alt="@Model.Ad"
+         loading="lazy" decoding="async" />
+}
+else
+{
+    <span class="urun-resim urun-resim-yok @Model.BoyutSinifi" role="img"
+          aria-label="@Model.Ad — fotoğraf yok" title="Fotoğraf yok">
+        <i class="bi @Model.YerTutucuIkonu"></i>
+    </span>
+}

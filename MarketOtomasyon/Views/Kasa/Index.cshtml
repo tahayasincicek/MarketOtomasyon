@@ -2,148 +2,181 @@
     ViewData["Title"] = "Kasa";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div class="small text-muted">
-        <kbd>Enter</kbd> ekle &nbsp;
-        <kbd>F2</kbd> ödeme &nbsp;
-        <kbd>F4</kbd> satır sil &nbsp;
-        <kbd>F5</kbd> satır indirimi &nbsp;
-        <kbd>F6</kbd> fiş indirimi &nbsp;
-        <kbd>F7</kbd> askıya al &nbsp;
-        <kbd>F8</kbd> bekleyenler &nbsp;
-        <kbd>Esc</kbd> iptal
-    </div>
-</div>
+@* Kasa ekrani tek bir calisma yuzeyidir: solda barkod + sepet izgarasi,
+   sagda fis ozeti ve tahsilat tuslari. Kutucuk yok -- kasiyerin gozu
+   barkod alaninda baslar, sepette iner, sag alttaki toplamda biter. *@
+<div class="ekran">
+    <div class="arac-cubugu">
+        <span class="arac-etiket">Barkod</span>
+        <input id="barkod" class="form-control font-monospace" style="width:22rem;font-size:1.1rem"
+               autocomplete="off" autofocus
+               placeholder="Okutun veya yazıp Enter'a basın" aria-label="Barkod" />
 
-<div class="row g-3">
-    <!-- Sol sütun: barkod girişi ve sepet -->
-    <div class="col-lg-8">
-        <div class="input-group input-group-lg mb-2">
-            <span class="input-group-text">Barkod</span>
-            <input id="barkod" class="form-control font-monospace" autocomplete="off" autofocus
-                   placeholder="Okutun veya yazıp Enter'a basın" />
+        <span class="arac-ayrac"></span>
+
+        <button type="button" id="btn-fis-indirim" class="btn btn-outline-secondary">
+            <i class="bi bi-percent"></i> Fişe İndirim
+        </button>
+        <button type="button" id="btn-askiya-al" class="btn btn-outline-secondary">
+            <i class="bi bi-pause-circle"></i> Askıya Al
+        </button>
+        <button type="button" id="btn-bekleyenler" class="btn btn-outline-secondary position-relative">
+            <i class="bi bi-list-check"></i> Bekleyenler
+            <span id="bekleyen-sayisi"
+                  class="badge bg-warning text-dark position-absolute top-0 start-100 translate-middle d-none">0</span>
+        </button>
+        <button type="button" id="btn-iptal" class="btn btn-outline-danger">
+            <i class="bi bi-x-circle"></i> Fişi İptal Et
+        </button>
+        <button type="button" id="btn-kamera" class="btn btn-outline-secondary">
+            <i class="bi bi-camera-video"></i> Kamera
+        </button>
+
+        <div class="arac-sag d-flex align-items-center gap-2">
+            <span class="arac-etiket">Fiş</span>
+            <strong id="fis-no" class="font-monospace">—</strong>
+        </div>
+    </div>
+
+    <div id="uyari" class="bildirim bildirim-olumsuz d-none" role="alert"></div>
+    @* Kamera paneli: kapaliyken hic yer kaplamaz, video akisi da baslamaz.
+       Kamera acikken barkod alanindan odak kacmaz -- el terminali de
+       kullanilabilsin diye ikisi ayni anda calisir. *@
+    <div id="kamera-paneli" class="arac-cubugu d-none" style="background:#f8fafc">
+        <video id="kamera-video" playsinline muted
+               style="width:22rem;max-width:100%;height:12rem;object-fit:cover;background:#111827;border-radius:.25rem"></video>
+
+        <div class="d-flex flex-column gap-1" style="min-width:0">
+            <span class="arac-etiket">Kamera</span>
+            <select id="kamera-secim" class="form-select" style="width:15rem"
+                    aria-label="Kamera seç"></select>
+
+            <div id="kamera-durum" class="ipucu">Kamera kapalı.</div>
+            <div id="kamera-son" class="ipucu"></div>
         </div>
 
-        <div id="uyari" class="alert alert-danger py-2 d-none" role="alert"></div>
+        <span class="ipucu arac-sag" style="max-width:18rem">
+            Barkodu kameranın ortasına, ekrana paralel tutun. Aynı barkod
+            2 saniye içinde tekrar okunmaz.
+        </span>
+    </div>
 
-        <!-- İndirim paneli. Tarayıcı diyalogu yerine satır içi: odak kaybolmasın. -->
-        <div id="indirim-paneli" class="card border-secondary mb-2 d-none">
-            <div class="card-body py-2">
-                <div class="row g-2 align-items-end">
-                    <div class="col-auto">
-                        <label class="form-label mb-0 small" id="indirim-baslik">İndirim</label>
-                        <div class="input-group input-group-sm">
-                            <input id="indirim-yuzde" type="text" class="form-control text-end" style="width:5rem" />
-                            <span class="input-group-text">%</span>
-                        </div>
-                    </div>
-                    <div class="col-auto">
-                        <label class="form-label mb-0 small">Onaylayan</label>
-                        <select id="indirim-onaylayan" class="form-select form-select-sm">
-                            <option value="">(kasiyer)</option>
-                            <option value="2">Müdür onayı</option>
-                        </select>
-                    </div>
-                    <div class="col-auto">
-                        <button type="button" id="btn-indirim-uygula" class="btn btn-sm btn-primary">Uygula</button>
-                        <button type="button" id="btn-indirim-kaldir" class="btn btn-sm btn-outline-secondary">Kaldır</button>
-                        <button type="button" id="btn-indirim-vazgec" class="btn btn-sm btn-link">Vazgeç</button>
-                    </div>
-                </div>
-                <div class="form-text">
-                    Kasiyer satırda en fazla %10, fişte en fazla %5 indirim verebilir; üstü müdür onayı ister.
-                </div>
+
+
+
+    @* Indirim paneli tarayici diyalogu yerine satir ici: modal acilinca
+       barkod alanindan odak kacar, kasiyer sirada bekletir. *@
+    <div id="indirim-paneli" class="arac-cubugu d-none" style="background:#fffbeb">
+        <span class="arac-etiket" id="indirim-baslik">İndirim</span>
+        <div class="input-group input-group-sm" style="width:7rem">
+            <input id="indirim-yuzde" type="text" class="form-control text-end" aria-label="İndirim yüzdesi" />
+            <span class="input-group-text">%</span>
+        </div>
+
+        <span class="arac-etiket">Onaylayan</span>
+        <select id="indirim-onaylayan" class="form-select" style="width:9rem" aria-label="Onaylayan">
+            <option value="">(kasiyer)</option>
+            <option value="2">Müdür onayı</option>
+        </select>
+
+        <button type="button" id="btn-indirim-uygula" class="btn btn-primary">Uygula</button>
+        <button type="button" id="btn-indirim-kaldir" class="btn btn-outline-secondary">Kaldır</button>
+        <button type="button" id="btn-indirim-vazgec" class="btn btn-link btn-sm">Vazgeç</button>
+
+        <span class="ipucu arac-sag">
+            Kasiyer satırda en fazla %10, fişte %5 indirim verebilir; üstü müdür onayı ister.
+        </span>
+    </div>
+
+    <div class="panel-serit" style="flex:1; min-height:0; align-items:stretch">
+
+        <!-- Sepet -->
+        <div class="panel" style="flex:3 1 34rem">
+            <div class="izgara-sarmal">
+                <table class="izgara">
+                    <thead>
+                        <tr>
+                            <th style="width:3rem">#</th>
+                            <th>Ürün</th>
+                            <th class="sayi" style="width:8rem">Miktar</th>
+                            <th class="sayi" style="width:8rem">Birim Fiyat</th>
+                            <th class="sayi" style="width:9rem">Tutar</th>
+                            <th class="islem"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="sepet-govde"></tbody>
+                </table>
+
+                <p id="bos-sepet" class="veri-yok">Sepet boş — barkod okutarak başlayın.</p>
             </div>
         </div>
 
-        <div class="table-responsive border rounded">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th style="width:3rem">#</th>
-                        <th>Ürün</th>
-                        <th class="text-end" style="width:8rem">Miktar</th>
-                        <th class="text-end" style="width:8rem">Birim Fiyat</th>
-                        <th class="text-end" style="width:9rem">Tutar</th>
-                        <th style="width:3rem"></th>
-                    </tr>
-                </thead>
-                <tbody id="sepet-govde"></tbody>
-            </table>
-            <p id="bos-sepet" class="text-center text-muted py-5 mb-0">
-                Sepet boş — barkod okutarak başlayın.
-            </p>
-        </div>
-
-        <div class="form-text mt-2">
-            Satıra tıklayarak seçin, <kbd>F4</kbd> ile silin. Miktar kutusunu değiştirip
-            <kbd>Enter</kbd>'a basarak güncelleyin; 0 yazarsanız satır silinir.
-        </div>
-    </div>
-
-    <!-- Sağ sütun: özet ve toplam -->
-    <div class="col-lg-4">
-        <div class="card mb-3">
-            <div class="card-body py-2">
-                <div class="text-uppercase text-muted" style="font-size:.7rem;letter-spacing:.08em">Son okutulan</div>
+        <!-- Fis ozeti ve tahsilat -->
+        <div class="panel" style="flex:1 1 20rem">
+            <div class="panel-baslik">
+                <span>Son okutulan</span>
+            </div>
+            @* Fotograf kasiyerin yanlis urun okuttugunu aninda gormesini saglar;
+               asil faydasi bu. Resim yoksa yer tutucu ayni yeri kaplar ki
+               panel her okutmada zipzip yer degistirmesin. *@
+            <div class="panel-govde son-okutulan" style="flex:none">
+                <span id="son-resim" class="urun-resim urun-resim-yok urun-resim-buyuk"
+                      role="img" aria-label="Son okutulan ürün">
+                    <i class="bi bi-upc-scan"></i>
+                </span>
                 <div id="son-ad" class="fs-5 fw-semibold">—</div>
-                <div id="son-detay" class="text-muted small"></div>
+                <div id="son-detay" class="ipucu"></div>
             </div>
-        </div>
 
-        <div class="card mb-3">
-            <div class="card-header py-2 d-flex justify-content-between">
-                <span>Fiş</span>
-                <span id="fis-no" class="text-muted font-monospace small">—</span>
-            </div>
-            <div class="card-body py-2">
-                <div class="d-flex justify-content-between d-none" id="indirim-satiri">
-                    <span class="text-muted">Toplam indirim</span>
-                    <span id="toplam-indirim" class="text-danger">0,00</span>
+            <div class="panel-baslik"><span>Fiş özeti</span></div>
+            <div class="panel-govde" style="flex:none">
+                <div class="cekmece-satir d-none" id="indirim-satiri" style="color:#b91c1c">
+                    <span>Toplam indirim</span><span id="toplam-indirim">0,00</span>
                 </div>
-                <div class="d-flex justify-content-between">
-                    <span class="text-muted">Ara toplam (KDV hariç)</span>
-                    <span id="ara-toplam">0,00</span>
+                <div class="cekmece-satir" style="color:#4b5563">
+                    <span>Ara toplam (KDV hariç)</span><span id="ara-toplam">0,00</span>
                 </div>
-                <div id="kdv-kirilimi" class="mt-1"></div>
-                <div class="d-flex justify-content-between border-top pt-1 mt-1">
-                    <span class="text-muted">Toplam KDV</span>
-                    <span id="toplam-kdv">0,00</span>
+                <div id="kdv-kirilimi"></div>
+                <div class="cekmece-satir" style="color:#4b5563;border-top:1px solid var(--izgara-cizgi)">
+                    <span>Toplam KDV</span><span id="toplam-kdv">0,00</span>
                 </div>
-                <div class="d-flex justify-content-between">
-                    <span class="text-muted">Satır</span>
-                    <span id="satir-sayisi">0</span>
+                <div class="cekmece-satir" style="color:#4b5563">
+                    <span>Satır</span><span id="satir-sayisi">0</span>
                 </div>
             </div>
-        </div>
 
-        <div class="card text-bg-success mb-3">
-            <div class="card-body text-end py-3">
-                <div class="text-uppercase" style="font-size:.7rem;letter-spacing:.12em;opacity:.85">Toplam</div>
-                <div id="genel-toplam" class="fw-bold" style="font-size:2.4rem;line-height:1.1">0,00 ₺</div>
+            @* Toplam, ekranin en kuvvetli ogesi. Musteri de bu rakami gorur. *@
+            <div class="cekmece" style="flex:none;background:#166534">
+                <div class="cekmece-toplam-etiket">Toplam</div>
+                <div id="genel-toplam" class="cekmece-toplam-tutar">0,00 ₺</div>
             </div>
-        </div>
 
-        <div class="d-grid gap-2">
-            <button type="button" id="btn-odeme" class="btn btn-primary btn-lg" disabled>
-                <i class="bi bi-cash-coin"></i> Ödeme Al (F2)
-            </button>
-            <button type="button" id="btn-fis-indirim" class="btn btn-outline-secondary">
-                <i class="bi bi-percent"></i> Fişe İndirim (F6)
-            </button>
-            <div class="d-flex gap-2">
-                <button type="button" id="btn-askiya-al" class="btn btn-outline-secondary flex-fill">
-                    <i class="bi bi-pause-circle"></i> Askıya Al (F7)
-                </button>
-                <button type="button" id="btn-bekleyenler" class="btn btn-outline-secondary flex-fill position-relative">
-                    <i class="bi bi-list-check"></i> Bekleyenler (F8)
-                    <span id="bekleyen-sayisi" class="badge bg-warning text-dark position-absolute top-0 start-100 translate-middle d-none">0</span>
-                </button>
+            <div class="panel-govde" style="flex:none">
+                <div class="d-grid">
+                    <button type="button" id="btn-odeme" class="btn btn-primary btn-lg" disabled>
+                        <i class="bi bi-cash-coin"></i> Ödeme Al (F2)
+                    </button>
+                </div>
             </div>
-            <button type="button" id="btn-iptal" class="btn btn-outline-danger">
-                <i class="bi bi-x-circle"></i> Fişi İptal Et (Esc)
-            </button>
         </div>
+    </div>
+
+    @* F-tusu lejandi altta sabit: masaustu otomasyonlarin standardi,
+       kasiyer kisayolu ezberlemek zorunda kalmaz. *@
+    <div class="durum-cubugu">
+        <div class="fkey-serit">
+            <span class="fkey"><b>Enter</b> ekle</span>
+            <span class="fkey"><b>F2</b> ödeme</span>
+            <span class="fkey"><b>F4</b> satır sil</span>
+            <span class="fkey"><b>F5</b> satır indirimi</span>
+            <span class="fkey"><b>F6</b> fiş indirimi</span>
+            <span class="fkey"><b>F7</b> askıya al</span>
+            <span class="fkey"><b>F8</b> bekleyenler</span>
+            <span class="fkey"><b>Esc</b> iptal</span>
+        </div>
+        <span class="arac-sag ipucu">
+            Satıra tıklayıp <b>F4</b> ile silin; miktar kutusuna 0 yazıp Enter da siler.
+        </span>
     </div>
 </div>
 
@@ -155,26 +188,25 @@
                 <h5 class="modal-title">Bekleyen Fişler</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
             </div>
-            <div class="modal-body">
-                <div class="form-text mb-2">
+            <div class="modal-body p-0">
+                <div class="bildirim bildirim-bilgi">
+                    <i class="bi bi-info-circle"></i>
                     Askıya alınmış sepetler stoğu etkilemez. Geri çağırdığınızda kasadaki dolu sepet
                     otomatik olarak askıya alınır.
                 </div>
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
+                <table class="izgara">
+                    <thead>
                         <tr>
                             <th>Fiş No</th>
-                            <th>Saat</th>
-                            <th class="text-end">Satır</th>
-                            <th class="text-end">Tutar</th>
-                            <th></th>
+                            <th style="width:6rem">Saat</th>
+                            <th class="sayi" style="width:5rem">Satır</th>
+                            <th class="sayi" style="width:8rem">Tutar</th>
+                            <th class="islem"></th>
                         </tr>
                     </thead>
                     <tbody id="bekleyenler-govde"></tbody>
                 </table>
-                <p id="bekleyen-yok" class="text-center text-muted py-4 mb-0 d-none">
-                    Askıda bekleyen fiş yok.
-                </p>
+                <p id="bekleyen-yok" class="veri-yok d-none">Askıda bekleyen fiş yok.</p>
             </div>
         </div>
     </div>
@@ -185,68 +217,85 @@
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header py-2">
-                <h5 class="modal-title">Ödeme <span id="odeme-fis-no" class="text-muted font-monospace small ms-2"></span></h5>
+                <h5 class="modal-title">
+                    Ödeme <span id="odeme-fis-no" class="text-muted font-monospace small ms-2"></span>
+                </h5>
             </div>
 
-            <div class="modal-body">
-                <div id="odeme-uyari" class="alert alert-danger py-2 d-none" role="alert"></div>
+            <div class="modal-body p-0">
+                <div id="odeme-uyari" class="bildirim bildirim-olumsuz d-none" role="alert"></div>
 
-                <div class="row g-3">
-                    <div class="col-md-5">
-                        <div class="d-flex justify-content-between">
-                            <span class="text-muted">Fiş toplamı</span>
-                            <span id="odeme-genel-toplam">0,00</span>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <span class="text-muted">Ödenen</span>
-                            <span id="odeme-odenen">0,00</span>
-                        </div>
-                        <div class="d-flex justify-content-between border-top pt-2 mt-2">
-                            <span class="fw-semibold">KALAN</span>
-                            <span id="odeme-kalan" class="fs-4 fw-bold text-danger">0,00</span>
-                        </div>
+                <div class="panel-serit">
+                    <div class="panel" style="flex:1 1 15rem">
+                        <div class="panel-govde">
+                            <div class="cekmece-satir" style="color:#4b5563">
+                                <span>Fiş toplamı</span><span id="odeme-genel-toplam">0,00</span>
+                            </div>
+                            <div class="cekmece-satir" style="color:#4b5563">
+                                <span>Ödenen</span><span id="odeme-odenen">0,00</span>
+                            </div>
+                            <div class="fark-kutu acik mt-2">
+                                <div class="arac-etiket">Kalan</div>
+                                <div id="odeme-kalan" class="fark-tutar">0,00</div>
+                            </div>
 
-                        <div id="para-ustu-kutusu" class="alert alert-warning mt-3 mb-0 py-2 d-none">
-                            <div class="small">Para üstü</div>
-                            <div id="para-ustu" class="fs-3 fw-bold">0,00</div>
-                        </div>
+                            <div id="para-ustu-kutusu" class="fark-kutu fazla mt-2 d-none">
+                                <div class="arac-etiket">Para üstü</div>
+                                <div id="para-ustu" class="fark-tutar">0,00</div>
+                            </div>
 
-                        <div id="odeme-tamam" class="alert alert-success mt-3 mb-0 py-2 d-none">
-                            Ödeme tamamlandı, fiş kapandı ve stok düşüldü.
-                        </div>
+                            <div id="odeme-tamam" class="bildirim bildirim-olumlu mt-2 d-none">
+                                <i class="bi bi-check-circle"></i>
+                                Ödeme tamamlandı, fiş kapandı ve stok düşüldü.
+                            </div>
 
-                        <div id="stok-uyari" class="alert alert-warning mt-3 mb-0 py-2 small d-none"></div>
+                            <div id="stok-uyari" class="bildirim bildirim-olumsuz mt-2 d-none"></div>
+                        </div>
                     </div>
 
-                    <div class="col-md-7">
-                        <div class="alert alert-secondary py-2 small mb-2">
-                            Şu an yalnızca <strong>nakit</strong> ödeme alınabiliyor.
-                            Kart ödemesi POS entegrasyonu yapıldığında açılacak.
-                        </div>
+                    <div class="panel" style="flex:1 1 18rem">
+                        <div class="panel-govde">
+                            <div class="ipucu mb-2">
+                                Şu an yalnızca <strong>nakit</strong> ödeme alınabiliyor.
+                                Kart ödemesi POS entegrasyonu yapıldığında açılacak.
+                            </div>
 
-                        <div class="mb-2">
-                            <label class="form-label mb-0 small">Mahsup edilecek tutar</label>
-                            <input id="odeme-tutar" type="text" class="form-control text-end" autocomplete="off" />
-                            <div class="form-text">Kalanın tamamı için boş bırakabilirsiniz.</div>
-                        </div>
+                            <div class="alan">
+                                <label for="odeme-tutar">Mahsup</label>
+                                <div class="deger">
+                                    <input id="odeme-tutar" type="text" class="form-control text-end"
+                                           autocomplete="off" />
+                                </div>
+                            </div>
+                            <div class="alan">
+                                <label></label>
+                                <div class="deger ipucu">Kalanın tamamı için boş bırakabilirsiniz.</div>
+                            </div>
+                            <div class="alan">
+                                <label for="odeme-alinan">Alınan</label>
+                                <div class="deger">
+                                    <input id="odeme-alinan" type="text" class="form-control text-end"
+                                           autocomplete="off" />
+                                </div>
+                            </div>
 
-                        <div class="mb-2">
-                            <label class="form-label mb-0 small">Müşteriden alınan</label>
-                            <input id="odeme-alinan" type="text" class="form-control text-end" autocomplete="off" />
+                            <div class="d-grid mt-2">
+                                <button type="button" id="btn-odeme-ekle" class="btn btn-primary">
+                                    Ödemeyi Ekle
+                                </button>
+                            </div>
                         </div>
-
-                        <button type="button" id="btn-odeme-ekle" class="btn btn-primary w-100">Ödemeyi Ekle</button>
                     </div>
                 </div>
 
-                <table class="table table-sm mt-3 mb-0">
-                    <thead class="table-light">
+                <table class="izgara">
+                    <thead>
                         <tr>
                             <th>Tip</th>
-                            <th class="text-end">Tutar</th>
-                            <th class="text-end">Alınan</th>
-                            <th class="text-end">Para üstü</th>
-                            <th></th>
+                            <th class="sayi" style="width:8rem">Tutar</th>
+                            <th class="sayi" style="width:8rem">Alınan</th>
+                            <th class="sayi" style="width:8rem">Para üstü</th>
+                            <th class="islem"></th>
                         </tr>
                     </thead>
                     <tbody id="odeme-listesi"></tbody>
@@ -270,7 +319,9 @@
 </div>
 
 @section Scripts {
+    <script src="~/lib/zxing/index.min.js" asp-append-version="true"></script>
     <script src="~/js/kasa.js" asp-append-version="true"></script>
     <script src="~/js/odeme.js" asp-append-version="true"></script>
     <script src="~/js/askiya-alma.js" asp-append-version="true"></script>
+    <script src="~/js/kamera.js" asp-append-version="true"></script>
 }

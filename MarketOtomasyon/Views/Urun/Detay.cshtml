@@ -1,75 +1,120 @@
 @model MarketOtomasyon.Models.ViewModels.UrunDetayVm
+@using MarketOtomasyon.Models.ViewModels
 @{
     ViewData["Title"] = Model.Urun.Ad;
 }
 
-<div class="d-flex justify-content-between align-items-start mb-3">
-    <div>
-        <div class="text-muted">
-            <code>@Model.Urun.Kod</code>
-            &middot; @Model.Urun.Birim
-            &middot; KDV %@Model.Urun.KdvOrani.ToString("0.##")
-            @if (Model.Urun.Tartili)
-            {
-                <span class="badge bg-info">tartılı</span>
-            }
-            @if (!Model.Urun.Aktif)
-            {
-                <span class="badge bg-secondary">pasif</span>
-            }
+<div class="ekran">
+    <div class="arac-cubugu">
+        <a class="btn btn-outline-secondary" asp-action="Index">
+            <i class="bi bi-arrow-left"></i> Liste
+        </a>
+        <a class="btn btn-primary" asp-action="Duzenle" asp-route-id="@Model.Urun.Id">
+            <i class="bi bi-pencil"></i> Düzenle
+        </a>
+
+        <span class="arac-ayrac"></span>
+
+        <span class="kod">@Model.Urun.Kod</span>
+        <strong>@Model.Urun.Ad</strong>
+        <span class="text-muted">
+            @Model.Urun.Birim · KDV %@Model.Urun.KdvOrani.ToString("0.##")
+        </span>
+        @if (Model.Urun.Tartili)
+        {
+            <span class="rozet rozet-notr">tartılı</span>
+        }
+        @if (Model.Urun.Aktif)
+        {
+            <span class="rozet rozet-olumlu">aktif</span>
+        }
+        else
+        {
+            <span class="rozet rozet-notr">pasif</span>
+        }
+
+        @if (Model.GuncelFiyat is not null)
+        {
+            <div class="arac-sag d-flex align-items-center gap-2">
+                <span class="arac-etiket">Güncel fiyat</span>
+                <strong class="fs-5">@Model.GuncelFiyat.Value.ToString("N2") ₺</strong>
+            </div>
+        }
+    </div>
+
+    @if (TempData["Mesaj"] is string mesaj)
+    {
+        <div class="bildirim bildirim-olumlu"><i class="bi bi-check-circle"></i> @mesaj</div>
+    }
+
+    <div class="panel-serit" style="flex:1; min-height:0; align-items:stretch">
+
+        <!-- Fotograf -->
+        <div class="panel" style="flex:0 1 16rem">
+            <div class="panel-baslik"><span><i class="bi bi-image"></i> Fotoğraf</span></div>
+            <div class="panel-govde text-center">
+                <partial name="_UrunResmi"
+                         model="@UrunResmiVm.Olustur(Model.Urun.ResimYolu, Model.Urun.Ad, "dev")" />
+
+                @* CC-BY-SA atif yukumlulugu: kaynak gizlenmez. *@
+                @if (!string.IsNullOrWhiteSpace(Model.Urun.ResimKaynagi))
+                {
+                    <div class="resim-kaynak mt-2">
+                        @Model.Urun.ResimKaynagi
+                        @if (Model.Urun.ResimTarihi is not null)
+                        {
+                            <br />
+                            <text>@Model.Urun.ResimTarihi.Value.ToLocalTime().ToString("dd.MM.yyyy") tarihinde indirildi</text>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="resim-kaynak mt-2">
+                        Fotoğraf yok. Ürün listesindeki <strong>Resimleri Çek</strong>
+                        düğmesi barkodu olan ürünler için dener.
+                    </div>
+                }
+            </div>
         </div>
-    </div>
-    <div>
-        <a class="btn btn-outline-primary" asp-action="Duzenle" asp-route-id="@Model.Urun.Id"><i class="bi bi-pencil"></i> Düzenle</a>
-        <a class="btn btn-link" asp-action="Index"><i class="bi bi-arrow-left"></i> Listeye dön</a>
-    </div>
-</div>
 
-@if (TempData["Mesaj"] is string mesaj)
-{
-    <div class="alert alert-success">@mesaj</div>
-}
+        <!-- Barkodlar -->
+        <div class="panel" style="flex:3 1 28rem">
+            <div class="panel-baslik"><span><i class="bi bi-upc-scan"></i> Barkodlar</span></div>
 
-<div class="row g-4">
-    <div class="col-lg-7">
-        <div class="card">
-            <div class="card-header">Barkodlar</div>
-            <div class="card-body">
-                <table class="table table-sm align-middle mb-3">
+            <div class="izgara-sarmal">
+                <table class="izgara">
                     <thead>
                         <tr>
                             <th>Barkod</th>
-                            <th>Tip</th>
-                            <th class="text-end">Çarpan</th>
-                            <th></th>
+                            <th style="width:6rem">Tip</th>
+                            <th class="sayi" style="width:7rem">Çarpan</th>
+                            <th class="islem"></th>
                         </tr>
                     </thead>
                     <tbody>
-                        @if (Model.Barkodlar.Count == 0)
-                        {
-                            <tr><td colspan="4" class="text-center text-muted py-3">Bu ürüne henüz barkod tanımlanmamış.</td></tr>
-                        }
-                        @foreach (var b in Model.Barkodlar)
+                        @foreach (var barkod in Model.Barkodlar)
                         {
                             <tr>
-                                <td><code>@b.Barkod</code></td>
+                                <td class="kod">@barkod.Barkod</td>
                                 <td>
-                                    @if (b.Tip == 2)
+                                    @if (barkod.Tip == 2)
                                     {
-                                        <span class="badge bg-warning text-dark">koli</span>
+                                        <span class="rozet rozet-uyari">koli</span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-light text-dark">tekli</span>
+                                        <span class="rozet rozet-notr">tekli</span>
                                     }
                                 </td>
-                                <td class="text-end">@b.Carpan.ToString("0.##")</td>
-                                <td class="text-end">
+                                <td class="sayi">@barkod.Carpan.ToString("0.##")</td>
+                                <td class="islem">
                                     <form method="post" asp-action="BarkodSil">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@b.Id" />
+                                        <input type="hidden" name="id" value="@barkod.Id" />
                                         <input type="hidden" name="urunId" value="@Model.Urun.Id" />
-                                        <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                        <button type="submit" class="btn btn-outline-danger" title="Barkodu sil">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
                                     </form>
                                 </td>
                             </tr>
@@ -77,86 +122,89 @@
                     </tbody>
                 </table>
 
-                <h6 class="text-muted">Yeni barkod ekle</h6>
-                <form method="post" asp-action="BarkodEkle" class="row g-2 align-items-end">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" asp-for="YeniBarkod.UrunId" value="@Model.Urun.Id" />
-
-                    <div class="col-md-5">
-                        <label class="form-label">Barkod</label>
-                        <input class="form-control" asp-for="YeniBarkod.Barkod" autocomplete="off" />
-                        <span class="text-danger small" asp-validation-for="YeniBarkod.Barkod"></span>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Tip</label>
-                        <select class="form-select" asp-for="YeniBarkod.Tip">
-                            <option value="1">Tekli</option>
-                            <option value="2">Koli</option>
-                        </select>
-                        <span class="text-danger small" asp-validation-for="YeniBarkod.Tip"></span>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Çarpan</label>
-                        <input class="form-control" asp-for="YeniBarkod.Carpan" type="number" step="0.001" min="0" />
-                        <span class="text-danger small" asp-validation-for="YeniBarkod.Carpan"></span>
-                    </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary w-100">Ekle</button>
-                    </div>
-                </form>
-                <div class="form-text mt-2">
-                    Koli barkodunda çarpan, bir okutmada sepete eklenecek adedi belirtir (örn. 12'li koli için 12).
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-lg-5">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span>Fiyat geçmişi</span>
-                @if (Model.GuncelFiyat is not null)
+                @if (Model.Barkodlar.Count == 0)
                 {
-                    <strong>@Model.GuncelFiyat.Value.ToString("N2") TL</strong>
+                    <p class="veri-yok">Bu ürüne henüz barkod tanımlanmamış.</p>
                 }
             </div>
-            <div class="card-body">
-                <table class="table table-sm mb-0">
+
+            @* Ekleme satiri izgaranin hemen altinda: yeni barkod, listenin
+               devami gibi girilir. *@
+            <form method="post" asp-action="BarkodEkle" class="arac-cubugu"
+                  style="border-top:1px solid var(--izgara-cizgi); border-bottom:none">
+                <input type="hidden" asp-for="YeniBarkod.UrunId" value="@Model.Urun.Id" />
+
+                <span class="arac-etiket">Yeni</span>
+                <input class="form-control font-monospace" style="width:13rem"
+                       asp-for="YeniBarkod.Barkod" autocomplete="off"
+                       placeholder="Barkod" aria-label="Barkod" />
+
+                <select class="form-select" style="width:7rem" asp-for="YeniBarkod.Tip" aria-label="Barkod tipi">
+                    <option value="1">Tekli</option>
+                    <option value="2">Koli</option>
+                </select>
+
+                <input class="form-control text-end" style="width:6rem" asp-for="YeniBarkod.Carpan"
+                       type="number" step="0.001" min="0" placeholder="Çarpan" aria-label="Çarpan" />
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-plus-lg"></i> Ekle
+                </button>
+
+                <span class="hata" asp-validation-for="YeniBarkod.Barkod"></span>
+                <span class="hata" asp-validation-for="YeniBarkod.Carpan"></span>
+
+                <span class="ipucu arac-sag">
+                    Koli barkodunda çarpan, bir okutmada sepete eklenecek adettir (12'li koli → 12).
+                </span>
+            </form>
+        </div>
+
+        <!-- Fiyat gecmisi -->
+        <div class="panel" style="flex:2 1 22rem">
+            <div class="panel-baslik"><span><i class="bi bi-clock-history"></i> Fiyat geçmişi</span></div>
+
+            <div class="izgara-sarmal">
+                <table class="izgara">
                     <thead>
                         <tr>
-                            <th class="text-end">Fiyat</th>
+                            <th class="sayi" style="width:7rem">Fiyat</th>
                             <th>Başlangıç</th>
                             <th>Bitiş</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @if (Model.FiyatGecmisi.Count == 0)
+                        @foreach (var fiyat in Model.FiyatGecmisi)
                         {
-                            <tr><td colspan="3" class="text-center text-muted py-3">Fiyat kaydı yok.</td></tr>
-                        }
-                        @foreach (var f in Model.FiyatGecmisi)
-                        {
-                            <tr class="@(f.Guncel ? "table-success" : null)">
-                                <td class="text-end">@f.Fiyat.ToString("N2")</td>
-                                <td>@f.BaslangicTarihi.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                            <tr>
+                                <td class="sayi fw-semibold">@fiyat.Fiyat.ToString("N2")</td>
+                                <td>@fiyat.BaslangicTarihi.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
                                 <td>
-                                    @if (f.Guncel)
+                                    @if (fiyat.Guncel)
                                     {
-                                        <span class="badge bg-success">güncel</span>
+                                        <span class="rozet rozet-olumlu">güncel</span>
                                     }
                                     else
                                     {
-                                        @f.BitisTarihi!.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+                                        @fiyat.BitisTarihi!.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
                                     }
                                 </td>
                             </tr>
                         }
                     </tbody>
                 </table>
-                <div class="form-text mt-2">
-                    Fiyat, ürün düzenleme ekranından değiştirilir. Eski kayıt silinmez, bitiş tarihi doldurulur.
-                </div>
+
+                @if (Model.FiyatGecmisi.Count == 0)
+                {
+                    <p class="veri-yok">Fiyat kaydı yok.</p>
+                }
             </div>
         </div>
+    </div>
+
+    <div class="durum-cubugu">
+        <span><strong>@Model.Barkodlar.Count</strong> barkod</span>
+        <span><strong>@Model.FiyatGecmisi.Count</strong> fiyat kaydı</span>
+        <span class="arac-sag">Fiyat düzenleme ekranından değişir; eski kayıt silinmez, bitiş tarihi dolar.</span>
     </div>
 </div>

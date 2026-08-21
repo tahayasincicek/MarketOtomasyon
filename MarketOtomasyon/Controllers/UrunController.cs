@@ -19,6 +19,7 @@ public class UrunController : Controller
     private readonly IValidator<UrunFormVm> _validator;
     private readonly BarkodRepository _barkodRepository;
     private readonly IValidator<BarkodFormVm> _barkodValidator;
+    private readonly UrunResimService _urunResimService;
 
     public UrunController(
         UrunRepository urunRepository,
@@ -27,7 +28,8 @@ public class UrunController : Controller
         UrunService urunService,
         IValidator<UrunFormVm> validator,
         BarkodRepository barkodRepository,
-        IValidator<BarkodFormVm> barkodValidator)
+        IValidator<BarkodFormVm> barkodValidator,
+        UrunResimService urunResimService)
     {
         _urunRepository = urunRepository;
         _kategoriRepository = kategoriRepository;
@@ -36,6 +38,35 @@ public class UrunController : Controller
         _validator = validator;
         _barkodRepository = barkodRepository;
         _barkodValidator = barkodValidator;
+        _urunResimService = urunResimService;
+    }
+
+    /// <summary>
+    /// Resmi olmayan urunlerin fotografini Open Food Facts'ten ceker.
+    /// Yavas bir islemdir (hiz siniri geregi urun basina ~4.5 sn beklenir);
+    /// bu yuzden kasa akisindan degil, yalnizca bu ekrandan cagrilir.
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResimleriCek(CancellationToken ct)
+    {
+        var sonuc = await _urunResimService.TumEksikleriCekAsync(ct);
+
+        if (sonuc.Denenen == 0)
+        {
+            TempData["Mesaj"] = "Resmi eksik, barkodu olan ürün kalmadı.";
+        }
+        else
+        {
+            TempData["Mesaj"] =
+                $"{sonuc.Denenen} ürün denendi: {sonuc.Bulunan} resim indirildi, " +
+                $"{sonuc.Bulunamayan} üründe kayıt bulunamadı.";
+        }
+
+        if (sonuc.Hatalar.Count > 0)
+            TempData["Uyari"] = string.Join(" · ", sonuc.Hatalar.Take(3));
+
+        return RedirectToAction(nameof(Index));
     }
 
     public async Task<IActionResult> Index(string? arama, int? kategoriId, bool sadeceAktif = true, int sayfa = 1, CancellationToken ct = default)

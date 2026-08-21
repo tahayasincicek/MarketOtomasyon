@@ -46,6 +46,7 @@ UPDATE Fis SET Askida = @askida WHERE Id = @fisId AND Durum = 1;";
 
     private const string SqlSatirlar = @"
 SELECT fs.Id AS SatirId, fs.SatirNo, fs.UrunId, u.Kod, u.Ad, u.Birim,
+       u.ResimYolu,
        fs.Miktar, fs.BirimFiyat, fs.IndirimTutari, fs.KdvOrani, fs.SatirToplam,
        fs.KampanyaId, kmp.Ad AS KampanyaAdi
 FROM FisSatir fs

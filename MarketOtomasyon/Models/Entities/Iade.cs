@@ -6,6 +6,8 @@ public class Iade
     public int Id { get; set; }
     public string IadeNo { get; set; } = string.Empty;
     public int FisId { get; set; }
+    /// <summary>Iadenin yapildigi andaki acik vardiya. Fisin vardiyasi degil.</summary>
+    public int? VardiyaId { get; set; }
     public int KullaniciId { get; set; }
     public DateTime Tarih { get; set; }
     public decimal ToplamTutar { get; set; }

@@ -1,80 +1,95 @@
 @model List<MarketOtomasyon.Models.ViewModels.KampanyaListeSatirVm>
 @{
     ViewData["Title"] = "Kampanyalar";
+    var yururlukte = Model.Count(k => k.SuAnGecerli);
 }
 
-<div class="d-flex justify-content-end align-items-center mb-3">
-    <a class="btn btn-primary" asp-action="Ekle"><i class="bi bi-plus-lg"></i> Yeni Kampanya</a>
-</div>
+<div class="ekran">
+    @if (TempData["Mesaj"] is string mesaj)
+    {
+        <div class="bildirim bildirim-olumlu"><i class="bi bi-check-circle"></i> @mesaj</div>
+    }
 
-@if (TempData["Mesaj"] is string mesaj)
-{
-    <div class="alert alert-success">@mesaj</div>
-}
+    <div class="bildirim bildirim-bilgi">
+        <i class="bi bi-info-circle"></i>
+        <span>
+            Kampanyalar kasada otomatik uygulanır. Bir satıra birden fazla kampanya uyuyorsa
+            <strong>müşteri lehine en yüksek indirim</strong> seçilir; eşitlikte önceliği küçük olan kazanır.
+            Elle indirim verilmiş satıra kampanya uygulanmaz.
+        </span>
+    </div>
 
-<div class="alert alert-light border small">
-    Kampanyalar kasada otomatik uygulanır; kasiyerin bir şey yapması gerekmez.
-    Bir satıra birden fazla kampanya uyuyorsa <strong>müşteri lehine en yüksek indirim</strong> seçilir,
-    eşitlik hâlinde önceliği küçük olan kazanır. Elle indirim verilmiş satıra kampanya uygulanmaz.
-</div>
+    <div class="arac-cubugu">
+        <a class="btn btn-primary" asp-action="Ekle">
+            <i class="bi bi-plus-lg"></i> Yeni Kampanya
+        </a>
+    </div>
 
-<table class="table table-striped align-middle">
-    <thead>
-        <tr>
-            <th>Kod</th>
-            <th>Ad</th>
-            <th>Tip</th>
-            <th>Kapsam</th>
-            <th class="text-end">Öncelik</th>
-            <th>Geçerlilik</th>
-            <th>Durum</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
+    <div class="izgara-sarmal">
+        <table class="izgara">
+            <thead>
+                <tr>
+                    <th style="width:8rem">Kod</th>
+                    <th>Ad</th>
+                    <th style="width:10rem">Tip</th>
+                    <th style="width:14rem">Kapsam</th>
+                    <th class="sayi" style="width:6rem">Öncelik</th>
+                    <th style="width:14rem">Geçerlilik</th>
+                    <th style="width:8rem">Durum</th>
+                    <th class="islem"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var kampanya in Model)
+                {
+                    <tr class="@(kampanya.Aktif ? "" : "pasif")">
+                        <td class="kod">@kampanya.Kod</td>
+                        <td>@kampanya.Ad</td>
+                        <td>@kampanya.TipAdi</td>
+                        <td class="text-muted">@kampanya.KapsamAdi</td>
+                        <td class="sayi">@kampanya.Oncelik</td>
+                        <td class="text-muted">
+                            @kampanya.BaslangicTarihi.ToLocalTime().ToString("dd.MM.yyyy")
+                            @if (kampanya.BitisTarihi.HasValue)
+                            {
+                                <text>– @kampanya.BitisTarihi.Value.ToLocalTime().ToString("dd.MM.yyyy")</text>
+                            }
+                            else
+                            {
+                                <text>– süresiz</text>
+                            }
+                        </td>
+                        <td>
+                            @if (kampanya.SuAnGecerli)
+                            {
+                                <span class="rozet rozet-olumlu">yürürlükte</span>
+                            }
+                            else if (!kampanya.Aktif)
+                            {
+                                <span class="rozet rozet-notr">pasif</span>
+                            }
+                            else
+                            {
+                                <span class="rozet rozet-uyari">tarih dışı</span>
+                            }
+                        </td>
+                        <td class="islem">
+                            <a class="btn btn-outline-primary" asp-action="Duzenle" asp-route-id="@kampanya.Id"
+                               title="Düzenle"><i class="bi bi-pencil"></i></a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
         @if (Model.Count == 0)
         {
-            <tr><td colspan="8" class="text-center text-muted py-4">Henüz kampanya tanımlanmamış.</td></tr>
+            <p class="veri-yok">Henüz kampanya tanımlanmamış.</p>
         }
-        @foreach (var k in Model)
-        {
-            <tr>
-                <td><code>@k.Kod</code></td>
-                <td>@k.Ad</td>
-                <td>@k.TipAdi</td>
-                <td class="text-muted">@k.KapsamAdi</td>
-                <td class="text-end">@k.Oncelik</td>
-                <td class="small text-muted">
-                    @k.BaslangicTarihi.ToLocalTime().ToString("dd.MM.yyyy")
-                    @if (k.BitisTarihi.HasValue)
-                    {
-                        <text>— @k.BitisTarihi.Value.ToLocalTime().ToString("dd.MM.yyyy")</text>
-                    }
-                    else
-                    {
-                        <text>— süresiz</text>
-                    }
-                </td>
-                <td>
-                    @if (k.SuAnGecerli)
-                    {
-                        <span class="badge bg-success">yürürlükte</span>
-                    }
-                    else if (!k.Aktif)
-                    {
-                        <span class="badge bg-secondary">pasif</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-warning text-dark">tarih dışı</span>
-                    }
-                </td>
-                <td class="text-end">
-                    <a class="btn btn-sm btn-outline-primary" asp-action="Duzenle" asp-route-id="@k.Id">
-                        <i class="bi bi-pencil"></i> Düzenle
-                    </a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+    </div>
+
+    <div class="durum-cubugu">
+        <span><strong>@Model.Count</strong> kampanya</span>
+        <span>@yururlukte tanesi şu an yürürlükte</span>
+    </div>
+</div>

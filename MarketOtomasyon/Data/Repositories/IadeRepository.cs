@@ -49,9 +49,9 @@ ORDER BY fs.SatirNo;";
 DECLARE @no INT = NEXT VALUE FOR IadeNoSeq;
 DECLARE @iadeNo NVARCHAR(20) = FORMAT(SYSUTCDATETIME(), 'yyyyMMdd') + '-I-' + FORMAT(@no, '00000');
 
-INSERT INTO Iade (IadeNo, FisId, KullaniciId, ToplamTutar, OdemeTipi, Aciklama)
+INSERT INTO Iade (IadeNo, FisId, VardiyaId, KullaniciId, ToplamTutar, OdemeTipi, Aciklama)
 OUTPUT INSERTED.Id, INSERTED.IadeNo
-VALUES (@iadeNo, @FisId, @KullaniciId, @ToplamTutar, @OdemeTipi, @Aciklama);";
+VALUES (@iadeNo, @FisId, @VardiyaId, @KullaniciId, @ToplamTutar, @OdemeTipi, @Aciklama);";
 
     private const string SqlIadeSatirEkle = @"
 INSERT INTO IadeSatir

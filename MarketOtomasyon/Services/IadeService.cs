@@ -67,7 +67,7 @@ public class IadeService
     /// Para iadesi, FisSatir.IadeEdilenMiktar ve stok girisini ayni transaction'da yazar.
     /// </summary>
     public async Task<IadeSonucVm> IadeEtAsync(
-        IadeFormVm form, int kullaniciId, CancellationToken ct = default)
+    IadeFormVm form, int kullaniciId, int vardiyaId, CancellationToken ct = default)
     {
         var fisNo = form.FisNo?.Trim();
         if (string.IsNullOrWhiteSpace(fisNo))
@@ -138,6 +138,7 @@ public class IadeService
         {
             FisId = fis.FisId,
             KullaniciId = kullaniciId,
+            VardiyaId = vardiyaId,
             ToplamTutar = toplamTutar,
             OdemeTipi = OdemeTipNakit,
             Aciklama = string.IsNullOrWhiteSpace(form.Aciklama) ? null : form.Aciklama.Trim()

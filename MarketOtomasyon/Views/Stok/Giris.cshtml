@@ -3,104 +3,146 @@
     ViewData["Title"] = "Mal Kabul";
 }
 
-<div class="d-flex justify-content-end align-items-center mb-3">
-    <a class="btn btn-link" asp-action="Index"><i class="bi bi-arrow-left"></i> Stok durumuna dön</a>
-</div>
+<div class="ekran">
+    <div class="arac-cubugu">
+        <a class="btn btn-outline-secondary" asp-action="Index">
+            <i class="bi bi-arrow-left"></i> Stok Durumu
+        </a>
+        <span class="arac-ayrac"></span>
+        <span class="ipucu">
+            Her giriş bir stok hareketi olarak yazılır; bakiye hareketlerin toplamından okunur.
+        </span>
+    </div>
 
-@if (TempData["Mesaj"] is string mesaj)
-{
-    <div class="alert alert-success">@mesaj</div>
-}
+    @if (TempData["Mesaj"] is string mesaj)
+    {
+        <div class="bildirim bildirim-olumlu"><i class="bi bi-check-circle"></i> @mesaj</div>
+    }
 
-<div class="row g-4">
-    <div class="col-lg-5">
-        <div class="card">
-            <div class="card-header">Giriş</div>
-            <div class="card-body">
-                <form method="post" asp-action="Giris" class="row g-3">
-                    @Html.AntiForgeryToken()
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="bildirim bildirim-olumsuz">
+            <i class="bi bi-exclamation-triangle"></i>
+            <div asp-validation-summary="All" class="mb-0"></div>
+        </div>
+    }
 
-                    <div asp-validation-summary="All" class="alert alert-danger @(ViewData.ModelState.IsValid ? "d-none" : "")"></div>
+    <div class="panel-serit" style="flex:1; min-height:0; align-items:stretch">
 
-                    <div class="col-12">
-                        <label class="form-label" asp-for="Barkod">Barkod</label>
-                        <input class="form-control" asp-for="Barkod" autocomplete="off" autofocus
-                               placeholder="Okutun veya elle girin" />
-                        <span class="text-danger small" asp-validation-for="Barkod"></span>
-                        <div class="form-text">Koli barkodu okutulsa da miktar aşağıdan girilir.</div>
+        <!-- Giris formu -->
+        <div class="panel" style="flex:1 1 24rem">
+            <div class="panel-baslik"><span><i class="bi bi-box-arrow-in-down"></i> Giriş</span></div>
+            <div class="panel-govde">
+                <form method="post" asp-action="Giris">
+                    <div class="alan">
+                        <label asp-for="Barkod">Barkod</label>
+                        <div class="deger">
+                            <input class="form-control font-monospace" asp-for="Barkod"
+                                   autocomplete="off" autofocus placeholder="Okutun veya elle girin" />
+                            <span class="hata" asp-validation-for="Barkod"></span>
+                        </div>
                     </div>
 
-                    <div class="col-12">
-                        <label class="form-label" asp-for="DepoId">Depo</label>
-                        <select class="form-select" asp-for="DepoId">
-                            <option value="0">(seçiniz)</option>
-                            @foreach (var d in Model.Depolar)
-                            {
-                                <option value="@d.Id" selected="@(Model.DepoId == d.Id)">@d.Ad</option>
-                            }
-                        </select>
-                        <span class="text-danger small" asp-validation-for="DepoId"></span>
+                    <div class="alan">
+                        <label asp-for="DepoId">Depo</label>
+                        <div class="deger">
+                            <select class="form-select orta-genislik" asp-for="DepoId">
+                                <option value="0">(seçiniz)</option>
+                                @foreach (var depo in Model.Depolar)
+                                {
+                                    <option value="@depo.Id" selected="@(Model.DepoId == depo.Id)">@depo.Ad</option>
+                                }
+                            </select>
+                            <span class="hata" asp-validation-for="DepoId"></span>
+                        </div>
                     </div>
 
-                    <div class="col-12">
-                        <label class="form-label" asp-for="Miktar">Miktar</label>
-                        <input class="form-control" asp-for="Miktar" type="number" step="0.001" min="0" />
-                        <span class="text-danger small" asp-validation-for="Miktar"></span>
+                    <div class="alan">
+                        <label asp-for="Miktar">Miktar</label>
+                        <div class="deger">
+                            <input class="form-control dar text-end" asp-for="Miktar"
+                                   type="number" step="0.001" min="0" />
+                            <span class="hata" asp-validation-for="Miktar"></span>
+                        </div>
                     </div>
 
-                    <div class="col-12">
-                        <label class="form-label" asp-for="Aciklama">Açıklama</label>
-                        <input class="form-control" asp-for="Aciklama" placeholder="İrsaliye no, tedarikçi vb." />
+                    <div class="alan">
+                        <label></label>
+                        <div class="deger ipucu">Koli barkodu okutulsa da miktar buradan girilir.</div>
                     </div>
 
-                    <div class="col-12">
-                        <button type="submit" class="btn btn-primary">Girişi Kaydet</button>
+                    <div class="alan">
+                        <label asp-for="Aciklama">Açıklama</label>
+                        <div class="deger">
+                            <input class="form-control" asp-for="Aciklama"
+                                   placeholder="İrsaliye no, tedarikçi vb." />
+                        </div>
+                    </div>
+
+                    <div class="alan">
+                        <label></label>
+                        <div class="deger">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg"></i> Girişi Kaydet
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>
         </div>
-    </div>
 
-    <div class="col-lg-7">
-        <div class="card">
-            <div class="card-header">Son hareketler</div>
-            <div class="card-body">
-                <table class="table table-sm align-middle mb-0">
+        <!-- Son hareketler -->
+        <div class="panel" style="flex:2 1 32rem">
+            <div class="panel-baslik"><span><i class="bi bi-list-ul"></i> Son hareketler</span></div>
+
+            <div class="izgara-sarmal">
+                <table class="izgara">
                     <thead>
                         <tr>
-                            <th>Tarih</th>
+                            <th style="width:8rem">Tarih</th>
                             <th>Ürün</th>
-                            <th>Depo</th>
-                            <th>Kaynak</th>
-                            <th class="text-end">Miktar</th>
+                            <th style="width:9rem">Depo</th>
+                            <th style="width:8rem">Kaynak</th>
+                            <th class="sayi" style="width:9rem">Miktar</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @if (Model.SonHareketler.Count == 0)
-                        {
-                            <tr><td colspan="5" class="text-center text-muted py-3">Henüz hareket yok.</td></tr>
-                        }
-                        @foreach (var h in Model.SonHareketler)
+                        @foreach (var hareket in Model.SonHareketler)
                         {
                             <tr>
-                                <td class="text-muted small">@h.Tarih.ToLocalTime().ToString("dd.MM HH:mm")</td>
-                                <td>
-                                    <code class="small">@h.UrunKod</code> @h.UrunAd
-                                    @if (!string.IsNullOrWhiteSpace(h.Aciklama))
+                                <td class="text-muted">@hareket.Tarih.ToLocalTime().ToString("dd.MM HH:mm")</td>
+                                <td style="white-space:normal">
+                                    <span class="kod">@hareket.UrunKod</span> @hareket.UrunAd
+                                    @if (!string.IsNullOrWhiteSpace(hareket.Aciklama))
                                     {
-                                        <div class="text-muted small">@h.Aciklama</div>
+                                        <span class="ipucu">· @hareket.Aciklama</span>
                                     }
                                 </td>
-                                <td class="small">@h.DepoAd</td>
-                                <td><span class="badge bg-light text-dark">@h.KaynakAdi</span></td>
-                                <td class="text-end @(h.Yon == 1 ? "text-success" : "text-danger")">
-                                    @(h.Yon == 1 ? "+" : "-")@h.Miktar.ToString("0.###") @h.Birim
+                                <td>@hareket.DepoAd</td>
+                                <td><span class="rozet rozet-notr">@hareket.KaynakAdi</span></td>
+                                @* Giris/cikis yonu isaretle de belirtilir: renge bagimli kalinmasin. *@
+                                <td class="sayi @(hareket.Yon == 1 ? "text-success" : "text-danger")">
+                                    @(hareket.Yon == 1 ? "+" : "−")@hareket.Miktar.ToString("0.###") @hareket.Birim
                                 </td>
                             </tr>
                         }
                     </tbody>
                 </table>
+
+                @if (Model.SonHareketler.Count == 0)
+                {
+                    <p class="veri-yok">Henüz stok hareketi yok.</p>
+                }
             </div>
         </div>
     </div>
+
+    <div class="durum-cubugu">
+        <span>Son <strong>@Model.SonHareketler.Count</strong> hareket listeleniyor</span>
+        <span class="arac-sag">Satış ve iade hareketleri de burada görünür.</span>
+    </div>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

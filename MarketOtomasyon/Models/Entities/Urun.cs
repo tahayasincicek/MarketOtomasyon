@@ -15,4 +15,12 @@ public class Urun
     public bool Tartili { get; set; }
     public bool Aktif { get; set; }
     public DateTime OlusturmaTarihi { get; set; }
+
+    /// <summary>wwwroot altindaki gorece yol (/urun-resim/URN001.jpg). Resim yoksa null.</summary>
+    public string? ResimYolu { get; set; }
+
+    /// <summary>Resmin kaynagi ve lisansi. CC-BY-SA atifi icin ekranda gosterilir.</summary>
+    public string? ResimKaynagi { get; set; }
+
+    public DateTime? ResimTarihi { get; set; }
 }

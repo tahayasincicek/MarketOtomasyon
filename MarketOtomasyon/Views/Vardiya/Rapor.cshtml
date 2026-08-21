@@ -1,0 +1,263 @@
+@model MarketOtomasyon.Models.ViewModels.ZRaporVm
+@{
+    // Gercek kasalarda Z raporu, fisle ayni termal ruloya basilir.
+    // Bu yuzden Fis.cshtml ile ayni 80 mm duzeni kullanilir.
+    Layout = null;
+    var tr = new System.Globalization.CultureInfo("tr-TR");
+    string Para(decimal d) => d.ToString("N2", tr);
+
+    var fark = Model.Fark ?? 0;
+    var raporTipi = Model.Acik ? "X RAPORU" : "Z RAPORU";
+    var farkEtiketi = fark > 0 ? "KASA FAZLASI" : fark < 0 ? "KASA ACIGI" : "KASA DENK";
+}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <title>@raporTipi - Vardiya @Model.VardiyaId</title>
+    <style>
+        :root { --fis-genislik: 80mm; }
+
+        body {
+            margin: 0;
+            padding: 1rem;
+            background: #e5e7eb;
+            font-family: "Consolas", "Courier New", monospace;
+            font-size: 12px;
+            color: #000;
+        }
+
+        .fis {
+            width: var(--fis-genislik);
+            margin: 0 auto;
+            background: #fff;
+            padding: 6mm 4mm;
+            box-shadow: 0 .25rem 1rem rgba(0,0,0,.15);
+        }
+
+        .orta { text-align: center; }
+        .sag { text-align: right; }
+        .kalin { font-weight: 700; }
+        .buyuk { font-size: 15px; }
+        .kucuk { font-size: 11px; }
+
+        .baslik { font-size: 14px; font-weight: 700; letter-spacing: .05em; }
+
+        /* Rapor tipi rulonun tepesinde ters zeminle basilir; kasiyer
+           rulo yiginindan Z raporunu bakmadan ayirabilsin. */
+        .rapor-tipi {
+            background: #000;
+            color: #fff;
+            text-align: center;
+            font-weight: 700;
+            letter-spacing: .18em;
+            padding: 3px 0;
+            margin: 4px 0;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px dashed #000;
+            margin: 4px 0;
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+        td { padding: 1px 0; vertical-align: top; }
+
+        .bolum {
+            font-weight: 700;
+            letter-spacing: .06em;
+            margin-top: 6px;
+        }
+
+        .cift-cizgi {
+            border: none;
+            border-top: 3px double #000;
+            margin: 4px 0;
+        }
+
+        /* Fark satiri raporun kritik satiridir; cerceveyle ayrilir. */
+        .fark-satiri {
+            border: 2px solid #000;
+            padding: 3px 4px;
+            margin-top: 4px;
+            display: flex;
+            justify-content: space-between;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .yazdir-cubugu {
+            width: var(--fis-genislik);
+            margin: 0 auto .75rem;
+            display: flex;
+            gap: .5rem;
+        }
+
+        .yazdir-cubugu button, .yazdir-cubugu a {
+            flex: 1;
+            padding: .55rem;
+            font-family: system-ui, sans-serif;
+            font-size: 13px;
+            border: 1px solid #9ca3af;
+            border-radius: .25rem;
+            background: #fff;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            color: #111;
+        }
+
+        .yazdir-cubugu .geri {
+            background: #27272a;
+            border-color: #27272a;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        @@media print {
+            body { background: #fff; padding: 0; }
+            .fis { box-shadow: none; width: auto; padding: 0; }
+            .yazdir-cubugu { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="yazdir-cubugu">
+        <button type="button" onclick="window.print()">Yazdır</button>
+        <a class="geri" href="/Vardiya">Vardiya ekranı</a>
+    </div>
+
+    <div class="fis">
+        <div class="orta baslik">MARKET OTOMASYONU</div>
+        <div class="orta kucuk">Örnek Mah. Test Cad. No:1</div>
+        <div class="orta kucuk">Tel: 0212 000 00 00</div>
+
+        <div class="rapor-tipi">@raporTipi</div>
+
+        <table class="kucuk">
+            <tr>
+                <td>Vardiya No</td>
+                <td class="sag kalin">@Model.VardiyaId</td>
+            </tr>
+            <tr>
+                <td>Kasiyer</td>
+                <td class="sag">@Model.KasiyerAdi</td>
+            </tr>
+            <tr>
+                <td>Açılış</td>
+                <td class="sag">@Model.AcilisTarihi.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+            </tr>
+            <tr>
+                <td>Kapanış</td>
+                <td class="sag">
+                    @(Model.KapanisTarihi?.ToLocalTime().ToString("dd.MM.yyyy HH:mm") ?? "— (açık)")
+                </td>
+            </tr>
+        </table>
+
+        <hr />
+        <div class="bolum">SATIŞ ÖZETİ</div>
+        <table>
+            <tr>
+                <td>Fiş adedi</td>
+                <td class="sag">@Model.FisSayisi</td>
+            </tr>
+            <tr>
+                <td>Brüt ciro</td>
+                <td class="sag">@Para(Model.Ciro)</td>
+            </tr>
+            <tr>
+                <td>Toplam indirim</td>
+                <td class="sag">@Para(Model.ToplamIndirim)</td>
+            </tr>
+            <tr>
+                <td>Toplam KDV</td>
+                <td class="sag">@Para(Model.ToplamKdv)</td>
+            </tr>
+            <tr>
+                <td>İade (@Model.IadeSayisi adet)</td>
+                <td class="sag">-@Para(Model.IadeToplam)</td>
+            </tr>
+        </table>
+        <hr class="cift-cizgi" />
+        <table>
+            <tr class="kalin buyuk">
+                <td>NET CİRO</td>
+                <td class="sag">@Para(Model.NetCiro)</td>
+            </tr>
+        </table>
+
+        <hr />
+        <div class="bolum">ÖDEME DAĞILIMI</div>
+        <table>
+            <tr>
+                <td>NAKİT</td>
+                <td class="sag">@Para(Model.NakitSatis)</td>
+            </tr>
+            <tr>
+                <td>KART</td>
+                <td class="sag">@Para(Model.KartSatis)</td>
+            </tr>
+            <tr>
+                <td>PUAN</td>
+                <td class="sag">@Para(Model.PuanSatis)</td>
+            </tr>
+        </table>
+
+        <hr />
+        <div class="bolum">KASA MUTABAKATI</div>
+        @* Kart tahsilati cekmeceye para koymaz; beklenen tutara girmez. *@
+        <table>
+            <tr>
+                <td>Açılış tutarı</td>
+                <td class="sag">@Para(Model.AcilisTutari)</td>
+            </tr>
+            <tr>
+                <td>+ Nakit satış</td>
+                <td class="sag">@Para(Model.NakitSatis)</td>
+            </tr>
+            <tr>
+                <td>- Nakit iade</td>
+                <td class="sag">@Para(Model.NakitIade)</td>
+            </tr>
+        </table>
+        <hr />
+        <table>
+            <tr class="kalin">
+                <td>BEKLENEN TUTAR</td>
+                <td class="sag">@Para(Model.BeklenenTutar)</td>
+            </tr>
+            @if (Model.SayilanTutar is not null)
+            {
+                <tr class="kalin">
+                    <td>SAYILAN TUTAR</td>
+                    <td class="sag">@Para(Model.SayilanTutar.Value)</td>
+                </tr>
+            }
+        </table>
+
+        @if (Model.SayilanTutar is not null)
+        {
+            <div class="fark-satiri">
+                <span>@farkEtiketi</span>
+                <span>@Para(fark)</span>
+            </div>
+        }
+        else
+        {
+            <hr />
+            <div class="orta kucuk">
+                Vardiya henüz açık. Kapanış sayımı yapılmadı,<br />
+                bu bir ara rapordur (X).
+            </div>
+        }
+
+        <hr />
+        <div class="orta kucuk">
+            Rapor tarihi: @DateTime.UtcNow.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+        </div>
+        <div class="orta kucuk">Mali değeri yoktur.</div>
+    </div>
+</body>
+</html>
