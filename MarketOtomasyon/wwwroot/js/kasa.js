@@ -33,7 +33,12 @@
 
     async function sepetiYukle() {
         const yanit = await fetch("/Kasa/Sepet");
-        ciz(await yanit.json());
+        const govde = await yanit.json();
+
+        // Acik vardiya yoksa sunucu 409 + { hata } doner, sepet govdesi gelmez.
+        if (!yanit.ok) { uyariGoster(govde.hata); return; }
+
+        ciz(govde);
     }
 
     // ---------- Ekrana basma ----------
@@ -89,9 +94,11 @@
 
         tr.innerHTML =
             '<td class="text-muted">' + satir.satirNo + "</td>" +
-            "<td>" + metniKacir(satir.ad) +
+            '<td><span class="urun-hucre">' + resimEtiketi(satir.resimYolu, satir.ad, "kucuk") +
+                '<span class="urun-hucre-metin">' + metniKacir(satir.ad) +
                 '<span class="d-block text-muted font-monospace small">' + metniKacir(satir.kod) +
-                (kg ? ' <span class="badge bg-warning text-dark">kg</span>' : "") + indirimRozeti + "</span>" + kampanyaEtiketi + "</td>" +
+                (kg ? ' <span class="badge bg-warning text-dark">kg</span>' : "") + indirimRozeti + "</span>" +
+                kampanyaEtiketi + "</span></span></td>" +
             '<td class="text-end"></td>' +
             '<td class="text-end">' + paraBicimi.format(satir.birimFiyat) + "</td>" +
             '<td class="text-end fw-semibold">' + paraBicimi.format(satir.satirToplam) + "</td>" +
@@ -164,6 +171,17 @@
         return d.innerHTML;
     }
 
+    // Sunucudaki _UrunResmi partial'inin JS karsiligi. Resmi olmayan urun
+    // cogunluktadir; yer tutucu ayni yeri kaplar ki satirlar hizada kalsin.
+    function resimEtiketi(yol, ad, boyut) {
+        const sinif = "urun-resim urun-resim-" + boyut;
+        return yol
+            ? '<img class="' + sinif + '" src="' + metniKacir(yol) + '" alt="' + metniKacir(ad) +
+              '" loading="lazy" decoding="async" />'
+            : '<span class="' + sinif + ' urun-resim-yok" role="img" aria-label="' +
+              metniKacir(ad) + ' — fotoğraf yok"><i class="bi bi-box-seam"></i></span>';
+    }
+
     function uyariGoster(mesaj) {
         uyari.textContent = mesaj;
         uyari.classList.remove("d-none");
@@ -173,12 +191,43 @@
         uyari.classList.add("d-none");
     }
 
-    function sonOkutulan(satirlar) {
-        const son = satirlar[satirlar.length - 1];
+    // Sepetin son satiri DEGIL, bu istekte okutulan urunun satiri gosterilir.
+    // Okutulan urun sepette zaten varsa mevcut satirina eklenir; son satira
+    // bakilirsa kasiyere bambaska bir urunun fotografi gosterilir.
+    // KG urunlerde her okutma ayri satir acar, en yenisi sondakidir.
+    function sonOkutulan(sepet) {
+        const satirlar = sepet.satirlar || [];
+        const okutulan = sepet.sonOkutulanUrunId ?? null;
+
+        const eslesenler = okutulan === null
+            ? satirlar
+            : satirlar.filter(s => s.urunId === okutulan);
+
+        const kaynak = eslesenler.length > 0 ? eslesenler : satirlar;
+        const son = kaynak[kaynak.length - 1];
         document.getElementById("son-ad").textContent = son ? son.ad : "—";
         document.getElementById("son-detay").textContent = son
             ? miktarBicimi.format(son.miktar) + " " + son.birim + " × " + paraBicimi.format(son.birimFiyat)
             : "";
+
+        sonResimCiz(son);
+    }
+
+    // Panelin yuksekligi sabit kalsin diye <img> ile <span> arasinda gecis
+    // yapmak yerine ayni yerdeki dugum degistirilir.
+    function sonResimCiz(son) {
+        const eski = document.getElementById("son-resim");
+        if (!eski) return;
+
+        const kap = document.createElement("div");
+        kap.innerHTML = son
+            ? resimEtiketi(son.resimYolu, son.ad, "buyuk")
+            : '<span class="urun-resim urun-resim-yok urun-resim-buyuk" role="img" ' +
+              'aria-label="Son okutulan ürün"><i class="bi bi-upc-scan"></i></span>';
+
+        const yeni = kap.firstElementChild;
+        yeni.id = "son-resim";
+        eski.replaceWith(yeni);
     }
 
     /// Ortak akis: istegi calistir, sonucu ciz, odagi barkod alanina geri ver.
@@ -189,7 +238,7 @@
             if (hata) uyariGoster(hata); else uyariGizle();
             if (sepet) {
                 ciz(sepet);
-                if (sonuOkutulanGuncelle && !hata) sonOkutulan(sepet.satirlar);
+                if (sonuOkutulanGuncelle && !hata) sonOkutulan(sepet);
             }
         } catch (e) {
             uyariGoster("Sunucuya ulaşılamadı.");
@@ -244,6 +293,7 @@
         await islet(() => gonder("/Kasa/Iptal", {}));
         document.getElementById("son-ad").textContent = "—";
         document.getElementById("son-detay").textContent = "";
+        sonResimCiz(null);
     }
 
     // ---------- Indirim paneli ----------

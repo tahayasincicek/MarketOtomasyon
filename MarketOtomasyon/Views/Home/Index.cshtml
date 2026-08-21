@@ -1,8 +1,143 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@model MarketOtomasyon.Models.ViewModels.AnaEkranVm
+@using System.Globalization
+@{
+    ViewData["Title"] = "Ana Ekran";
+    var tr = new CultureInfo("tr-TR");
+    string Para(decimal deger) => deger.ToString("N2", tr);
+    var ozet = Model.Ozet;
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="ekran">
+    @if (!Model.VardiyaAcik)
+    {
+        <div class="bildirim bildirim-olumsuz">
+            <i class="bi bi-exclamation-triangle"></i>
+            <span>Açık vardiya yok — kasada satış yapılamaz.</span>
+            <a class="btn btn-sm btn-danger ms-2" asp-controller="Vardiya" asp-action="Index">Vardiya Aç</a>
+        </div>
+    }
+
+    @* Ana ekran bir menu degil, bir baslatma tablosudur: market
+       otomasyonlarinda gun icinde en cok basilan tuslar buradadir. *@
+    <div class="kisayol-izgara">
+        <a class="kisayol" asp-controller="Kasa" asp-action="Index">
+            <i class="bi bi-cash-stack"></i>
+            <span class="kisayol-ad">Kasa</span>
+            <span class="kisayol-tus">Satış ekranı</span>
+        </a>
+        <a class="kisayol" asp-controller="Iade" asp-action="Index">
+            <i class="bi bi-arrow-counterclockwise"></i>
+            <span class="kisayol-ad">İade</span>
+            <span class="kisayol-tus">Fişten iade al</span>
+        </a>
+        <a class="kisayol" asp-controller="Vardiya" asp-action="Index">
+            <i class="bi bi-safe2"></i>
+            <span class="kisayol-ad">Vardiya</span>
+            <span class="kisayol-tus">Aç / kapat, Z raporu</span>
+        </a>
+        <a class="kisayol" asp-controller="Stok" asp-action="Giris">
+            <i class="bi bi-box-arrow-in-down"></i>
+            <span class="kisayol-ad">Mal Kabul</span>
+            <span class="kisayol-tus">Stok girişi</span>
+        </a>
+        <a class="kisayol" asp-controller="Urun" asp-action="Index">
+            <i class="bi bi-box-seam"></i>
+            <span class="kisayol-ad">Ürünler</span>
+            <span class="kisayol-tus">Kart ve fiyat</span>
+        </a>
+        <a class="kisayol" asp-controller="Kampanya" asp-action="Index">
+            <i class="bi bi-tags"></i>
+            <span class="kisayol-ad">Kampanyalar</span>
+            <span class="kisayol-tus">İndirim tanımla</span>
+        </a>
+    </div>
+
+    <div class="panel-serit">
+        <div class="panel" style="flex:2 1 26rem">
+            <div class="panel-baslik">
+                <span>Bugünün satışı</span>
+                <span class="text-muted text-lowercase" style="letter-spacing:0">
+                    @Model.Gun.ToString("dd MMMM yyyy", tr)
+                </span>
+            </div>
+            <div class="panel-govde">
+                <div class="kunye">
+                    <div class="kunye-oge">
+                        <div class="kunye-etiket">Fiş sayısı</div>
+                        <div class="kunye-deger">@ozet.FisSayisi</div>
+                    </div>
+                    <div class="kunye-oge">
+                        <div class="kunye-etiket">Brüt ciro</div>
+                        <div class="kunye-deger">@Para(ozet.Ciro)</div>
+                    </div>
+                    <div class="kunye-oge">
+                        <div class="kunye-etiket">İade (@ozet.IadeSayisi)</div>
+                        <div class="kunye-deger">@Para(ozet.IadeToplam)</div>
+                    </div>
+                    <div class="kunye-oge">
+                        <div class="kunye-etiket">Net ciro</div>
+                        <div class="kunye-deger">@Para(ozet.NetCiro)</div>
+                    </div>
+                    <div class="kunye-oge">
+                        <div class="kunye-etiket">Nakit</div>
+                        <div class="kunye-deger">@Para(ozet.Nakit)</div>
+                    </div>
+                    <div class="kunye-oge">
+                        <div class="kunye-etiket">Kart</div>
+                        <div class="kunye-deger">@Para(ozet.Kart)</div>
+                    </div>
+                    <div class="kunye-oge">
+                        <div class="kunye-etiket">Ortalama sepet</div>
+                        <div class="kunye-deger">@Para(ozet.OrtalamaSepet)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel" style="flex:1 1 18rem">
+            <div class="panel-baslik">Dikkat edilecekler</div>
+            <div class="panel-govde">
+                <div class="alan">
+                    <label>Kritik stok</label>
+                    <div class="deger">
+                        @if (ozet.KritikUrun > 0)
+                        {
+                            <span class="rozet rozet-uyari">@ozet.KritikUrun ürün</span>
+                            <a class="ms-2" asp-controller="Stok" asp-action="Index" asp-route-sadeceKritik="true">
+                                listeyi aç
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="rozet rozet-olumlu">yok</span>
+                        }
+                    </div>
+                </div>
+                <div class="alan">
+                    <label>Vardiya</label>
+                    <div class="deger">
+                        @if (Model.VardiyaAcik)
+                        {
+                            <span class="rozet rozet-olumlu">#@Model.AcikVardiyaId açık</span>
+                        }
+                        else
+                        {
+                            <span class="rozet rozet-olumsuz">kapalı</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="durum-cubugu">
+        <div class="fkey-serit">
+            <span class="fkey"><b>Enter</b> barkod ekle</span>
+            <span class="fkey"><b>F2</b> ödeme</span>
+            <span class="fkey"><b>F7</b> askıya al</span>
+            <span class="fkey"><b>F8</b> bekleyenler</span>
+            <span class="fkey"><b>Esc</b> fişi iptal et</span>
+        </div>
+        <span class="arac-sag text-muted">Kısayollar kasa ekranında geçerlidir.</span>
+    </div>
 </div>

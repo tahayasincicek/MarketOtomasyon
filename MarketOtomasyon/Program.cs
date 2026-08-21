@@ -1,6 +1,7 @@
 using System.Globalization;
 using FluentValidation;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.Extensions.Options;
 using MarketOtomasyon.Data;
 using MarketOtomasyon.Data.Repositories;
 using MarketOtomasyon.Services;
@@ -29,6 +30,8 @@ builder.Services.AddScoped<KullaniciRepository>();
 builder.Services.AddScoped<OdemeRepository>();
 builder.Services.AddScoped<KampanyaRepository>();
 builder.Services.AddScoped<IadeRepository>();
+builder.Services.AddScoped<OzetRepository>();
+builder.Services.AddScoped<UrunResimRepository>();
 
 // Servisler
 builder.Services.AddScoped<UrunService>();
@@ -39,10 +42,21 @@ builder.Services.AddScoped<OdemeService>();
 builder.Services.AddScoped<SatisService>();
 builder.Services.AddScoped<KampanyaService>();
 builder.Services.AddScoped<IadeService>();
+builder.Services.AddScoped<VardiyaService>();
+builder.Services.AddScoped<UrunResimService>();
 
 // Isletmeye gore degisen satis kurallari
 builder.Services.Configure<SatisAyarlari>(builder.Configuration.GetSection("Satis"));
 builder.Services.Configure<IadeAyarlari>(builder.Configuration.GetSection("Iade"));
+builder.Services.Configure<UrunResimAyarlari>(builder.Configuration.GetSection("UrunResim"));
+
+// Open Food Facts kimliksiz istekleri bot sayip engelliyor; User-Agent zorunlu.
+builder.Services.AddHttpClient("acikUrunVeritabani", (sp, istemci) =>
+{
+    var ayar = sp.GetRequiredService<IOptions<UrunResimAyarlari>>().Value;
+    istemci.DefaultRequestHeaders.UserAgent.ParseAdd(ayar.KullaniciAjani);
+    istemci.Timeout = TimeSpan.FromSeconds(ayar.ZamanAsimiSaniye);
+});
 
 // Dogrulayicilar (controller icinde elle cagriliyor)
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();

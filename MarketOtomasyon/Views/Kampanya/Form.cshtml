@@ -5,165 +5,232 @@
     ViewData["Title"] = yeniKayit ? "Yeni Kampanya" : "Kampanya Düzenle";
 }
 
-<div class="d-flex justify-content-end align-items-center mb-3">
-    <a class="btn btn-link" asp-action="Index"><i class="bi bi-arrow-left"></i> Listeye dön</a>
-</div>
-
-<form method="post" asp-action="@(yeniKayit ? "Ekle" : "Duzenle")" class="row g-3" style="max-width: 900px;">
+<form method="post" asp-action="@(yeniKayit ? "Ekle" : "Duzenle")" class="ekran">
     @Html.AntiForgeryToken()
     <input type="hidden" asp-for="Id" />
 
-    <div asp-validation-summary="All" class="alert alert-danger @(ViewData.ModelState.IsValid ? "d-none" : "")"></div>
-
-    <div class="col-md-3">
-        <label class="form-label" asp-for="Kod">Kod</label>
-        <input class="form-control" asp-for="Kod" />
-        <span class="text-danger small" asp-validation-for="Kod"></span>
+    <div class="arac-cubugu">
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-lg"></i> Kaydet
+        </button>
+        <a class="btn btn-outline-secondary" asp-action="Index">
+            <i class="bi bi-x-lg"></i> Vazgeç
+        </a>
+        <span class="arac-ayrac"></span>
+        <span class="ipucu">Kampanyalar kasada otomatik uygulanır.</span>
     </div>
 
-    <div class="col-md-9">
-        <label class="form-label" asp-for="Ad">Kampanya adı</label>
-        <input class="form-control" asp-for="Ad" placeholder="Kasa ekranında ve fişte bu ad görünür" />
-        <span class="text-danger small" asp-validation-for="Ad"></span>
-    </div>
-
-    <!-- Kampanya tipi: seçime göre alttaki alanlar değişir -->
-    <div class="col-12">
-        <label class="form-label">Kampanya tipi</label>
-        <div class="btn-group w-100" role="group">
-            <input type="radio" class="btn-check" name="KampanyaTipi" id="tip-yuzde"
-                   value="@KampanyaFormVm.TipYuzdeIndirim" checked="@(Model.KampanyaTipi == KampanyaFormVm.TipYuzdeIndirim)" />
-            <label class="btn btn-outline-primary" for="tip-yuzde">Yüzde indirim</label>
-
-            <input type="radio" class="btn-check" name="KampanyaTipi" id="tip-tutar"
-                   value="@KampanyaFormVm.TipTutarIndirimi" checked="@(Model.KampanyaTipi == KampanyaFormVm.TipTutarIndirimi)" />
-            <label class="btn btn-outline-primary" for="tip-tutar">Tutar indirimi</label>
-
-            <input type="radio" class="btn-check" name="KampanyaTipi" id="tip-nalm"
-                   value="@KampanyaFormVm.TipNAlMOde" checked="@(Model.KampanyaTipi == KampanyaFormVm.TipNAlMOde)" />
-            <label class="btn btn-outline-primary" for="tip-nalm">N al M öde</label>
-
-            <input type="radio" class="btn-check" name="KampanyaTipi" id="tip-baraj"
-                   value="@KampanyaFormVm.TipTutarBaraji" checked="@(Model.KampanyaTipi == KampanyaFormVm.TipTutarBaraji)" />
-            <label class="btn btn-outline-primary" for="tip-baraj">Tutar barajı</label>
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="bildirim bildirim-olumsuz">
+            <i class="bi bi-exclamation-triangle"></i>
+            <div asp-validation-summary="All" class="mb-0"></div>
         </div>
-    </div>
+    }
 
-    <!-- Kapsam: tutar barajı dışındaki tiplerde görünür -->
-    <div class="col-12 kapsam-alani">
-        <div class="card">
-            <div class="card-body py-3">
-                <label class="form-label">Hangi ürünlere uygulanacak?</label>
-                <div class="row g-2 align-items-end">
-                    <div class="col-md-3">
-                        <select class="form-select" asp-for="Kapsam" id="kapsam-secim">
+    <div class="izgara-sarmal">
+        <div class="form-ekran">
+
+            <div class="bolum">
+                <div class="bolum-baslik">Tanım</div>
+
+                <div class="alan">
+                    <label asp-for="Kod">Kod</label>
+                    <div class="deger">
+                        <input class="form-control dar font-monospace" asp-for="Kod" />
+                        <span class="hata" asp-validation-for="Kod"></span>
+                    </div>
+                </div>
+
+                <div class="alan">
+                    <label asp-for="Ad">Kampanya adı</label>
+                    <div class="deger">
+                        <input class="form-control" asp-for="Ad" style="max-width:32rem"
+                               placeholder="Kasa ekranında ve fişte bu ad görünür" />
+                        <span class="hata" asp-validation-for="Ad"></span>
+                    </div>
+                </div>
+
+                @* Tip secimi alttaki alanlari acip kapatir; ilgisiz alan hic gorunmez. *@
+                <div class="alan">
+                    <label>Kampanya tipi</label>
+                    <div class="deger">
+                        <div class="btn-group btn-group-sm" role="group">
+                            <input type="radio" class="btn-check" name="KampanyaTipi" id="tip-yuzde"
+                                   value="@KampanyaFormVm.TipYuzdeIndirim"
+                                   checked="@(Model.KampanyaTipi == KampanyaFormVm.TipYuzdeIndirim)" />
+                            <label class="btn btn-outline-primary" for="tip-yuzde">Yüzde indirim</label>
+
+                            <input type="radio" class="btn-check" name="KampanyaTipi" id="tip-tutar"
+                                   value="@KampanyaFormVm.TipTutarIndirimi"
+                                   checked="@(Model.KampanyaTipi == KampanyaFormVm.TipTutarIndirimi)" />
+                            <label class="btn btn-outline-primary" for="tip-tutar">Tutar indirimi</label>
+
+                            <input type="radio" class="btn-check" name="KampanyaTipi" id="tip-nalm"
+                                   value="@KampanyaFormVm.TipNAlMOde"
+                                   checked="@(Model.KampanyaTipi == KampanyaFormVm.TipNAlMOde)" />
+                            <label class="btn btn-outline-primary" for="tip-nalm">N al M öde</label>
+
+                            <input type="radio" class="btn-check" name="KampanyaTipi" id="tip-baraj"
+                                   value="@KampanyaFormVm.TipTutarBaraji"
+                                   checked="@(Model.KampanyaTipi == KampanyaFormVm.TipTutarBaraji)" />
+                            <label class="btn btn-outline-primary" for="tip-baraj">Tutar barajı</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bolum kapsam-alani">
+                <div class="bolum-baslik">Kapsam</div>
+
+                <div class="alan">
+                    <label>Uygulanacağı</label>
+                    <div class="deger d-flex align-items-center gap-2 flex-wrap">
+                        <select class="form-select" style="width:9rem" asp-for="Kapsam" id="kapsam-secim">
                             <option value="@KampanyaFormVm.KapsamUrun">Tek ürün</option>
                             <option value="@KampanyaFormVm.KapsamKategori">Kategori</option>
                         </select>
-                    </div>
 
-                    <div class="col-md-6 kapsam-urun">
-                        <select class="form-select" asp-for="UrunId">
-                            <option value="">(ürün seçiniz)</option>
-                            @foreach (var u in Model.Urunler)
-                            {
-                                <option value="@u.Id" selected="@(Model.UrunId == u.Id)">@u.Kod — @u.Ad</option>
-                            }
-                        </select>
-                        <span class="text-danger small" asp-validation-for="UrunId"></span>
-                    </div>
+                        <span class="kapsam-urun">
+                            <select class="form-select" style="width:24rem" asp-for="UrunId">
+                                <option value="">(ürün seçiniz)</option>
+                                @foreach (var urun in Model.Urunler)
+                                {
+                                    <option value="@urun.Id" selected="@(Model.UrunId == urun.Id)">@urun.Kod — @urun.Ad</option>
+                                }
+                            </select>
+                            <span class="hata" asp-validation-for="UrunId"></span>
+                        </span>
 
-                    <div class="col-md-6 kapsam-kategori">
-                        <select class="form-select" asp-for="KategoriId">
-                            <option value="">(kategori seçiniz)</option>
-                            @foreach (var k in Model.Kategoriler)
-                            {
-                                <option value="@k.Id" selected="@(Model.KategoriId == k.Id)">@k.Ad</option>
-                            }
-                        </select>
-                        <span class="text-danger small" asp-validation-for="KategoriId"></span>
+                        <span class="kapsam-kategori">
+                            <select class="form-select" style="width:24rem" asp-for="KategoriId">
+                                <option value="">(kategori seçiniz)</option>
+                                @foreach (var kategori in Model.Kategoriler)
+                                {
+                                    <option value="@kategori.Id" selected="@(Model.KategoriId == kategori.Id)">@kategori.Ad</option>
+                                }
+                            </select>
+                            <span class="hata" asp-validation-for="KategoriId"></span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bolum">
+                <div class="bolum-baslik">Koşul ve indirim</div>
+
+                <div class="alan alan-yuzde">
+                    <label asp-for="Yuzde">İndirim oranı</label>
+                    <div class="deger d-flex align-items-center gap-2">
+                        <input class="form-control dar text-end" asp-for="Yuzde"
+                               type="number" step="0.01" min="0" max="100" />
+                        <span class="ipucu">%</span>
+                        <span class="hata" asp-validation-for="Yuzde"></span>
+                    </div>
+                </div>
+
+                <div class="alan alan-tutar">
+                    <label asp-for="Tutar">İndirim tutarı</label>
+                    <div class="deger d-flex align-items-center gap-2">
+                        <input class="form-control dar text-end" asp-for="Tutar"
+                               type="number" step="0.01" min="0" />
+                        <span class="ipucu">₺</span>
+                        <span class="hata" asp-validation-for="Tutar"></span>
+                    </div>
+                </div>
+
+                <div class="alan alan-nalm">
+                    <label asp-for="AlinacakMiktar">Alınacak (N)</label>
+                    <div class="deger">
+                        <input class="form-control dar text-end" asp-for="AlinacakMiktar"
+                               type="number" step="1" min="2" />
+                        <span class="hata" asp-validation-for="AlinacakMiktar"></span>
+                    </div>
+                </div>
+
+                <div class="alan alan-nalm">
+                    <label asp-for="OdenecekMiktar">Ödenecek (M)</label>
+                    <div class="deger d-flex align-items-center gap-2">
+                        <input class="form-control dar text-end" asp-for="OdenecekMiktar"
+                               type="number" step="1" min="1" />
+                        <span class="ipucu">3 al 2 öde için N=3, M=2</span>
+                        <span class="hata" asp-validation-for="OdenecekMiktar"></span>
+                    </div>
+                </div>
+
+                <div class="alan alan-baraj">
+                    <label asp-for="MinSepetTutari">Baraj tutarı</label>
+                    <div class="deger d-flex align-items-center gap-2">
+                        <input class="form-control dar text-end" asp-for="MinSepetTutari"
+                               type="number" step="0.01" min="0" />
+                        <span class="ipucu">₺ — sepet bu tutarı geçince indirim uygulanır</span>
+                        <span class="hata" asp-validation-for="MinSepetTutari"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bolum">
+                <div class="bolum-baslik">Geçerlilik</div>
+
+                <div class="alan">
+                    <label asp-for="BaslangicTarihi">Başlangıç</label>
+                    <div class="deger">
+                        <input class="form-control orta-genislik" asp-for="BaslangicTarihi" type="date" />
+                    </div>
+                </div>
+
+                <div class="alan">
+                    <label asp-for="BitisTarihi">Bitiş</label>
+                    <div class="deger d-flex align-items-center gap-2">
+                        <input class="form-control orta-genislik" asp-for="BitisTarihi" type="date" />
+                        <span class="ipucu">boş bırakılırsa süresiz</span>
+                        <span class="hata" asp-validation-for="BitisTarihi"></span>
+                    </div>
+                </div>
+
+                <div class="alan">
+                    <label asp-for="Oncelik">Öncelik</label>
+                    <div class="deger d-flex align-items-center gap-2">
+                        <input class="form-control dar text-end" asp-for="Oncelik" type="number" step="1" />
+                        <span class="ipucu">küçük olan önce uygulanır</span>
+                    </div>
+                </div>
+
+                <div class="alan">
+                    <label>Seçenekler</label>
+                    <div class="deger d-flex align-items-center gap-4 flex-wrap">
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" asp-for="Aktif" />
+                            <label class="form-check-label" asp-for="Aktif">Aktif</label>
+                        </div>
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" asp-for="DigerleriyleBirlesir" />
+                            <label class="form-check-label" asp-for="DigerleriyleBirlesir">Diğerleriyle birleşir</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alan">
+                    <label></label>
+                    <div class="deger ipucu">
+                        "Diğerleriyle birleşir" işaretlenirse, bu kampanyanın uygulandığı satıra sepet barajı
+                        indirimi de eklenebilir. İşaretlenmezse o satır yalnızca bu kampanyayı alır.
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Tipe özel alanlar -->
-    <div class="col-md-4 alan-yuzde">
-        <label class="form-label" asp-for="Yuzde">İndirim oranı (%)</label>
-        <input class="form-control" asp-for="Yuzde" type="number" step="0.01" min="0" max="100" />
-        <span class="text-danger small" asp-validation-for="Yuzde"></span>
-    </div>
-
-    <div class="col-md-4 alan-tutar">
-        <label class="form-label" asp-for="Tutar">İndirim tutarı (TL)</label>
-        <input class="form-control" asp-for="Tutar" type="number" step="0.01" min="0" />
-        <span class="text-danger small" asp-validation-for="Tutar"></span>
-    </div>
-
-    <div class="col-md-4 alan-nalm">
-        <label class="form-label" asp-for="AlinacakMiktar">Alınacak (N)</label>
-        <input class="form-control" asp-for="AlinacakMiktar" type="number" step="1" min="2" />
-        <span class="text-danger small" asp-validation-for="AlinacakMiktar"></span>
-    </div>
-
-    <div class="col-md-4 alan-nalm">
-        <label class="form-label" asp-for="OdenecekMiktar">Ödenecek (M)</label>
-        <input class="form-control" asp-for="OdenecekMiktar" type="number" step="1" min="1" />
-        <span class="text-danger small" asp-validation-for="OdenecekMiktar"></span>
-        <div class="form-text">3 al 2 öde için N=3, M=2</div>
-    </div>
-
-    <div class="col-md-4 alan-baraj">
-        <label class="form-label" asp-for="MinSepetTutari">Baraj tutarı (TL)</label>
-        <input class="form-control" asp-for="MinSepetTutari" type="number" step="0.01" min="0" />
-        <span class="text-danger small" asp-validation-for="MinSepetTutari"></span>
-        <div class="form-text">Sepet bu tutarı geçince indirim uygulanır</div>
-    </div>
-
-    <!-- Geçerlilik ve öncelik -->
-    <div class="col-12"><hr class="my-1" /></div>
-
-    <div class="col-md-3">
-        <label class="form-label" asp-for="BaslangicTarihi">Başlangıç</label>
-        <input class="form-control" asp-for="BaslangicTarihi" type="date" />
-    </div>
-
-    <div class="col-md-3">
-        <label class="form-label" asp-for="BitisTarihi">Bitiş</label>
-        <input class="form-control" asp-for="BitisTarihi" type="date" />
-        <div class="form-text">Boş bırakılırsa süresiz</div>
-        <span class="text-danger small" asp-validation-for="BitisTarihi"></span>
-    </div>
-
-    <div class="col-md-2">
-        <label class="form-label" asp-for="Oncelik">Öncelik</label>
-        <input class="form-control" asp-for="Oncelik" type="number" step="1" />
-        <div class="form-text">Küçük olan önce</div>
-    </div>
-
-    <div class="col-md-4 d-flex align-items-center gap-4 pt-4">
-        <div class="form-check">
-            <input class="form-check-input" asp-for="Aktif" />
-            <label class="form-check-label" asp-for="Aktif">Aktif</label>
-        </div>
-        <div class="form-check">
-            <input class="form-check-input" asp-for="DigerleriyleBirlesir" />
-            <label class="form-check-label" asp-for="DigerleriyleBirlesir">Diğerleriyle birleşir</label>
-        </div>
-    </div>
-
-    <div class="col-12">
-        <div class="form-text mb-2">
-            "Diğerleriyle birleşir" işaretlenirse, bu kampanyanın uygulandığı satıra sepet barajı
-            indirimi de eklenebilir. İşaretlenmezse o satır yalnızca bu kampanyayı alır.
-        </div>
-        <button type="submit" class="btn btn-primary">Kaydet</button>
-        <a class="btn btn-link" asp-action="Index">Vazgeç</a>
+    <div class="durum-cubugu">
+        <span>@(yeniKayit ? "Yeni kampanya" : $"Kampanya #{Model.Id}")</span>
+        <span class="arac-sag">
+            Bir satıra birden fazla kampanya uyarsa müşteri lehine en yüksek indirim seçilir.
+        </span>
     </div>
 </form>
 
 @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
     <script>
         // Kampanya tipine gore ilgisiz alanlar gizlenir; kullanici yalnizca
         // secilen tip icin anlamli olan alanlari gorur.

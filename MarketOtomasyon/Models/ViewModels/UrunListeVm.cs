@@ -14,6 +14,9 @@ public class UrunListeSatirVm
 
     /// <summary>Hic fiyat girilmemis urunlerde null olur.</summary>
     public decimal? GuncelFiyat { get; set; }
+
+    /// <summary>Resmi cekilmemis urunlerde null; ekran yer tutucu gosterir.</summary>
+    public string? ResimYolu { get; set; }
 }
 
 /// <summary>Liste ekraninin tamami: filtre degerleri, satirlar ve sayfalama bilgisi.</summary>

@@ -6,121 +6,135 @@
     string Para(decimal deger) => deger.ToString("N2", tr);
 }
 
-@if (TempData["Mesaj"] is string mesaj)
-{
-    <div class="alert alert-success">@mesaj</div>
-}
+<div class="ekran">
+    @* Fis arama arac cubugunda: iade ekrani her zaman bir fis numarasiyla
+       baslar, once onu bulduran alan gelir. *@
+    <form method="get" asp-action="Index" class="arac-cubugu">
+        <span class="arac-etiket">Fiş no</span>
+        <input class="form-control font-monospace" style="width:14rem" id="fisNo" name="fisNo"
+               value="@Model.FisNo" autocomplete="off" autofocus
+               placeholder="20260821-00001" aria-label="Fiş numarası" />
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-search"></i> Satışı Bul
+        </button>
 
-<div class="card mb-4">
-    <div class="card-header">Satış fişini bul</div>
-    <div class="card-body">
-        <form method="get" asp-action="Index" class="row g-2 align-items-end">
-            <div class="col-md-6 col-lg-4">
-                <label class="form-label" for="fisNo">Fiş numarası</label>
-                <input class="form-control font-monospace" id="fisNo" name="fisNo" value="@Model.FisNo"
-                       autocomplete="off" autofocus placeholder="20260820-00001" />
+        @if (Model.Fis is not null)
+        {
+            <span class="arac-ayrac"></span>
+            <span class="arac-etiket">Satış</span>
+            <strong>@Model.Fis.Tarih.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</strong>
+            <span class="arac-ayrac"></span>
+            <span class="arac-etiket">Toplam</span>
+            <strong class="fs-5">@Para(Model.Fis.GenelToplam) ₺</strong>
+            <span class="arac-ayrac"></span>
+            <span class="arac-etiket">İade son tarihi</span>
+            <strong>@Model.Fis.IadeSonTarihi.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</strong>
+        }
+    </form>
+
+    @if (TempData["Mesaj"] is string mesaj)
+    {
+        <div class="bildirim bildirim-olumlu"><i class="bi bi-check-circle"></i> @mesaj</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.Hata))
+    {
+        <div class="bildirim bildirim-olumsuz"><i class="bi bi-exclamation-triangle"></i> @Model.Hata</div>
+    }
+
+    @if (Model.Fis is null)
+    {
+        <p class="veri-yok">
+            İade almak için önce satış fişinin numarasını girin.
+        </p>
+    }
+    else
+    {
+        var fis = Model.Fis;
+
+        @if (!fis.IadeEdilebilir)
+        {
+            <div class="bildirim bildirim-olumsuz">
+                <i class="bi bi-clock-history"></i>
+                Bu fiş için iade süresi dolmuş. Satır girişleri kapalı.
             </div>
-            <div class="col-auto">
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-search"></i> Satışı Bul
-                </button>
+        }
+
+        <form method="post" asp-action="Olustur" style="flex:1; display:flex; flex-direction:column; min-height:0">
+            <input type="hidden" name="FisNo" value="@fis.FisNo" />
+
+            <div class="izgara-sarmal">
+                <table class="izgara">
+                    <thead>
+                        <tr>
+                            <th>Ürün</th>
+                            <th class="sayi" style="width:8rem">Satış fiyatı</th>
+                            <th class="sayi" style="width:8rem">Satılan</th>
+                            <th class="sayi" style="width:8rem">Önceki iade</th>
+                            <th class="sayi" style="width:8rem">Kalan</th>
+                            <th class="sayi" style="width:10rem">İade miktarı</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (var i = 0; i < fis.Satirlar.Count; i++)
+                        {
+                            var satir = fis.Satirlar[i];
+                            var girilen = Model.Form.Satirlar
+                                .FirstOrDefault(s => s.FisSatirId == satir.FisSatirId)?.Miktar ?? 0;
+                            var tukendi = satir.KalanMiktar <= 0;
+
+                            <tr class="@(tukendi ? "pasif" : "")">
+                                <td style="white-space:normal">
+                                    <span class="kod">@satir.Kod</span> @satir.Ad
+                                    @if (satir.IndirimTutari > 0)
+                                    {
+                                        <span class="rozet rozet-notr">satır indirimi −@Para(satir.IndirimTutari)</span>
+                                    }
+                                </td>
+                                <td class="sayi">@Para(satir.BirimFiyat)</td>
+                                <td class="sayi">@satir.Miktar.ToString("0.###", tr) @satir.Birim</td>
+                                <td class="sayi">@satir.IadeEdilenMiktar.ToString("0.###", tr) @satir.Birim</td>
+                                <td class="sayi fw-semibold">@satir.KalanMiktar.ToString("0.###", tr) @satir.Birim</td>
+                                <td class="sayi">
+                                    <input type="hidden" name="Satirlar[@i].FisSatirId" value="@satir.FisSatirId" />
+                                    <input class="form-control form-control-sm text-end" type="number"
+                                           name="Satirlar[@i].Miktar"
+                                           value="@girilen.ToString("0.###", CultureInfo.InvariantCulture)"
+                                           min="0"
+                                           max="@satir.KalanMiktar.ToString("0.####", CultureInfo.InvariantCulture)"
+                                           step="@(satir.Birim == "KG" ? "0.001" : "1")"
+                                           disabled="@(tukendi || !fis.IadeEdilebilir)"
+                                           aria-label="@satir.Ad iade miktarı" />
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="arac-cubugu" style="border-top:1px solid var(--izgara-cizgi); border-bottom:none">
+                <span class="arac-etiket">Açıklama</span>
+                <input class="form-control" style="width:26rem" id="aciklama" name="Aciklama" maxlength="300"
+                       value="@Model.Form.Aciklama" placeholder="İade nedeni (isteğe bağlı)"
+                       aria-label="İade açıklaması" />
+
+                <div class="arac-sag">
+                    <button type="submit" class="btn btn-danger" disabled="@(!fis.IadeEdilebilir)">
+                        <i class="bi bi-arrow-counterclockwise"></i> İadeyi Tamamla
+                    </button>
+                </div>
             </div>
         </form>
+    }
+
+    <div class="durum-cubugu">
+        @if (Model.Fis is not null)
+        {
+            <span>Fiş <strong class="font-monospace">@Model.Fis.FisNo</strong></span>
+            <span><strong>@Model.Fis.Satirlar.Count</strong> satır</span>
+        }
+        <span class="arac-sag">
+            İade tutarı satış anındaki net satır tutarından hesaplanır; para iadesi nakit yapılır.
+        </span>
     </div>
 </div>
-
-@if (!string.IsNullOrWhiteSpace(Model.Hata))
-{
-    <div class="alert alert-danger">@Model.Hata</div>
-}
-
-@if (Model.Fis is not null)
-{
-    var fis = Model.Fis;
-
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <span>Fiş <strong class="font-monospace">@fis.FisNo</strong></span>
-            <span class="badge bg-light text-dark">@fis.Tarih.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</span>
-        </div>
-        <div class="card-body">
-            <div class="row g-3 mb-3">
-                <div class="col-sm-4">
-                    <div class="text-muted small">Satış toplamı</div>
-                    <div class="fs-5 fw-semibold">@Para(fis.GenelToplam) ₺</div>
-                </div>
-                <div class="col-sm-4">
-                    <div class="text-muted small">İade son tarihi</div>
-                    <div>@fis.IadeSonTarihi.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</div>
-                </div>
-                <div class="col-sm-4">
-                    <div class="text-muted small">Hesaplama</div>
-                    <div>Satış anındaki net satır tutarı</div>
-                </div>
-            </div>
-
-            <form method="post" asp-action="Olustur">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="FisNo" value="@fis.FisNo" />
-
-                <div class="table-responsive">
-                    <table class="table align-middle">
-                        <thead>
-                            <tr>
-                                <th>Ürün</th>
-                                <th class="text-end">Satış fiyatı</th>
-                                <th class="text-end">Satılan</th>
-                                <th class="text-end">Önceki iade</th>
-                                <th class="text-end">Kalan</th>
-                                <th style="width: 170px">İade miktarı</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @for (var i = 0; i < fis.Satirlar.Count; i++)
-                            {
-                                var satir = fis.Satirlar[i];
-                                var girilen = Model.Form.Satirlar.FirstOrDefault(s => s.FisSatirId == satir.FisSatirId)?.Miktar ?? 0;
-                                <tr class="@(satir.KalanMiktar <= 0 ? "table-light text-muted" : "")">
-                                    <td>
-                                        <div>@satir.Ad</div>
-                                        <code class="small">@satir.Kod</code>
-                                        @if (satir.IndirimTutari > 0)
-                                        {
-                                            <span class="badge bg-light text-dark">Satır indirimi -@Para(satir.IndirimTutari)</span>
-                                        }
-                                    </td>
-                                    <td class="text-end">@Para(satir.BirimFiyat) ₺</td>
-                                    <td class="text-end">@satir.Miktar.ToString("0.###", tr) @satir.Birim</td>
-                                    <td class="text-end">@satir.IadeEdilenMiktar.ToString("0.###", tr) @satir.Birim</td>
-                                    <td class="text-end fw-semibold">@satir.KalanMiktar.ToString("0.###", tr) @satir.Birim</td>
-                                    <td>
-                                        <input type="hidden" name="Satirlar[@i].FisSatirId" value="@satir.FisSatirId" />
-                                        <input class="form-control" type="number" name="Satirlar[@i].Miktar"
-                                               value="@girilen.ToString("0.###", CultureInfo.InvariantCulture)"
-                                               min="0" max="@satir.KalanMiktar.ToString("0.####", CultureInfo.InvariantCulture)"
-                                               step="@(satir.Birim == "KG" ? "0.001" : "1")"
-                                               disabled="@(satir.KalanMiktar <= 0 || !fis.IadeEdilebilir)" />
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="row g-3 align-items-end">
-                    <div class="col-md-8">
-                        <label class="form-label" for="aciklama">Açıklama</label>
-                        <input class="form-control" id="aciklama" name="Aciklama" maxlength="300"
-                               value="@Model.Form.Aciklama" placeholder="İade nedeni (isteğe bağlı)" />
-                    </div>
-                    <div class="col-md-4 text-md-end">
-                        <button type="submit" class="btn btn-danger" disabled="@(!fis.IadeEdilebilir)">
-                            <i class="bi bi-arrow-counterclockwise"></i> İadeyi Tamamla
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-}
-

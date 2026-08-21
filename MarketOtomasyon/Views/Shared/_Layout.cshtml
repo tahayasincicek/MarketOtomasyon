@@ -25,6 +25,9 @@
                 <a class="menu-oge @Aktif("Iade")" asp-controller="Iade" asp-action="Index">
                     <i class="menu-ikon bi bi-arrow-counterclockwise"></i> İade
                 </a>
+                <a class="menu-oge @Aktif("Vardiya")" asp-controller="Vardiya" asp-action="Index">
+                    <i class="menu-ikon bi bi-safe2"></i> Vardiya
+                </a>
 
                 <div class="menu-baslik">Yönetim</div>
                 <a class="menu-oge @Aktif("Urun")" asp-controller="Urun" asp-action="Index">
@@ -42,9 +45,20 @@
         </aside>
 
         <div class="icerik">
+            @* Ust serit her ekranda ayni: nerede oldugun (sol), kim oldugun ve
+               vardiyanin acik olup olmadigi (sag). Kasiyer bunlari sormak icin
+               ekran degistirmez. *@
             <header class="ust-serit">
                 <button type="button" class="menu-dugmesi" id="menu-dugmesi" aria-label="Menüyü aç/kapat"><i class="bi bi-list"></i></button>
                 <span class="sayfa-basligi">@ViewData["Title"]</span>
+
+                <div class="arac-sag serit-grup">
+                    @await Component.InvokeAsync("VardiyaDurumu")
+                    <span class="serit-grup serit-saat-grup">
+                        <span class="arac-ayrac"></span>
+                        <span class="serit-vardiya" id="serit-saat">—</span>
+                    </span>
+                </div>
             </header>
 
             <main role="main" class="sayfa">

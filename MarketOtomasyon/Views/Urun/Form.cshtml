@@ -4,85 +4,154 @@
     ViewData["Title"] = yeniKayit ? "Yeni Ürün" : "Ürün Düzenle";
 }
 
-<form method="post" asp-action="@(yeniKayit ? "Ekle" : "Duzenle")" class="row g-3" style="max-width: 720px;">
+<form method="post" asp-action="@(yeniKayit ? "Ekle" : "Duzenle")" class="ekran">
     @Html.AntiForgeryToken()
     <input type="hidden" asp-for="Id" />
 
-    <div asp-validation-summary="All" class="alert alert-danger @(ViewData.ModelState.IsValid ? "d-none" : "")"></div>
-
-    <div class="col-md-4">
-        <label class="form-label" asp-for="Kod">Kod</label>
-        <input class="form-control" asp-for="Kod" />
-        <span class="text-danger small" asp-validation-for="Kod"></span>
-    </div>
-
-    <div class="col-md-8">
-        <label class="form-label" asp-for="Ad">Ad</label>
-        <input class="form-control" asp-for="Ad" />
-        <span class="text-danger small" asp-validation-for="Ad"></span>
-    </div>
-
-    <div class="col-md-4">
-        <label class="form-label" asp-for="KategoriId">Kategori</label>
-        <select class="form-select" asp-for="KategoriId">
-            <option value="0">(seçiniz)</option>
-            @foreach (var k in Model.Kategoriler)
-            {
-                <option value="@k.Id" selected="@(Model.KategoriId == k.Id)">@k.Ad</option>
-            }
-        </select>
-        <span class="text-danger small" asp-validation-for="KategoriId"></span>
-    </div>
-
-    <div class="col-md-4">
-        <label class="form-label" asp-for="Birim">Birim</label>
-        <select class="form-select" asp-for="Birim">
-            <option value="ADET">ADET</option>
-            <option value="KG">KG</option>
-        </select>
-        <span class="text-danger small" asp-validation-for="Birim"></span>
-    </div>
-
-    <div class="col-md-4">
-        <label class="form-label" asp-for="KdvOrani">KDV Oranı (%)</label>
-        <select class="form-select" asp-for="KdvOrani">
-            <option value="0">0</option>
-            <option value="1">1</option>
-            <option value="10">10</option>
-            <option value="20">20</option>
-        </select>
-        <span class="text-danger small" asp-validation-for="KdvOrani"></span>
-    </div>
-
-    <div class="col-md-4">
-        <label class="form-label" asp-for="Fiyat">Satış Fiyatı</label>
-        <input class="form-control" asp-for="Fiyat" type="number" step="0.01" min="0" />
-        <span class="text-danger small" asp-validation-for="Fiyat"></span>
+    @* Kaydet/vazgec ustte: kayit ekranlarinda dugmeler hep ayni yerde
+       olsun, form uzadikca asagi kaymasin. *@
+    <div class="arac-cubugu">
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-lg"></i> Kaydet
+        </button>
+        <a class="btn btn-outline-secondary" asp-action="Index">
+            <i class="bi bi-x-lg"></i> Vazgeç
+        </a>
         @if (!yeniKayit)
         {
-            <div class="form-text">Değiştirirseniz eski fiyat geçmişte saklanır.</div>
+            <span class="arac-ayrac"></span>
+            <a class="btn btn-outline-secondary" asp-action="Detay" asp-route-id="@Model.Id">
+                <i class="bi bi-list-ul"></i> Detay
+            </a>
         }
     </div>
 
-    <div class="col-md-4">
-        <label class="form-label" asp-for="MinStokSeviyesi">Min. Stok</label>
-        <input class="form-control" asp-for="MinStokSeviyesi" type="number" step="0.001" min="0" />
-        <span class="text-danger small" asp-validation-for="MinStokSeviyesi"></span>
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="bildirim bildirim-olumsuz">
+            <i class="bi bi-exclamation-triangle"></i>
+            <div asp-validation-summary="All" class="mb-0"></div>
+        </div>
+    }
+
+    <div class="izgara-sarmal">
+        <div class="form-ekran">
+            <div class="bolum">
+                <div class="bolum-baslik">Tanım</div>
+
+                <div class="alan">
+                    <label asp-for="Kod">Kod</label>
+                    <div class="deger">
+                        <input class="form-control dar font-monospace" asp-for="Kod" />
+                        <span class="hata" asp-validation-for="Kod"></span>
+                    </div>
+                </div>
+
+                <div class="alan">
+                    <label asp-for="Ad">Ad</label>
+                    <div class="deger">
+                        <input class="form-control" asp-for="Ad" style="max-width:30rem" />
+                        <span class="hata" asp-validation-for="Ad"></span>
+                    </div>
+                </div>
+
+                <div class="alan">
+                    <label asp-for="KategoriId">Kategori</label>
+                    <div class="deger">
+                        <select class="form-select orta-genislik" asp-for="KategoriId">
+                            <option value="0">(seçiniz)</option>
+                            @foreach (var kategori in Model.Kategoriler)
+                            {
+                                <option value="@kategori.Id" selected="@(Model.KategoriId == kategori.Id)">@kategori.Ad</option>
+                            }
+                        </select>
+                        <span class="hata" asp-validation-for="KategoriId"></span>
+                    </div>
+                </div>
+
+                <div class="alan">
+                    <label asp-for="Birim">Birim</label>
+                    <div class="deger">
+                        <select class="form-select dar" asp-for="Birim">
+                            <option value="ADET">ADET</option>
+                            <option value="KG">KG</option>
+                        </select>
+                        <span class="hata" asp-validation-for="Birim"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bolum">
+                <div class="bolum-baslik">Fiyat ve vergi</div>
+
+                <div class="alan">
+                    <label asp-for="KdvOrani">KDV oranı</label>
+                    <div class="deger d-flex align-items-center gap-2">
+                        <select class="form-select dar" asp-for="KdvOrani">
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                        </select>
+                        <span class="ipucu">%</span>
+                        <span class="hata" asp-validation-for="KdvOrani"></span>
+                    </div>
+                </div>
+
+                <div class="alan">
+                    <label asp-for="Fiyat">Satış fiyatı</label>
+                    <div class="deger d-flex align-items-center gap-2">
+                        <input class="form-control dar text-end" asp-for="Fiyat" type="number" step="0.01" min="0" />
+                        <span class="ipucu">₺ (KDV dahil)</span>
+                        <span class="hata" asp-validation-for="Fiyat"></span>
+                    </div>
+                </div>
+
+                @if (!yeniKayit)
+                {
+                    <div class="alan">
+                        <label></label>
+                        <div class="deger ipucu">Fiyatı değiştirirseniz eski fiyat geçmişte saklanır.</div>
+                    </div>
+                }
+            </div>
+
+            <div class="bolum">
+                <div class="bolum-baslik">Stok ve seçenekler</div>
+
+                <div class="alan">
+                    <label asp-for="MinStokSeviyesi">Min. stok</label>
+                    <div class="deger d-flex align-items-center gap-2">
+                        <input class="form-control dar text-end" asp-for="MinStokSeviyesi"
+                               type="number" step="0.001" min="0" />
+                        <span class="ipucu">bu seviyenin altı stok ekranında kritik gösterilir</span>
+                        <span class="hata" asp-validation-for="MinStokSeviyesi"></span>
+                    </div>
+                </div>
+
+                <div class="alan">
+                    <label>Seçenekler</label>
+                    <div class="deger d-flex align-items-center gap-4">
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" asp-for="Tartili" />
+                            <label class="form-check-label" asp-for="Tartili">Tartılı</label>
+                        </div>
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" asp-for="Aktif" />
+                            <label class="form-check-label" asp-for="Aktif">Aktif</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="col-md-4 d-flex align-items-end gap-4">
-        <div class="form-check">
-            <input class="form-check-input" asp-for="Tartili" />
-            <label class="form-check-label" asp-for="Tartili">Tartılı</label>
-        </div>
-        <div class="form-check">
-            <input class="form-check-input" asp-for="Aktif" />
-            <label class="form-check-label" asp-for="Aktif">Aktif</label>
-        </div>
-    </div>
-
-    <div class="col-12">
-        <button type="submit" class="btn btn-primary">Kaydet</button>
-        <a class="btn btn-link" asp-action="Index">Vazgeç</a>
+    <div class="durum-cubugu">
+        <span>@(yeniKayit ? "Yeni kayıt" : $"Kayıt #{Model.Id}")</span>
+        <span class="arac-sag">Tartılı ürünler kasada terazi barkoduyla okutulur.</span>
     </div>
 </form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

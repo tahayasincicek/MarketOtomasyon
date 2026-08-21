@@ -1,0 +1,26 @@
+@model MarketOtomasyon.Models.ViewModels.UstSeritVm
+
+@* Kasiyer adi dar ekranda dusurulur, vardiya gostergesi hep kalir. *@
+<span class="serit-grup serit-kasiyer-grup">
+    <span class="serit-vardiya">
+        <i class="bi bi-person-badge text-muted"></i>
+        <strong>@Model.KasiyerAdi</strong>
+    </span>
+    <span class="arac-ayrac"></span>
+</span>
+
+<a class="serit-vardiya text-decoration-none" asp-controller="Vardiya" asp-action="Index"
+   title="@(Model.VardiyaAcik ? "Vardiya ekranını aç" : "Satış için önce vardiya açın")">
+    <span class="serit-nokta @(Model.VardiyaAcik ? "" : "kapali")"></span>
+    @if (Model.VardiyaAcik)
+    {
+        <span>
+            Vardiya <strong>#@Model.VardiyaId</strong>
+            <span class="text-muted">· @Model.AcilisTarihi!.Value.ToLocalTime().ToString("HH:mm")</span>
+        </span>
+    }
+    else
+    {
+        <span class="text-muted">Vardiya kapalı</span>
+    }
+</a>

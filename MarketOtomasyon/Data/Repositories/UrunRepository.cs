@@ -27,7 +27,7 @@ WHERE (@arama IS NULL OR u.Ad LIKE '%' + @arama + '%' OR u.Kod LIKE '%' + @arama
   AND (@sadeceAktif = 0 OR u.Aktif = 1);
 
 SELECT u.Id, u.Kod, u.Ad, k.Ad AS KategoriAd, u.Birim, u.KdvOrani, u.Tartili, u.Aktif,
-       gf.Fiyat AS GuncelFiyat
+       u.ResimYolu, gf.Fiyat AS GuncelFiyat
 FROM Urun u
 JOIN Kategori k ON k.Id = u.KategoriId
 LEFT JOIN vw_GuncelFiyat gf ON gf.UrunId = u.Id
@@ -39,13 +39,15 @@ OFFSET @atla ROWS FETCH NEXT @adet ROWS ONLY;";
 
     // Kampanya formundaki urun secim listesi icin; sayfalama gerekmez.
     private const string SqlAktifListe = @"
-SELECT Id, Kod, Ad, KategoriId, Birim, KdvOrani, MinStokSeviyesi, Tartili, Aktif, OlusturmaTarihi
+SELECT Id, Kod, Ad, KategoriId, Birim, KdvOrani, MinStokSeviyesi, Tartili, Aktif, OlusturmaTarihi,
+       ResimYolu, ResimKaynagi, ResimTarihi
 FROM Urun
 WHERE Aktif = 1
 ORDER BY Ad;";
 
     private const string SqlGetir = @"
-SELECT Id, Kod, Ad, KategoriId, Birim, KdvOrani, MinStokSeviyesi, Tartili, Aktif, OlusturmaTarihi
+SELECT Id, Kod, Ad, KategoriId, Birim, KdvOrani, MinStokSeviyesi, Tartili, Aktif, OlusturmaTarihi,
+       ResimYolu, ResimKaynagi, ResimTarihi
 FROM Urun
 WHERE Id = @id;";
 

@@ -33,6 +33,7 @@ WHERE u.Aktif = 1
         FROM StokHareket h WHERE h.UrunId = u.Id), 0) <= u.MinStokSeviyesi);
 
 SELECT u.Id AS UrunId, u.Kod, u.Ad, u.Birim, u.MinStokSeviyesi,
+       u.ResimYolu,
        ISNULL((SELECT SUM(CASE WHEN h.Yon = 1 THEN h.Miktar ELSE -h.Miktar END)
                FROM StokHareket h WHERE h.UrunId = u.Id), 0) AS ToplamBakiye
 FROM Urun u

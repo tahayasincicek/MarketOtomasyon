@@ -11,6 +11,9 @@ public class StokSatirVm
     public decimal MinStokSeviyesi { get; set; }
     public decimal ToplamBakiye { get; set; }
 
+    /// <summary>Resmi cekilmemis urunlerde null; ekran yer tutucu gosterir.</summary>
+    public string? ResimYolu { get; set; }
+
     public bool Kritik => ToplamBakiye <= MinStokSeviyesi;
 }
 
