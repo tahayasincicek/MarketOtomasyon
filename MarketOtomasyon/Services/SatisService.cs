@@ -28,6 +28,7 @@ public class SatisService
     private readonly OdemeRepository _odemeRepository;
     private readonly StokRepository _stokRepository;
     private readonly DepoRepository _depoRepository;
+    private readonly MaliyetService _maliyetService;
     private readonly SatisAyarlari _ayarlar;
 
     public SatisService(
@@ -36,6 +37,7 @@ public class SatisService
         OdemeRepository odemeRepository,
         StokRepository stokRepository,
         DepoRepository depoRepository,
+        MaliyetService maliyetService,
         IOptions<SatisAyarlari> ayarlar)
     {
         _factory = factory;
@@ -43,6 +45,7 @@ public class SatisService
         _odemeRepository = odemeRepository;
         _stokRepository = stokRepository;
         _depoRepository = depoRepository;
+        _maliyetService = maliyetService;
         _ayarlar = ayarlar.Value;
     }
 
@@ -54,7 +57,7 @@ public class SatisService
     public async Task<SatisSonucVm> TamamlaAsync(int fisId, CancellationToken ct = default)
     {
         var fis = await _fisRepository.GetirAsync(fisId, ct);
-        if (fis is null) return SatisSonucVm.Basarisiz("Fis bulunamadi.");
+        if (fis is null) return SatisSonucVm.Basarisiz("Fiş bulunamadı.");
 
         using var conn = await _factory.CreateOpenConnectionAsync(ct);
         using var tx = conn.BeginTransaction();
@@ -75,20 +78,20 @@ public class SatisService
         IDbConnection conn, IDbTransaction tx, Fis fis, CancellationToken ct = default)
     {
         if (fis.Durum != DurumBeklemede)
-            return SatisSonucVm.Basarisiz("Fis zaten kapanmis veya iptal edilmis.");
+            return SatisSonucVm.Basarisiz("Fiş zaten kapanmış veya iptal edilmiş.");
 
         var satirlar = await _fisRepository.SatirlariGetirAsync(conn, tx, fis.Id, ct);
         if (satirlar.Count == 0)
-            return SatisSonucVm.Basarisiz("Bos fis tamamlanamaz.");
+            return SatisSonucVm.Basarisiz("Boş fiş tamamlanamaz.");
 
         var odenen = await _odemeRepository.OdenenToplamAsync(conn, tx, fis.Id, ct);
         if (odenen < fis.GenelToplam)
             return SatisSonucVm.Basarisiz(
-                $"Odeme tamamlanmadi. Kalan: {OdemeHesaplayici.KalanHesapla(fis.GenelToplam, odenen):0.00}");
+                $"Ödeme tamamlanmadı. Kalan: {OdemeHesaplayici.KalanHesapla(fis.GenelToplam, odenen):0.00}");
 
         var depoId = await _depoRepository.IdGetirAsync(_ayarlar.DepoKodu, ct);
         if (depoId is null)
-            return SatisSonucVm.Basarisiz($"Satis deposu bulunamadi: {_ayarlar.DepoKodu}");
+            return SatisSonucVm.Basarisiz($"Satış deposu bulunamadı: {_ayarlar.DepoKodu}");
 
         // Once tum satirlarin stogu kontrol edilir; yarisini yazip ortada
         // birakmamak icin hareketler ancak kontrol bittikten sonra islenir.
@@ -98,7 +101,7 @@ public class SatisService
             var bakiye = await _stokRepository.BakiyeAsync(conn, tx, satir.UrunId, depoId.Value, ct);
             if (bakiye >= satir.Miktar) continue;
 
-            uyarilar.Add($"{satir.Ad}: stok {bakiye:0.###}, satilan {satir.Miktar:0.###}");
+            uyarilar.Add($"{satir.Ad}: stok {bakiye:0.###}, satılan {satir.Miktar:0.###}");
         }
 
         if (uyarilar.Count > 0 && !_ayarlar.NegatifStogaIzinVer)
@@ -106,7 +109,7 @@ public class SatisService
 
         foreach (var satir in satirlar)
         {
-            await _stokRepository.HareketEkleAsync(conn, tx, new StokHareket
+            var hareketId = await _stokRepository.HareketEkleAsync(conn, tx, new StokHareket
             {
                 UrunId = satir.UrunId,
                 DepoId = depoId.Value,
@@ -114,8 +117,27 @@ public class SatisService
                 Miktar = satir.Miktar,
                 KaynakTip = KaynakSatis,
                 KaynakId = fis.Id,
-                Aciklama = $"Satis {fis.FisNo}"
+                Aciklama = $"Satış {fis.FisNo}"
             }, ct);
+
+            var maliyetSonucu = await _maliyetService.FifoTuketAsync(
+                conn,
+                tx,
+                satir.UrunId,
+                depoId.Value,
+                hareketId,
+                satir.SatirId,
+                satir.Miktar,
+                ct);
+
+            if (!maliyetSonucu.Basarili)
+            {
+                var maliyetHatasi = $"{satir.Ad}: {maliyetSonucu.Hata}";
+                if (!_ayarlar.NegatifStogaIzinVer)
+                    return SatisSonucVm.Basarisiz(maliyetHatasi);
+
+                uyarilar.Add(maliyetHatasi);
+            }
         }
 
         await _fisRepository.DurumGuncelleAsync(conn, tx, fis.Id, DurumTamamlandi, ct);
@@ -138,15 +160,15 @@ public class SatisService
     public async Task<(bool Basarili, string? Hata)> AskiyaAlAsync(int vardiyaId, CancellationToken ct = default)
     {
         var fis = await _fisRepository.AcikFisGetirAsync(vardiyaId, ct);
-        if (fis is null) return (false, "Askiya alinacak acik sepet yok.");
+        if (fis is null) return (false, "Askıya alınacak açık sepet yok.");
 
         var satirlar = await _fisRepository.SatirlariGetirAsync(fis.Id, ct);
-        if (satirlar.Count == 0) return (false, "Bos sepet askiya alinmaz.");
+        if (satirlar.Count == 0) return (false, "Boş sepet askıya alınmaz.");
 
         // Odeme baslamissa askiya alinamaz; alinan para ortada kalirdi.
         var odenen = await _odemeRepository.OdenenToplamAsync(fis.Id, ct);
         if (odenen > 0)
-            return (false, "Odemesi baslamis fis askiya alinamaz. Once odemeyi iptal edin.");
+            return (false, "Ödemesi başlamış fiş askıya alınamaz. Önce ödemeyi iptal edin.");
 
         using var conn = await _factory.CreateOpenConnectionAsync(ct);
         using var tx = conn.BeginTransaction();
@@ -166,10 +188,10 @@ public class SatisService
     {
         var hedef = await _fisRepository.GetirAsync(fisId, ct);
         if (hedef is null || hedef.Durum != DurumBeklemede)
-            return (false, "Fis bulunamadi veya artik beklemede degil.");
+            return (false, "Fiş bulunamadı veya artık beklemede değil.");
 
         if (hedef.VardiyaId != vardiyaId)
-            return (false, "Fis baska bir vardiyaya ait.");
+            return (false, "Fiş başka bir vardiyaya ait.");
 
         var mevcut = await _fisRepository.AcikFisGetirAsync(vardiyaId, ct);
         var mevcutSatirSayisi = mevcut is null

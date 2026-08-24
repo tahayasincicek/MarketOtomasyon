@@ -37,27 +37,27 @@ public static class OdemeHesaplayici
         byte tip, decimal tutar, decimal? alinanTutar, decimal kalan)
     {
         if (tip is not (TipNakit or TipKart or TipPuan))
-            return (false, "Gecersiz odeme tipi.");
+            return (false, "Geçersiz ödeme tipi.");
 
         if (!TipAcikMi(tip))
-            return (false, "Su an yalnizca nakit odeme alinabiliyor.");
+            return (false, "Şu an yalnızca nakit ödeme alınabiliyor.");
 
         if (tutar <= 0)
-            return (false, "Odeme tutari sifirdan buyuk olmalidir.");
+            return (false, "Ödeme tutarı sıfırdan büyük olmalıdır.");
 
         if (kalan <= 0)
-            return (false, "Fisin odenmemis bakiyesi yok.");
+            return (false, "Fişin ödenmemiş bakiyesi yok.");
 
         if (tutar > kalan)
-            return (false, $"Odeme tutari kalan borcu ({kalan:0.00}) asamaz.");
+            return (false, $"Ödeme tutarı kalan borcu ({kalan:0.00}) aşamaz.");
 
         if (tip == TipNakit)
         {
             if (alinanTutar is null)
-                return (false, "Nakit odemede alinan tutar girilmelidir.");
+                return (false, "Nakit ödemede alınan tutar girilmelidir.");
 
             if (alinanTutar < tutar)
-                return (false, "Alinan tutar, mahsup edilecek tutardan az olamaz.");
+                return (false, "Alınan tutar, mahsup edilecek tutardan az olamaz.");
         }
 
         return (true, null);

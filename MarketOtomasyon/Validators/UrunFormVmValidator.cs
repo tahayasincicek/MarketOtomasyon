@@ -12,28 +12,28 @@ public class UrunFormVmValidator : AbstractValidator<UrunFormVm>
     public UrunFormVmValidator(UrunRepository urunRepository)
     {
         RuleFor(x => x.Kod)
-            .NotEmpty().WithMessage("Urun kodu zorunludur.")
-            .MaximumLength(30).WithMessage("Urun kodu en fazla 30 karakter olabilir.")
+            .NotEmpty().WithMessage("Ürün kodu zorunludur.")
+            .MaximumLength(30).WithMessage("Ürün kodu en fazla 30 karakter olabilir.")
             .MustAsync(async (form, kod, ct) =>
                 !await urunRepository.KodVarMiAsync(kod.Trim(), form.Id == 0 ? null : form.Id, ct))
-            .WithMessage(x => $"'{x.Kod}' kodu baska bir urunde kullaniliyor.");
+            .WithMessage(x => $"'{x.Kod}' kodu başka bir üründe kullanılıyor.");
 
         RuleFor(x => x.Ad)
-            .NotEmpty().WithMessage("Urun adi zorunludur.")
-            .MaximumLength(200).WithMessage("Urun adi en fazla 200 karakter olabilir.");
+            .NotEmpty().WithMessage("Ürün adı zorunludur.")
+            .MaximumLength(200).WithMessage("Ürün adı en fazla 200 karakter olabilir.");
 
         RuleFor(x => x.KategoriId)
-            .GreaterThan(0).WithMessage("Kategori seciniz.");
+            .GreaterThan(0).WithMessage("Kategori seçiniz.");
 
         RuleFor(x => x.Birim)
-            .Must(b => GecerliBirimler.Contains(b)).WithMessage("Birim ADET veya KG olmalidir.");
+            .Must(b => GecerliBirimler.Contains(b)).WithMessage("Birim ADET veya KG olmalıdır.");
 
         RuleFor(x => x.KdvOrani)
             .Must(o => GecerliKdvOranlari.Contains(o))
-            .WithMessage("KDV orani 0, 1, 10 veya 20 olmalidir.");
+            .WithMessage("KDV oranı 0, 1, 10 veya 20 olmalıdır.");
 
         RuleFor(x => x.Fiyat)
-            .GreaterThan(0).WithMessage("Fiyat sifirdan buyuk olmalidir.");
+            .GreaterThan(0).WithMessage("Fiyat sıfırdan büyük olmalıdır.");
 
         RuleFor(x => x.MinStokSeviyesi)
             .GreaterThanOrEqualTo(0).WithMessage("Minimum stok seviyesi negatif olamaz.");
@@ -41,6 +41,6 @@ public class UrunFormVmValidator : AbstractValidator<UrunFormVm>
         // KG ile satilan urun tartili olmali; kasada miktar girisi buna gore degisir.
         RuleFor(x => x.Tartili)
             .Equal(true).When(x => x.Birim == "KG")
-            .WithMessage("KG birimli urun tartili olarak isaretlenmelidir.");
+            .WithMessage("KG birimli ürün tartılı olarak işaretlenmelidir.");
     }
 }

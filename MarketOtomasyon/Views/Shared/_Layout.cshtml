@@ -32,19 +32,33 @@
                     <i class="menu-ikon ph ph-vault"></i> Vardiya
                 </a>
 
-                <div class="menu-baslik">Yönetim</div>
+                <div class="menu-baslik">Bilgi</div>
                 <a class="menu-oge @Aktif("Urun")" asp-controller="Urun" asp-action="Index">
                     <i class="menu-ikon ph ph-package"></i> Ürünler
                 </a>
                 <a class="menu-oge @Aktif("Stok")" asp-controller="Stok" asp-action="Index">
                     <i class="menu-ikon ph ph-warehouse"></i> Stok
                 </a>
-                <a class="menu-oge @Aktif("Sayim")" asp-controller="Sayim" asp-action="Index">
-                    <i class="menu-ikon ph ph-list-checks"></i> Sayım ve Zayi
-                </a>
-                <a class="menu-oge @Aktif("Kampanya")" asp-controller="Kampanya" asp-action="Index">
-                    <i class="menu-ikon ph ph-tag"></i> Kampanyalar
-                </a>
+
+                @if (User.IsInRole("Mudur"))
+                {
+                    <div class="menu-baslik">Yönetim</div>
+                    <a class="menu-oge @Aktif("Sayim")" asp-controller="Sayim" asp-action="Index">
+                        <i class="menu-ikon ph ph-list-checks"></i> Sayım ve Zayi
+                    </a>
+                    <a class="menu-oge @Aktif("Kampanya")" asp-controller="Kampanya" asp-action="Index">
+                        <i class="menu-ikon ph ph-tag"></i> Kampanyalar
+                    </a>
+                    <a class="menu-oge @Aktif("Maliyet")" asp-controller="Maliyet" asp-action="Index">
+                        <i class="menu-ikon ph ph-chart-line-up"></i> Kâr Marjı
+                    </a>
+                    <a class="menu-oge @Aktif("Rapor")" asp-controller="Rapor" asp-action="Index">
+                        <i class="menu-ikon ph ph-chart-bar"></i> Raporlar
+                    </a>
+                    <a class="menu-oge @Aktif("IslemLog")" asp-controller="IslemLog" asp-action="Index">
+                        <i class="menu-ikon ph ph-list-magnifying-glass"></i> İşlem Logları
+                    </a>
+                }
             </nav>
 
            
@@ -57,6 +71,19 @@
             <header class="ust-serit">
                 <button type="button" class="menu-dugmesi" id="menu-dugmesi" aria-label="Menüyü aç/kapat"><i class="ph ph-list"></i></button>
                 <span class="sayfa-basligi">@ViewData["Title"]</span>
+
+                <div class="ms-auto d-flex align-items-center gap-3">
+                    <span class="small text-muted">
+                        <i class="ph ph-user-circle me-1"></i>@User.Identity?.Name
+                        <span class="badge bg-light text-dark ms-1">@(User.IsInRole("Mudur") ? "Müdür" : "Kasiyer")</span>
+                    </span>
+                    <form asp-controller="Hesap" asp-action="Cikis" method="post" class="m-0">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">
+                            <i class="ph ph-sign-out me-1"></i>Çıkış
+                        </button>
+                    </form>
+                </div>
 
             </header>
 

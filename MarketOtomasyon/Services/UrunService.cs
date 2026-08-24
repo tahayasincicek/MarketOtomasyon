@@ -2,6 +2,7 @@ using MarketOtomasyon.Data;
 using MarketOtomasyon.Data.Repositories;
 using MarketOtomasyon.Models.Entities;
 using MarketOtomasyon.Models.ViewModels;
+using System.Globalization;
 
 namespace MarketOtomasyon.Services;
 
@@ -14,12 +15,18 @@ public class UrunService
     private readonly IDbConnectionFactory _factory;
     private readonly UrunRepository _urunRepository;
     private readonly FiyatRepository _fiyatRepository;
+    private readonly IslemLogRepository _islemLogRepository;
 
-    public UrunService(IDbConnectionFactory factory, UrunRepository urunRepository, FiyatRepository fiyatRepository)
+    public UrunService(
+        IDbConnectionFactory factory,
+        UrunRepository urunRepository,
+        FiyatRepository fiyatRepository,
+        IslemLogRepository islemLogRepository)
     {
         _factory = factory;
         _urunRepository = urunRepository;
         _fiyatRepository = fiyatRepository;
+        _islemLogRepository = islemLogRepository;
     }
 
     public async Task<int> EkleAsync(UrunFormVm form, CancellationToken ct = default)
@@ -34,7 +41,10 @@ public class UrunService
         return urunId;
     }
 
-    public async Task GuncelleAsync(UrunFormVm form, CancellationToken ct = default)
+    public async Task GuncelleAsync(
+        UrunFormVm form,
+        int kullaniciId,
+        CancellationToken ct = default)
     {
         // Fiyat gercekten degistiyse yeni satir acilir; her kayitta gecmis sismesin.
         var mevcutFiyat = await _fiyatRepository.GuncelFiyatAsync(form.Id, ct);
@@ -49,10 +59,23 @@ public class UrunService
         {
             await _fiyatRepository.AcikFiyatiKapatAsync(conn, tx, form.Id, ct);
             await _fiyatRepository.FiyatEkleAsync(conn, tx, form.Id, form.Fiyat, ct);
+            await _islemLogRepository.EkleAsync(conn, tx, new IslemLog
+            {
+                KullaniciId = kullaniciId,
+                IslemTipi = "FiyatDegisikligi",
+                HedefTipi = "Urun",
+                HedefId = form.Id,
+                EskiDeger = Fiyat(mevcutFiyat),
+                YeniDeger = Fiyat(form.Fiyat),
+                Aciklama = $"{form.Kod} - {form.Ad} ürününün satış fiyatı değiştirildi."
+            }, ct);
         }
 
         tx.Commit();
     }
+
+    private static string? Fiyat(decimal? fiyat)
+        => fiyat?.ToString("0.00", CultureInfo.InvariantCulture);
 
     private static Urun FormdanUrun(UrunFormVm form) => new()
     {

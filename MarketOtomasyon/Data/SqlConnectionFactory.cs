@@ -10,7 +10,7 @@ public sealed class SqlConnectionFactory : IDbConnectionFactory
     public SqlConnectionFactory(IConfiguration configuration)
     {
         _connectionString = configuration.GetConnectionString("MarketDb")
-            ?? throw new InvalidOperationException("ConnectionStrings:MarketDb tanimli degil.");
+            ?? throw new InvalidOperationException("ConnectionStrings:MarketDb tanımlı değil.");
     }
 
     public async Task<IDbConnection> CreateOpenConnectionAsync(CancellationToken ct = default)

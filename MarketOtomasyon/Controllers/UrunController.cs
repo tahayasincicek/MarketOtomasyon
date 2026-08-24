@@ -4,10 +4,13 @@ using MarketOtomasyon.Models.Entities;
 using MarketOtomasyon.Models.ViewModels;
 using MarketOtomasyon.Services;
 using Microsoft.AspNetCore.Mvc;
+using MarketOtomasyon.Security;
+using Microsoft.AspNetCore.Authorization;
 
 namespace MarketOtomasyon.Controllers;
 
 /// <summary>Sadece istek alir, servisi cagirir, View doner. Hesap ve SQL burada yok.</summary>
+[Authorize(Roles = Roller.SatisRolleri)]
 public class UrunController : Controller
 {
     private const int SayfaBoyutu = 20;
@@ -47,6 +50,7 @@ public class UrunController : Controller
     /// bu yuzden kasa akisindan degil, yalnizca bu ekrandan cagrilir.
     /// </summary>
     [HttpPost]
+    [Authorize(Roles = Roller.Mudur)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ResimleriCek(CancellationToken ct)
     {
@@ -91,6 +95,7 @@ public class UrunController : Controller
     }
 
     [HttpGet]
+    [Authorize(Roles = Roller.Mudur)]
     public async Task<IActionResult> Ekle(CancellationToken ct)
     {
         var vm = new UrunFormVm { Kategoriler = await _kategoriRepository.AktifleriGetirAsync(ct) };
@@ -98,6 +103,7 @@ public class UrunController : Controller
     }
 
     [HttpPost]
+    [Authorize(Roles = Roller.Mudur)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Ekle(UrunFormVm form, CancellationToken ct)
     {
@@ -113,6 +119,7 @@ public class UrunController : Controller
     }
 
     [HttpGet]
+    [Authorize(Roles = Roller.Mudur)]
     public async Task<IActionResult> Duzenle(int id, CancellationToken ct)
     {
         var urun = await _urunRepository.GetirAsync(id, ct);
@@ -137,6 +144,7 @@ public class UrunController : Controller
     }
 
     [HttpPost]
+    [Authorize(Roles = Roller.Mudur)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Duzenle(UrunFormVm form, CancellationToken ct)
     {
@@ -146,8 +154,8 @@ public class UrunController : Controller
             return View("Form", form);
         }
 
-        await _urunService.GuncelleAsync(form, ct);
-        TempData["Mesaj"] = $"{form.Ad} guncellendi.";
+        await _urunService.GuncelleAsync(form, User.KullaniciId(), ct);
+        TempData["Mesaj"] = $"{form.Ad} güncellendi.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -175,6 +183,7 @@ public class UrunController : Controller
     }
 
     [HttpPost]
+    [Authorize(Roles = Roller.Mudur)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> BarkodEkle(BarkodFormVm form, CancellationToken ct)
     {
@@ -201,11 +210,12 @@ public class UrunController : Controller
     }
 
     [HttpPost]
+    [Authorize(Roles = Roller.Mudur)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> BarkodSil(int id, int urunId, CancellationToken ct)
     {
         var silinen = await _barkodRepository.SilAsync(id, urunId, ct);
-        TempData["Mesaj"] = silinen > 0 ? "Barkod silindi." : "Barkod bulunamadi.";
+        TempData["Mesaj"] = silinen > 0 ? "Barkod silindi." : "Barkod bulunamadı.";
         return RedirectToAction(nameof(Detay), new { id = urunId });
     }
 

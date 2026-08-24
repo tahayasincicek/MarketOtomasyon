@@ -1,17 +1,16 @@
 using MarketOtomasyon.Services;
+using MarketOtomasyon.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MarketOtomasyon.Controllers;
 
 /// <summary>
 /// Vardiya acma/kapatma ve Z raporu.
-///
-/// GECICI: oturum acma henuz yok, kasiyer sabit (Id 1) kabul ediliyor.
 /// </summary>
+[Authorize(Roles = Roller.SatisRolleri)]
 public class VardiyaController : Controller
 {
-    private const int GeciciKullaniciId = 1;
-
     private readonly VardiyaService _vardiyaService;
 
     public VardiyaController(VardiyaService vardiyaService) => _vardiyaService = vardiyaService;
@@ -19,7 +18,7 @@ public class VardiyaController : Controller
     [HttpGet]
     public async Task<IActionResult> Index(string? returnUrl, CancellationToken ct)
     {
-        var vm = await _vardiyaService.EkranAsync(GeciciKullaniciId, ct);
+        var vm = await _vardiyaService.EkranAsync(User.KullaniciId(), ct);
         vm.ReturnUrl = YerelDonusAdresi(returnUrl);
         return View(vm);
     }
@@ -29,10 +28,11 @@ public class VardiyaController : Controller
     public async Task<IActionResult> Ac(decimal acilisTutari, string? returnUrl, CancellationToken ct)
     {
         returnUrl = YerelDonusAdresi(returnUrl);
-        var hata = await _vardiyaService.AcAsync(GeciciKullaniciId, acilisTutari, ct);
+        var kullaniciId = User.KullaniciId();
+        var hata = await _vardiyaService.AcAsync(kullaniciId, acilisTutari, ct);
         if (hata is not null)
         {
-            var vm = await _vardiyaService.EkranAsync(GeciciKullaniciId, ct);
+            var vm = await _vardiyaService.EkranAsync(kullaniciId, ct);
             vm.Hata = hata;
             vm.AcilisTutari = acilisTutari;
             vm.ReturnUrl = returnUrl;
@@ -48,10 +48,11 @@ public class VardiyaController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Kapat(decimal sayilanTutar, CancellationToken ct)
     {
-        var (rapor, hata) = await _vardiyaService.KapatAsync(GeciciKullaniciId, sayilanTutar, ct);
+        var kullaniciId = User.KullaniciId();
+        var (rapor, hata) = await _vardiyaService.KapatAsync(kullaniciId, sayilanTutar, ct);
         if (hata is not null)
         {
-            var vm = await _vardiyaService.EkranAsync(GeciciKullaniciId, ct);
+            var vm = await _vardiyaService.EkranAsync(kullaniciId, ct);
             vm.Hata = hata;
             vm.SayilanTutar = sayilanTutar;
             return View(nameof(Index), vm);

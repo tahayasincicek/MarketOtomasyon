@@ -17,6 +17,7 @@ public class IadeService
     private readonly IadeRepository _iadeRepository;
     private readonly StokRepository _stokRepository;
     private readonly DepoRepository _depoRepository;
+    private readonly MaliyetService _maliyetService;
     private readonly IadeAyarlari _iadeAyarlari;
     private readonly SatisAyarlari _satisAyarlari;
 
@@ -25,6 +26,7 @@ public class IadeService
         IadeRepository iadeRepository,
         StokRepository stokRepository,
         DepoRepository depoRepository,
+        MaliyetService maliyetService,
         IOptions<IadeAyarlari> iadeAyarlari,
         IOptions<SatisAyarlari> satisAyarlari)
     {
@@ -32,6 +34,7 @@ public class IadeService
         _iadeRepository = iadeRepository;
         _stokRepository = stokRepository;
         _depoRepository = depoRepository;
+        _maliyetService = maliyetService;
         _iadeAyarlari = iadeAyarlari.Value;
         _satisAyarlari = satisAyarlari.Value;
     }
@@ -45,7 +48,7 @@ public class IadeService
         var fis = await _iadeRepository.FisGetirAsync(vm.FisNo, ct);
         if (fis is null)
         {
-            vm.Hata = $"'{vm.FisNo}' numarali fis bulunamadi.";
+            vm.Hata = $"'{vm.FisNo}' numaralı fiş bulunamadı.";
             return vm;
         }
 
@@ -59,7 +62,12 @@ public class IadeService
                 .ToList()
         };
 
-        vm.Hata = FisDogrulamaHatasi(fis, DateTime.UtcNow);
+        var dogrulamaHatasi = FisDogrulamaHatasi(fis, DateTime.UtcNow);
+        if (fis.Durum == DurumTamamlandi && fis.TumUrunlerIadeEdildi)
+            vm.Bilgi = "Fişteki tüm ürünlerin iadesi tamamlandı. İade edilebilecek ürün kalmadı.";
+        else
+            vm.Hata = dogrulamaHatasi;
+
         return vm;
     }
 
@@ -71,7 +79,7 @@ public class IadeService
     {
         var fisNo = form.FisNo?.Trim();
         if (string.IsNullOrWhiteSpace(fisNo))
-            return IadeSonucVm.Basarisiz("Fis numarasi zorunludur.");
+            return IadeSonucVm.Basarisiz("Fiş numarası zorunludur.");
 
         var talepler = form.Satirlar
             .Where(s => s.Miktar > 0)
@@ -80,11 +88,11 @@ public class IadeService
             .ToList();
 
         if (talepler.Count == 0)
-            return IadeSonucVm.Basarisiz("Iade edilecek en az bir satir ve miktar girin.");
+            return IadeSonucVm.Basarisiz("İade edilecek en az bir satır ve miktar girin.");
 
         var depoId = await _depoRepository.IdGetirAsync(_satisAyarlari.DepoKodu, ct);
         if (depoId is null)
-            return IadeSonucVm.Basarisiz($"Iade stogunun girecegi depo bulunamadi: {_satisAyarlari.DepoKodu}");
+            return IadeSonucVm.Basarisiz($"İade stoğunun gireceği depo bulunamadı: {_satisAyarlari.DepoKodu}");
 
         using var conn = await _factory.CreateOpenConnectionAsync(ct);
         using var tx = conn.BeginTransaction();
@@ -93,7 +101,7 @@ public class IadeService
         if (fis is null)
         {
             tx.Rollback();
-            return IadeSonucVm.Basarisiz("Fis bulunamadi.");
+            return IadeSonucVm.Basarisiz("Fiş bulunamadı.");
         }
 
         FisBilgileriniTamamla(fis);
@@ -112,7 +120,7 @@ public class IadeService
             if (satir is null)
             {
                 tx.Rollback();
-                return IadeSonucVm.Basarisiz("Secilen satir bu fise ait degil.");
+                return IadeSonucVm.Basarisiz("Seçilen satır bu fişe ait değil.");
             }
 
             var (gecerli, hata) = IadeKurallari.MiktarDogrula(
@@ -151,7 +159,9 @@ public class IadeService
             if (guncellenen != 1)
             {
                 tx.Rollback();
-                return IadeSonucVm.Basarisiz($"{satir.Ad} daha once iade edilmis; fis yeniden yuklensin.");
+                return IadeSonucVm.Basarisiz(
+                    $"{satir.Ad} için iade miktarı başka bir işlemde değişmiş. " +
+                    "Fişi yeniden yükleyip kalan miktarı kontrol edin.");
             }
 
             var brutIade = decimal.Round(satir.BirimFiyat * miktar, 2, MidpointRounding.AwayFromZero);
@@ -167,7 +177,7 @@ public class IadeService
                 Tutar = tutar
             }, ct);
 
-            await _stokRepository.HareketEkleAsync(conn, tx, new StokHareket
+            var hareketId = await _stokRepository.HareketEkleAsync(conn, tx, new StokHareket
             {
                 UrunId = satir.UrunId,
                 DepoId = depoId.Value,
@@ -175,8 +185,21 @@ public class IadeService
                 Miktar = miktar,
                 KaynakTip = KaynakIade,
                 KaynakId = iadeId,
-                Aciklama = $"Iade {iadeNo} / Fis {fis.FisNo}"
+                Aciklama = $"İade {iadeNo} / Fiş {fis.FisNo}"
             }, ct);
+
+            var varsayilanMaliyet = satir.BirimFiyat / (1 + satir.KdvOrani / 100m);
+            await _maliyetService.IadePartisiAcAsync(
+                conn,
+                tx,
+                satir.UrunId,
+                depoId.Value,
+                hareketId,
+                satir.FisSatirId,
+                miktar,
+                varsayilanMaliyet,
+                $"İade {iadeNo}",
+                ct);
         }
 
         tx.Commit();
@@ -201,16 +224,16 @@ public class IadeService
     private static string? FisDogrulamaHatasi(IadeFisVm fis, DateTime simdiUtc)
     {
         if (fis.Durum != DurumTamamlandi)
-            return "Yalnizca tamamlanmis satis fisleri iade edilebilir.";
+            return "Yalnızca tamamlanmış satış fişleri iade edilebilir.";
 
         if (simdiUtc > fis.IadeSonTarihi)
-            return $"Iade suresi {fis.IadeSonTarihi.ToLocalTime():dd.MM.yyyy} tarihinde dolmus.";
+            return $"İade süresi {fis.IadeSonTarihi.ToLocalTime():dd.MM.yyyy} tarihinde dolmuş.";
 
         if (fis.Satirlar.Count == 0)
-            return "Fiste iade edilebilecek satir yok.";
+            return "Fişte iade edilebilecek satır yok.";
 
         if (fis.Satirlar.All(s => s.KalanMiktar <= 0))
-            return "Fisteki tum urunler daha once iade edilmis.";
+            return "Fişteki tüm ürünler daha önce iade edilmiş.";
 
         return null;
     }

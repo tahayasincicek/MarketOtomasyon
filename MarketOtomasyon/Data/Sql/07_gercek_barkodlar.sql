@@ -23,15 +23,15 @@ GO
 DECLARE @yeni TABLE (Kod NVARCHAR(30), Barkod NVARCHAR(30), Karsilik NVARCHAR(100));
 
 INSERT INTO @yeni (Kod, Barkod, Karsilik) VALUES
-    ('URN001', '8690565100530', 'Pinar Sut 1 lt'),
-    ('URN004', '8690698511760', 'UNO Cok Tahilli Ekmek'),
+    ('URN001', '8690565100530', N'Pınar Süt 1 lt'),
+    ('URN004', '8690698511760', N'UNO Çok Tahıllı Ekmek'),
     ('URN006', '8690579140614', 'Barilla Penne Rigate 500 g'),
-    ('URN007', '8695077044198', 'Sole Aycicek Yagi 1 L'),
+    ('URN007', '8695077044198', N'Sole Ayçiçek Yağı 1 L'),
     ('URN018', '5000112664492', 'Coca-Cola 1 L'),
-    ('URN020', '8690767710537', 'Sutas Ayran 200 ml'),
-    ('URN021', '8691381000486', 'Beypazari Dogal Maden Suyu'),
-    ('URN022', '8690504135913', 'Ulker Cikolata'),
-    ('URN024', '8690504017301', 'Ulker Cubuk Kraker');
+    ('URN020', '8690767710537', N'Sütaş Ayran 200 ml'),
+    ('URN021', '8691381000486', N'Beypazarı Doğal Maden Suyu'),
+    ('URN022', '8690504135913', N'Ülker Çikolata'),
+    ('URN024', '8690504017301', N'Ülker Çubuk Kraker');
 
 /* Ayni barkod baska bir urunde duruyorsa UNIQUE kisiti patlar.
    Once cakismayi bildirelim ki hata mesaji anlasilir olsun. */
@@ -43,7 +43,7 @@ IF EXISTS (
     WHERE u.Kod <> y.Kod
 )
 BEGIN
-    RAISERROR('Bu barkodlardan biri baska bir urunde kayitli. Once onu temizleyin.', 16, 1);
+    RAISERROR(N'Bu barkodlardan biri başka bir üründe kayıtlı. Önce onu temizleyin.', 16, 1);
     RETURN;
 END
 

@@ -24,12 +24,12 @@ public class UrunResmiVm
     /// <summary>Kategoriye gore yer tutucu ikonu. Bilinmeyen kategoride genel kutu ikonu.</summary>
     private static string IkonSec(string? kategori) => kategori switch
     {
-        "Gida" => "bi-basket",
-        "Icecek" => "bi-cup-straw",
-        "Kahvaltilik" => "bi-egg-fried",
-        "Atistirmalik" => "bi-cookie",
+        "Gıda" or "Gida" => "bi-basket",
+        "İçecek" or "Icecek" => "bi-cup-straw",
+        "Kahvaltılık" or "Kahvaltilik" => "bi-egg-fried",
+        "Atıştırmalık" or "Atistirmalik" => "bi-cookie",
         "Temizlik" => "bi-droplet",
-        "Kisisel Bakim" => "bi-heart-pulse",
+        "Kişisel Bakım" or "Kisisel Bakim" => "bi-heart-pulse",
         _ => "bi-box-seam"
     };
 }

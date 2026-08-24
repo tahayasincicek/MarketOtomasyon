@@ -124,6 +124,19 @@
                     </div>
 
                     <div class="alan">
+                        <label asp-for="BirimMaliyet">Birim maliyet</label>
+                        <div class="deger">
+                            <div class="input-group dar">
+                                <input class="form-control text-end" asp-for="BirimMaliyet"
+                                       type="number" step="0.01" min="0.01" />
+                                <span class="input-group-text">₺</span>
+                            </div>
+                            <span class="hata" asp-validation-for="BirimMaliyet"></span>
+                            <div class="ipucu mt-1">KDV hariç alış birim maliyetini girin.</div>
+                        </div>
+                    </div>
+
+                    <div class="alan">
                         <label asp-for="Aciklama">Açıklama</label>
                         <div class="deger">
                             <input class="form-control" asp-for="Aciklama"

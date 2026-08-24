@@ -24,7 +24,7 @@ public class IndirimYetkisiTests
         var (yeterli, hata) = IndirimYetkisi.SatirIndirimiKontrol(Kasiyer, 15m);
 
         Assert.False(yeterli);
-        Assert.Contains("mudur onayi", hata!);
+        Assert.Contains("müdür onayı", hata!);
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public class IndirimYetkisiTests
         var (yeterli, hata) = IndirimYetkisi.SatirIndirimiKontrol(Mudur, 60m);
 
         Assert.False(yeterli);
-        Assert.Contains("asamaz", hata!);
+        Assert.Contains("aşamaz", hata!);
     }
 
     [Theory]

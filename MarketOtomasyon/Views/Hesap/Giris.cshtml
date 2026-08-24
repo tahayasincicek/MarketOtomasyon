@@ -1,0 +1,71 @@
+@model MarketOtomasyon.Models.ViewModels.GirisVm
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Giriş - Market Otomasyon</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/phosphor-icons/phosphor.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="giris-sayfasi">
+    <main class="giris-icerik">
+        <section class="giris-karti" aria-labelledby="giris-basligi">
+            <div class="giris-marka">
+                <span class="giris-marka-ikonu" aria-hidden="true">
+                    <svg class="giris-market-arabasi" viewBox="0 0 24 24" fill="none">
+                        <path d="M4 19a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                        <path d="M15 19a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                        <path d="M17 17H6V3H4" />
+                        <path d="M6 5l14 1l-1 7H6" />
+                    </svg>
+                </span>
+                <div>
+                    <span class="giris-ust-etiket">Güvenli personel girişi</span>
+                    <h1 id="giris-basligi">Market Otomasyon</h1>
+                </div>
+            </div>
+
+            <p class="giris-aciklama">Vardiyanıza devam etmek için hesabınızla giriş yapın.</p>
+
+            <form asp-action="Giris" method="post" novalidate>
+                @Html.AntiForgeryToken()
+                <input asp-for="ReturnUrl" type="hidden" />
+
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+
+                <div class="mb-3">
+                    <label asp-for="KullaniciAdi" class="form-label"></label>
+                    <div class="giris-alan">
+                        <i class="ph ph-user" aria-hidden="true"></i>
+                        <input asp-for="KullaniciAdi" class="form-control" autocomplete="username" autofocus />
+                    </div>
+                    <span asp-validation-for="KullaniciAdi" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="Sifre" class="form-label"></label>
+                    <div class="giris-alan">
+                        <i class="ph ph-lock-key" aria-hidden="true"></i>
+                        <input asp-for="Sifre" class="form-control" autocomplete="current-password" />
+                    </div>
+                    <span asp-validation-for="Sifre" class="text-danger small"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 giris-dugmesi">
+                    Giriş Yap <i class="ph ph-arrow-right ms-1"></i>
+                </button>
+            </form>
+
+            <div class="giris-alt-bilgi">
+                <i class="ph ph-shield-check" aria-hidden="true"></i>
+                İşlemler kullanıcı hesabınızla güvenli biçimde kaydedilir.
+            </div>
+        </section>
+    </main>
+</body>
+</html>

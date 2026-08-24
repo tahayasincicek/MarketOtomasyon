@@ -95,7 +95,7 @@ public class BarkodServiceTests
         var sonuc = await Servis().CozAsync("1234567890128");   // gecerli EAN, kayitli degil
 
         Assert.False(sonuc.Basarili);
-        Assert.Contains("bulunamadi", sonuc.Hata!);
+        Assert.Contains("bulunamadı", sonuc.Hata!);
     }
 
     [Fact]
@@ -104,7 +104,7 @@ public class BarkodServiceTests
         var sonuc = await Servis().CozAsync(TeraziBarkodu("2809999", 500));
 
         Assert.False(sonuc.Basarili);
-        Assert.Contains("tanimli degil", sonuc.Hata!);
+        Assert.Contains("tanımlı değil", sonuc.Hata!);
     }
 
     [Fact]

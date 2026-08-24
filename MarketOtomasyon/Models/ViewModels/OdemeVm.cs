@@ -15,7 +15,7 @@ public class OdemeSatirVm
         1 => "Nakit",
         2 => "Kart",
         3 => "Puan",
-        _ => "Diger"
+        _ => "Diğer"
     };
 }
 

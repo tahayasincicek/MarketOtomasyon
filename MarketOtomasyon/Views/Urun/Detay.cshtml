@@ -2,6 +2,7 @@
 @using MarketOtomasyon.Models.ViewModels
 @{
     ViewData["Title"] = Model.Urun.Ad;
+    var mudur = User.IsInRole("Mudur");
 }
 
 <div class="ekran">
@@ -9,9 +10,12 @@
         <a class="btn btn-outline-secondary" asp-action="Index">
             <i class="ph ph-arrow-left"></i> Liste
         </a>
-        <a class="btn btn-primary" asp-action="Duzenle" asp-route-id="@Model.Urun.Id">
-            <i class="ph ph-pencil-simple"></i> Düzenle
-        </a>
+        @if (mudur)
+        {
+            <a class="btn btn-primary" asp-action="Duzenle" asp-route-id="@Model.Urun.Id">
+                <i class="ph ph-pencil-simple"></i> Düzenle
+            </a>
+        }
 
         <span class="arac-ayrac"></span>
 
@@ -111,13 +115,16 @@
                                 </td>
                                 <td class="sayi">@barkod.Carpan.ToString("0.##")</td>
                                 <td class="islem">
-                                    <form method="post" asp-action="BarkodSil">
-                                        <input type="hidden" name="id" value="@barkod.Id" />
-                                        <input type="hidden" name="urunId" value="@Model.Urun.Id" />
-                                        <button type="submit" class="btn btn-outline-danger" title="Barkodu sil">
-                                            <i class="ph ph-trash"></i>
-                                        </button>
-                                    </form>
+                                    @if (mudur)
+                                    {
+                                        <form method="post" asp-action="BarkodSil">
+                                            <input type="hidden" name="id" value="@barkod.Id" />
+                                            <input type="hidden" name="urunId" value="@Model.Urun.Id" />
+                                            <button type="submit" class="btn btn-outline-danger" title="Barkodu sil">
+                                                <i class="ph ph-trash"></i>
+                                            </button>
+                                        </form>
+                                    }
                                 </td>
                             </tr>
                         }
@@ -130,36 +137,39 @@
                 }
             </div>
 
-            @* Ekleme satiri izgaranin hemen altinda: yeni barkod, listenin
-               devami gibi girilir. *@
-            <form method="post" asp-action="BarkodEkle" class="arac-cubugu"
-                  style="border-top:1px solid var(--izgara-cizgi); border-bottom:none">
-                <input type="hidden" asp-for="YeniBarkod.UrunId" value="@Model.Urun.Id" />
+            @if (mudur)
+            {
+                @* Ekleme satiri izgaranin hemen altinda: yeni barkod, listenin
+                   devami gibi girilir. *@
+                <form method="post" asp-action="BarkodEkle" class="arac-cubugu"
+                      style="border-top:1px solid var(--izgara-cizgi); border-bottom:none">
+                    <input type="hidden" asp-for="YeniBarkod.UrunId" value="@Model.Urun.Id" />
 
-                <span class="arac-etiket">Yeni</span>
-                <input class="form-control font-monospace" style="width:13rem"
-                       asp-for="YeniBarkod.Barkod" autocomplete="off"
-                       placeholder="Barkod" aria-label="Barkod" />
+                    <span class="arac-etiket">Yeni</span>
+                    <input class="form-control font-monospace" style="width:13rem"
+                           asp-for="YeniBarkod.Barkod" autocomplete="off"
+                           placeholder="Barkod" aria-label="Barkod" />
 
-                <select class="form-select" style="width:7rem" asp-for="YeniBarkod.Tip" aria-label="Barkod tipi">
-                    <option value="1">Tekli</option>
-                    <option value="2">Koli</option>
-                </select>
+                    <select class="form-select" style="width:7rem" asp-for="YeniBarkod.Tip" aria-label="Barkod tipi">
+                        <option value="1">Tekli</option>
+                        <option value="2">Koli</option>
+                    </select>
 
-                <input class="form-control text-end" style="width:6rem" asp-for="YeniBarkod.Carpan"
-                       type="number" step="0.001" min="0" placeholder="Çarpan" aria-label="Çarpan" />
+                    <input class="form-control text-end" style="width:6rem" asp-for="YeniBarkod.Carpan"
+                           type="number" step="0.001" min="0" placeholder="Çarpan" aria-label="Çarpan" />
 
-                <button type="submit" class="btn btn-primary">
-                    <i class="ph ph-plus"></i> Ekle
-                </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ph ph-plus"></i> Ekle
+                    </button>
 
-                <span class="hata" asp-validation-for="YeniBarkod.Barkod"></span>
-                <span class="hata" asp-validation-for="YeniBarkod.Carpan"></span>
+                    <span class="hata" asp-validation-for="YeniBarkod.Barkod"></span>
+                    <span class="hata" asp-validation-for="YeniBarkod.Carpan"></span>
 
-                <span class="ipucu arac-sag">
-                    Koli barkodunda çarpan, bir okutmada sepete eklenecek adettir (12'li koli → 12).
-                </span>
-            </form>
+                    <span class="ipucu arac-sag">
+                        Koli barkodunda çarpan, bir okutmada sepete eklenecek adettir (12'li koli → 12).
+                    </span>
+                </form>
+            }
         </div>
 
         <!-- Fiyat gecmisi -->

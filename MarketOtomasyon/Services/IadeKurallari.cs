@@ -7,13 +7,13 @@ public static class IadeKurallari
         decimal satilanMiktar, decimal iadeEdilenMiktar, decimal istenenMiktar)
     {
         if (istenenMiktar <= 0)
-            return (false, "Iade miktari sifirdan buyuk olmalidir.");
+            return (false, "İade miktarı sıfırdan büyük olmalıdır.");
 
         var kalan = Math.Max(0, satilanMiktar - iadeEdilenMiktar);
         if (istenenMiktar > kalan)
             return (false, kalan == 0
-                ? "Bu satirin tamami daha once iade edilmis."
-                : $"Iade miktari kalan miktari ({kalan:0.###}) asamaz.");
+                ? "Bu satırın tamamı daha önce iade edilmiş."
+                : $"İade miktarı kalan miktarı ({kalan:0.###}) aşamaz.");
 
         return (true, null);
     }

@@ -16,6 +16,7 @@ public class StokRepository
 
     private const string SqlHareketEkle = @"
 INSERT INTO StokHareket (UrunId, DepoId, Yon, Miktar, KaynakTip, KaynakId, Aciklama)
+OUTPUT INSERTED.Id
 VALUES (@UrunId, @DepoId, @Yon, @Miktar, @KaynakTip, @KaynakId, @Aciklama);";
 
     private const string SqlBakiye = @"
@@ -68,8 +69,9 @@ JOIN Depo d ON d.Id = h.DepoId
 WHERE h.KaynakTip IN (4, 5)
 ORDER BY h.Id DESC;";
 
-    public async Task HareketEkleAsync(IDbConnection conn, IDbTransaction tx, StokHareket hareket, CancellationToken ct = default)
-        => await conn.ExecuteAsync(new CommandDefinition(SqlHareketEkle, hareket, tx, cancellationToken: ct));
+    public async Task<long> HareketEkleAsync(IDbConnection conn, IDbTransaction tx, StokHareket hareket, CancellationToken ct = default)
+        => await conn.ExecuteScalarAsync<long>(
+            new CommandDefinition(SqlHareketEkle, hareket, tx, cancellationToken: ct));
 
     public async Task<decimal> BakiyeAsync(int urunId, int depoId, CancellationToken ct = default)
     {

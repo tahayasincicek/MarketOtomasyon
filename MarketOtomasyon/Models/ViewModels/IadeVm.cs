@@ -6,6 +6,7 @@ public class IadeAramaVm
     public IadeFisVm? Fis { get; set; }
     public IadeFormVm Form { get; set; } = new();
     public string? Hata { get; set; }
+    public string? Bilgi { get; set; }
 }
 
 public class IadeFisVm
@@ -18,9 +19,12 @@ public class IadeFisVm
     public DateTime IadeSonTarihi { get; set; }
     public List<IadeFisSatirVm> Satirlar { get; set; } = [];
 
+    public bool TumUrunlerIadeEdildi => Satirlar.Count > 0
+                                        && Satirlar.All(s => s.KalanMiktar <= 0);
+
     public bool IadeEdilebilir => Durum == 2
                                   && DateTime.UtcNow <= IadeSonTarihi
-                                  && Satirlar.Any(s => s.KalanMiktar > 0);
+                                  && !TumUrunlerIadeEdildi;
 }
 
 public class IadeFisSatirVm
@@ -65,4 +69,3 @@ public class IadeSonucVm
 
     public static IadeSonucVm Basarisiz(string hata) => new() { Hata = hata };
 }
-

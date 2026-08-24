@@ -62,7 +62,7 @@ public static class BarkodCozumleyici
     public static (string Anahtar, decimal MiktarKg) TeraziAyristir(string barkod)
     {
         if (!TeraziBarkoduMu(barkod))
-            throw new ArgumentException("Terazi barkodu degil.", nameof(barkod));
+            throw new ArgumentException("Terazi barkodu değil.", nameof(barkod));
 
         var anahtar = barkod[..TeraziAnahtarUzunlugu];
         var gramaj = int.Parse(barkod.Substring(TeraziAnahtarUzunlugu, TeraziGramajUzunlugu));

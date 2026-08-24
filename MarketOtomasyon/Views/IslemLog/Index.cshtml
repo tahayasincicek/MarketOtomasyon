@@ -1,0 +1,47 @@
+@model IReadOnlyList<MarketOtomasyon.Models.ViewModels.IslemLogSatirVm>
+@{
+    ViewData["Title"] = "İşlem Logları";
+}
+
+<div class="panel">
+    <div class="panel-baslik">
+        <span><i class="ph ph-list-magnifying-glass me-1"></i> Son Hassas İşlemler</span>
+        <span class="text-muted small">@Model.Count kayıt</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Tarih</th>
+                    <th>Kullanıcı</th>
+                    <th>İşlem</th>
+                    <th>Hedef</th>
+                    <th>Eski değer</th>
+                    <th>Yeni değer</th>
+                    <th>Açıklama</th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (Model.Count == 0)
+            {
+                <tr><td colspan="7" class="text-center text-muted py-5">Henüz hassas işlem kaydı yok.</td></tr>
+            }
+            else
+            {
+                foreach (var kayit in Model)
+                {
+                    <tr>
+                        <td class="text-nowrap">@kayit.Tarih.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss")</td>
+                        <td><strong>@kayit.AdSoyad</strong><span class="d-block text-muted small">@kayit.KullaniciAdi</span></td>
+                        <td><span class="badge bg-secondary">@kayit.IslemTipi</span></td>
+                        <td>@kayit.HedefTipi @(kayit.HedefId is null ? "" : $"#{kayit.HedefId}")</td>
+                        <td>@(kayit.EskiDeger ?? "—")</td>
+                        <td>@(kayit.YeniDeger ?? "—")</td>
+                        <td>@(kayit.Aciklama ?? "—")</td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

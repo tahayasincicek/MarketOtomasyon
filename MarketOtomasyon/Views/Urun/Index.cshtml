@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Ürünler";
     var resimsiz = Model.Satirlar.Count(s => string.IsNullOrWhiteSpace(s.ResimYolu));
+    var mudur = User.IsInRole("Mudur");
 }
 
 <div class="ekran">
@@ -20,18 +21,21 @@
        ile serit duzenini bozmaz; ayri formlar cunku biri GET (filtre), digeri
        POST (resim cekme) ve POST'un antiforgery token'i olmali. *@
     <div class="arac-cubugu">
-        <a class="btn btn-primary" asp-action="Ekle">
-            <i class="ph ph-plus"></i> Yeni Ürün
-        </a>
+        @if (mudur)
+        {
+            <a class="btn btn-primary" asp-action="Ekle">
+                <i class="ph ph-plus"></i> Yeni Ürün
+            </a>
 
-        <form method="post" asp-action="ResimleriCek" class="form-seffaf">
-            <button type="submit" class="btn btn-outline-secondary"
-                    title="Barkodu olan ürünlerin fotoğrafını Open Food Facts'ten çeker">
-                <i class="ph ph-image"></i> Resimleri Çek
-            </button>
-        </form>
+            <form method="post" asp-action="ResimleriCek" class="form-seffaf">
+                <button type="submit" class="btn btn-outline-secondary"
+                        title="Barkodu olan ürünlerin fotoğrafını Open Food Facts'ten çeker">
+                    <i class="ph ph-image"></i> Resimleri Çek
+                </button>
+            </form>
 
-        <span class="arac-ayrac"></span>
+            <span class="arac-ayrac"></span>
+        }
 
         <form method="get" asp-action="Index" class="form-seffaf">
             <div class="arac-alan">
@@ -112,8 +116,11 @@
                         <td class="islem">
                             <a class="btn btn-outline-secondary" asp-action="Detay" asp-route-id="@urun.Id"
                                title="Detay"><i class="ph ph-list-bullets"></i></a>
-                            <a class="btn btn-outline-primary" asp-action="Duzenle" asp-route-id="@urun.Id"
-                               title="Düzenle"><i class="ph ph-pencil-simple"></i></a>
+                            @if (mudur)
+                            {
+                                <a class="btn btn-outline-primary" asp-action="Duzenle" asp-route-id="@urun.Id"
+                                   title="Düzenle"><i class="ph ph-pencil-simple"></i></a>
+                            }
                         </td>
                     </tr>
                 }

@@ -28,15 +28,66 @@
         <div class="panel" style="flex:1 1 28rem">
             <div class="panel-baslik"><span><i class="ph ph-trash"></i> Yeni zayi / fire</span></div>
             <div class="panel-govde">
-                <form method="post" asp-action="Zayi">
+                <form id="zayi-form"
+                      method="post"
+                      asp-action="Zayi"
+                      data-barkod-coz-url="@Url.Action("Coz", "Barkod")">
                     <div class="alan">
                         <label asp-for="Barkod">Barkod</label>
                         <div class="deger">
-                            <input class="form-control font-monospace" asp-for="Barkod"
-                                   autocomplete="off" autofocus placeholder="Okutun veya ürün seçin" />
+                            <div class="input-group">
+                                <input id="barkod"
+                                       class="form-control font-monospace"
+                                       asp-for="Barkod"
+                                       autocomplete="off"
+                                       autofocus
+                                       placeholder="Okutun, yazın veya kamerayı kullanın" />
+
+                                <button type="button"
+                                        id="btn-kamera"
+                                        class="btn btn-outline-secondary">
+                                    <i class="ph ph-video-camera"></i> Kamera
+                                </button>
+                            </div>
+
                             <span class="hata" asp-validation-for="Barkod"></span>
+
+                            <div id="zayi-urun-bilgi"
+                                 class="bildirim bildirim-bilgi d-none mt-2"
+                                 role="status"
+                                 aria-live="polite"></div>
                         </div>
                     </div>
+
+                    <div id="kamera-paneli"
+                         class="arac-cubugu d-none mb-3"
+                         style="background:#f8fafc">
+
+                        <video id="kamera-video"
+                               playsinline
+                               muted
+                               style="width:22rem;max-width:100%;height:12rem;object-fit:cover;background:#111827;border-radius:.25rem">
+                        </video>
+
+                        <div class="d-flex flex-column gap-1" style="min-width:0">
+                            <span class="arac-etiket">Kamera</span>
+
+                            <select id="kamera-secim"
+                                    class="form-select"
+                                    style="width:15rem"
+                                    aria-label="Kamera seç">
+                            </select>
+
+                            <div id="kamera-durum" class="ipucu">Kamera kapalı.</div>
+                            <div id="kamera-son" class="ipucu"></div>
+                        </div>
+
+                        <span class="ipucu arac-sag" style="max-width:18rem">
+                            Barkodu kameranın ortasına ve ekrana paralel tutun.
+                            Ürün bulunduğunda kamera kapanır ve miktar alanına geçilir.
+                        </span>
+                    </div>
+
                     <div class="alan">
                         <label asp-for="UrunId">Ürün</label>
                         <div class="deger">
@@ -44,7 +95,11 @@
                                 <option value="0">(barkod okutun veya seçiniz)</option>
                                 @foreach (var urun in Model.Urunler)
                                 {
-                                    <option value="@urun.Id" selected="@(Model.UrunId == urun.Id)">@urun.Kod · @urun.Ad</option>
+                                    <option value="@urun.Id"
+                                            data-kod="@urun.Kod"
+                                            data-ad="@urun.Ad"
+                                            data-birim="@urun.Birim"
+                                            selected="@(Model.UrunId == urun.Id)">@urun.Kod · @urun.Ad</option>
                                 }
                             </select>
                         </div>
@@ -94,4 +149,8 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script src="~/lib/zxing/index.min.js" asp-append-version="true"></script>
+    <script src="~/js/zayi-kamera.js" asp-append-version="true"></script>
+    <script src="~/js/kamera.js" asp-append-version="true"></script>
 }

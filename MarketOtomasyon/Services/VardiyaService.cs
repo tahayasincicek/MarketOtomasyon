@@ -29,10 +29,10 @@ public class VardiyaService
     public async Task<string?> AcAsync(int kullaniciId, decimal acilisTutari, CancellationToken ct = default)
     {
         if (acilisTutari < 0)
-            return "Acilis tutari negatif olamaz.";
+            return "Açılış tutarı negatif olamaz.";
 
         if (await _vardiyaRepository.AcikVardiyaGetirAsync(kullaniciId, ct) is not null)
-            return "Zaten acik bir vardiyaniz var. Once onu kapatin.";
+            return "Zaten açık bir vardiyanız var. Önce onu kapatın.";
 
         await _vardiyaRepository.AcAsync(kullaniciId, acilisTutari, ct);
         return null;
@@ -43,15 +43,15 @@ public class VardiyaService
         int kullaniciId, decimal sayilanTutar, CancellationToken ct = default)
     {
         if (sayilanTutar < 0)
-            return (null, "Sayilan tutar negatif olamaz.");
+            return (null, "Sayılan tutar negatif olamaz.");
 
         var acik = await _vardiyaRepository.AcikVardiyaGetirAsync(kullaniciId, ct);
         if (acik is null)
-            return (null, "Acik vardiya bulunamadi.");
+            return (null, "Açık vardiya bulunamadı.");
 
         var rapor = await _vardiyaRepository.ZRaporAsync(acik.Id, ct);
         if (rapor is null)
-            return (null, "Vardiya ozeti okunamadi.");
+            return (null, "Vardiya özeti okunamadı.");
 
         rapor.SayilanTutar = sayilanTutar;
         var beklenen = rapor.BeklenenTutar;
@@ -59,7 +59,7 @@ public class VardiyaService
 
         var etkilenen = await _vardiyaRepository.KapatAsync(acik.Id, sayilanTutar, beklenen, fark, ct);
         if (etkilenen != 1)
-            return (null, "Vardiya baska bir islemde kapatilmis.");
+            return (null, "Vardiya başka bir işlemde kapatılmış.");
 
         return (await _vardiyaRepository.ZRaporAsync(acik.Id, ct), null);
     }

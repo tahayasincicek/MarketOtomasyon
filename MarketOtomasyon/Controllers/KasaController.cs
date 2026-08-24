@@ -1,6 +1,8 @@
 using MarketOtomasyon.Data.Repositories;
 using MarketOtomasyon.Models.ViewModels;
 using MarketOtomasyon.Services;
+using MarketOtomasyon.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MarketOtomasyon.Controllers;
@@ -14,24 +16,20 @@ namespace MarketOtomasyon.Controllers;
 /// GECICI: oturum acma henuz yok, kasiyer sabit (Id 1) kabul ediliyor.
 /// </summary>
 [Route("[controller]/[action]")]
+[Authorize(Roles = Roller.SatisRolleri)]
 public class KasaController : Controller
 {
-    private const int GeciciKullaniciId = 1;
-
     private readonly SepetService _sepetService;
     private readonly VardiyaRepository _vardiyaRepository;
-    private readonly KullaniciRepository _kullaniciRepository;
     private readonly HizliUrunRepository _hizliUrunRepository;
 
     public KasaController(
         SepetService sepetService,
         VardiyaRepository vardiyaRepository,
-        KullaniciRepository kullaniciRepository,
         HizliUrunRepository hizliUrunRepository)
     {
         _sepetService = sepetService;
         _vardiyaRepository = vardiyaRepository;
-        _kullaniciRepository = kullaniciRepository;
         _hizliUrunRepository = hizliUrunRepository;
     }
 
@@ -40,7 +38,7 @@ public class KasaController : Controller
     public async Task<IActionResult> Index(CancellationToken ct)
     {
         var hizliUrunlerTask = _hizliUrunRepository.ListeleAsync(ct: ct);
-        var vardiyaTask = _vardiyaRepository.AcikVardiyaGetirAsync(GeciciKullaniciId, ct);
+        var vardiyaTask = _vardiyaRepository.AcikVardiyaGetirAsync(User.KullaniciId(), ct);
 
         await Task.WhenAll(hizliUrunlerTask, vardiyaTask);
 
@@ -66,7 +64,7 @@ public class KasaController : Controller
         var vardiyaId = await VardiyaIdAsync(ct);
         if (vardiyaId < 0) return VardiyaYok();
 
-        var (sepet, hata) = await _sepetService.BarkodEkleAsync(vardiyaId, GeciciKullaniciId, barkod, ct);
+        var (sepet, hata) = await _sepetService.BarkodEkleAsync(vardiyaId, User.KullaniciId(), barkod, ct);
         return hata is null ? Ok(sepet) : BadRequest(new { sepet, hata });
     }
 
@@ -90,29 +88,28 @@ public class KasaController : Controller
         return hata is null ? Ok(sepet) : BadRequest(new { sepet, hata });
     }
 
-    /// <summary>Yuzde 0 gonderilirse indirim kaldirilir. onaylayanKullaniciId verilirse
-    /// yetki onun rolune gore denetlenir (mudur onayi).</summary>
+    /// <summary>Yetki, formdan gelen bir kimlige degil oturumdaki role gore denetlenir.</summary>
     [HttpPost]
     public async Task<IActionResult> SatirIndirimi(
-        [FromForm] int satirId, [FromForm] decimal yuzde, [FromForm] int? onaylayanKullaniciId, CancellationToken ct)
+        [FromForm] int satirId, [FromForm] decimal yuzde, CancellationToken ct)
     {
         var vardiyaId = await VardiyaIdAsync(ct);
         if (vardiyaId < 0) return VardiyaYok();
 
-        var rol = await RolAsync(onaylayanKullaniciId, ct);
-        var (sepet, hata) = await _sepetService.SatirIndirimiUygulaAsync(vardiyaId, satirId, yuzde, rol, ct);
+        var (sepet, hata) = await _sepetService.SatirIndirimiUygulaAsync(
+            vardiyaId, satirId, yuzde, User.RolKodu(), User.KullaniciId(), ct);
         return hata is null ? Ok(sepet) : BadRequest(new { sepet, hata });
     }
 
     [HttpPost]
     public async Task<IActionResult> FisIndirimi(
-        [FromForm] decimal yuzde, [FromForm] int? onaylayanKullaniciId, CancellationToken ct)
+        [FromForm] decimal yuzde, CancellationToken ct)
     {
         var vardiyaId = await VardiyaIdAsync(ct);
         if (vardiyaId < 0) return VardiyaYok();
 
-        var rol = await RolAsync(onaylayanKullaniciId, ct);
-        var (sepet, hata) = await _sepetService.FisIndirimiUygulaAsync(vardiyaId, yuzde, rol, ct);
+        var (sepet, hata) = await _sepetService.FisIndirimiUygulaAsync(
+            vardiyaId, yuzde, User.RolKodu(), User.KullaniciId(), ct);
         return hata is null ? Ok(sepet) : BadRequest(new { sepet, hata });
     }
 
@@ -122,17 +119,12 @@ public class KasaController : Controller
         var vardiyaId = await VardiyaIdAsync(ct);
         if (vardiyaId < 0) return VardiyaYok();
 
-        return Ok(await _sepetService.IptalEtAsync(vardiyaId, ct));
+        return Ok(await _sepetService.IptalEtAsync(vardiyaId, User.KullaniciId(), ct));
     }
-
-    /// <summary>Onaylayan verilmemisse islemi yapan kasiyerin rolu kullanilir.</summary>
-    private async Task<byte> RolAsync(int? onaylayanKullaniciId, CancellationToken ct)
-        => await _kullaniciRepository.RolGetirAsync(onaylayanKullaniciId ?? GeciciKullaniciId, ct)
-           ?? IndirimYetkisi.RolKasiyer;
 
     /// <summary>Acik vardiya yoksa -1 doner; cagiran uc VardiyaYok() ile 409 dondurur.</summary>
     private async Task<int> VardiyaIdAsync(CancellationToken ct)
-        => (await _vardiyaRepository.AcikVardiyaGetirAsync(GeciciKullaniciId, ct))?.Id ?? -1;
+        => (await _vardiyaRepository.AcikVardiyaGetirAsync(User.KullaniciId(), ct))?.Id ?? -1;
 
     // Kasa ekranindaki JS, basarisiz yanitlarda govdedeki "hata" alanini gosterir.
     private ConflictObjectResult VardiyaYok()

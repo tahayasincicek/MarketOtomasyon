@@ -138,18 +138,12 @@
             <span class="input-group-text">%</span>
         </div>
 
-        <span class="arac-etiket">Onaylayan</span>
-        <select id="indirim-onaylayan" class="form-select" style="width:9rem" aria-label="Onaylayan">
-            <option value="">(kasiyer)</option>
-            <option value="2">Müdür onayı</option>
-        </select>
-
         <button type="button" id="btn-indirim-uygula" class="btn btn-primary">Uygula</button>
         <button type="button" id="btn-indirim-kaldir" class="btn btn-outline-secondary">Kaldır</button>
         <button type="button" id="btn-indirim-vazgec" class="btn btn-link btn-sm">Vazgeç</button>
 
         <span class="ipucu arac-sag">
-            Kasiyer satırda en fazla %10, fişte %5 indirim verebilir; üstü müdür onayı ister.
+            Yetki oturumdaki hesaptan alınır. Kasiyer satırda en fazla %10, fişte %5 indirim verebilir.
         </span>
     </div>
 
@@ -329,7 +323,8 @@
                                 <label for="odeme-tutar">Mahsup</label>
                                 <div class="deger">
                                     <input id="odeme-tutar" type="text" class="form-control text-end"
-                                           autocomplete="off" />
+                                           inputmode="decimal" autocomplete="off"
+                                           placeholder="Örn. 1.500,00" />
                                 </div>
                             </div>
                             <div class="alan">
@@ -340,7 +335,8 @@
                                 <label for="odeme-alinan">Alınan</label>
                                 <div class="deger">
                                     <input id="odeme-alinan" type="text" class="form-control text-end"
-                                           autocomplete="off" />
+                                           inputmode="decimal" autocomplete="off"
+                                           placeholder="Örn. 2.000,00" />
                                 </div>
                             </div>
 

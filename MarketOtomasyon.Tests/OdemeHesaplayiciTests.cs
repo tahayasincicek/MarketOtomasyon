@@ -51,7 +51,7 @@ public class OdemeHesaplayiciTests
         var (gecerli, hata) = OdemeHesaplayici.Dogrula(tip, 60m, null, 100m);
 
         Assert.False(gecerli);
-        Assert.Contains("yalnizca nakit", hata!);
+        Assert.Contains("yalnızca nakit", hata!);
     }
 
     [Fact]
@@ -60,7 +60,7 @@ public class OdemeHesaplayiciTests
         var (gecerli, hata) = OdemeHesaplayici.Dogrula(9, 10m, null, 100m);
 
         Assert.False(gecerli);
-        Assert.Contains("Gecersiz odeme tipi", hata!);
+        Assert.Contains("Geçersiz ödeme tipi", hata!);
     }
 
     // ---------- Dogrulama kurallari ----------
@@ -71,7 +71,7 @@ public class OdemeHesaplayiciTests
         var (gecerli, hata) = OdemeHesaplayici.Dogrula(Nakit, 40m, null, 100m);
 
         Assert.False(gecerli);
-        Assert.Contains("alinan tutar", hata!);
+        Assert.Contains("alınan tutar", hata!);
     }
 
     [Fact]

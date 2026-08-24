@@ -12,7 +12,7 @@ public static class SayimKurallari
     {
         if (sayilanMiktar < 0)
             throw new ArgumentOutOfRangeException(nameof(sayilanMiktar),
-                "Sayilan miktar sifirdan kucuk olamaz.");
+                "Sayılan miktar sıfırdan küçük olamaz.");
 
         var fark = sayilanMiktar - sistemMiktari;
         if (fark > 0) return new Duzeltme(fark, 1, fark);

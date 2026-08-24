@@ -15,15 +15,18 @@ public class SayimService
     private readonly IDbConnectionFactory _factory;
     private readonly SayimRepository _sayimRepository;
     private readonly StokRepository _stokRepository;
+    private readonly MaliyetService _maliyetService;
 
     public SayimService(
         IDbConnectionFactory factory,
         SayimRepository sayimRepository,
-        StokRepository stokRepository)
+        StokRepository stokRepository,
+        MaliyetService maliyetService)
     {
         _factory = factory;
         _sayimRepository = sayimRepository;
         _stokRepository = stokRepository;
+        _maliyetService = maliyetService;
     }
 
     /// <summary>
@@ -34,31 +37,31 @@ public class SayimService
         SayimEkranVm form, int kullaniciId, CancellationToken ct = default)
     {
         if (form.DepoId <= 0)
-            return SayimKayitSonucu.Basarisiz("Depo seciniz.");
+            return SayimKayitSonucu.Basarisiz("Depo seçiniz.");
 
         var satirlar = form.Satirlar.Where(s => s.SayilanMiktar.HasValue).ToList();
         if (satirlar.Count == 0)
-            return SayimKayitSonucu.Basarisiz("En az bir urunun sayilan miktarini girin.");
+            return SayimKayitSonucu.Basarisiz("En az bir ürünün sayılan miktarını girin.");
 
         if (satirlar.Any(s => s.UrunId <= 0))
-            return SayimKayitSonucu.Basarisiz("Gecersiz urun satiri.");
+            return SayimKayitSonucu.Basarisiz("Geçersiz ürün satırı.");
 
         if (satirlar.Any(s => s.SayilanMiktar < 0))
-            return SayimKayitSonucu.Basarisiz("Sayilan miktar sifirdan kucuk olamaz.");
+            return SayimKayitSonucu.Basarisiz("Sayılan miktar sıfırdan küçük olamaz.");
 
         if (satirlar.Select(s => s.UrunId).Distinct().Count() != satirlar.Count)
-            return SayimKayitSonucu.Basarisiz("Ayni urun sayimda birden fazla kez bulunamaz.");
+            return SayimKayitSonucu.Basarisiz("Aynı ürün sayımda birden fazla kez bulunamaz.");
 
         using var conn = await _factory.CreateOpenConnectionAsync(ct);
         using var tx = conn.BeginTransaction(IsolationLevel.Serializable);
 
         if (!await _sayimRepository.DepoAktifMiAsync(conn, tx, form.DepoId, ct))
-            return SayimKayitSonucu.Basarisiz("Secilen depo bulunamadi veya aktif degil.");
+            return SayimKayitSonucu.Basarisiz("Seçilen depo bulunamadı veya aktif değil.");
 
         foreach (var satir in satirlar)
         {
             if (!await _sayimRepository.UrunAktifMiAsync(conn, tx, satir.UrunId, ct))
-                return SayimKayitSonucu.Basarisiz("Sayim satirlarindan biri bulunamadi veya aktif degil.");
+                return SayimKayitSonucu.Basarisiz("Sayım satırlarından biri bulunamadı veya aktif değil.");
         }
 
         var sayim = new Sayim
@@ -88,7 +91,7 @@ public class SayimService
 
             if (!duzeltme.HareketGerekli) continue;
 
-            await _stokRepository.HareketEkleAsync(conn, tx, new StokHareket
+            var hareketId = await _stokRepository.HareketEkleAsync(conn, tx, new StokHareket
             {
                 UrunId = satir.UrunId,
                 DepoId = form.DepoId,
@@ -96,8 +99,31 @@ public class SayimService
                 Miktar = duzeltme.Miktar,
                 KaynakTip = KaynakSayim,
                 KaynakId = sayim.Id,
-                Aciklama = $"Sayim #{sayim.Id}: sistem {sistemMiktari:0.###}, sayilan {sayilanMiktar:0.###}"
+                Aciklama = $"Sayım #{sayim.Id}: sistem {sistemMiktari:0.###}, sayılan {sayilanMiktar:0.###}"
             }, ct);
+
+            if (duzeltme.Yon == YonCikis)
+            {
+                var maliyetSonucu = await _maliyetService.FifoTuketAsync(
+                    conn, tx, satir.UrunId, form.DepoId, hareketId, null, duzeltme.Miktar, ct);
+                if (!maliyetSonucu.Basarili)
+                {
+                    tx.Rollback();
+                    return SayimKayitSonucu.Basarisiz($"{satir.UrunId}: {maliyetSonucu.Hata}");
+                }
+            }
+            else
+            {
+                await _maliyetService.DuzeltmePartisiAcAsync(
+                    conn,
+                    tx,
+                    satir.UrunId,
+                    form.DepoId,
+                    hareketId,
+                    duzeltme.Miktar,
+                    $"Sayım #{sayim.Id} fazlası",
+                    ct);
+            }
             hareketSayisi++;
         }
 
@@ -120,9 +146,9 @@ public class SayimService
         int kullaniciId,
         CancellationToken ct = default)
     {
-        if (urunId <= 0) return ZayiKayitSonucu.Basarisiz("Urun seciniz veya barkod okutunuz.");
-        if (depoId <= 0) return ZayiKayitSonucu.Basarisiz("Depo seciniz.");
-        if (miktar <= 0) return ZayiKayitSonucu.Basarisiz("Miktar sifirdan buyuk olmalidir.");
+        if (urunId <= 0) return ZayiKayitSonucu.Basarisiz("Ürün seçiniz veya barkod okutunuz.");
+        if (depoId <= 0) return ZayiKayitSonucu.Basarisiz("Depo seçiniz.");
+        if (miktar <= 0) return ZayiKayitSonucu.Basarisiz("Miktar sıfırdan büyük olmalıdır.");
 
         var temizSebep = Temizle(sebep);
         if (temizSebep is null) return ZayiKayitSonucu.Basarisiz("Zayi/fire sebebi zorunludur.");
@@ -132,9 +158,9 @@ public class SayimService
         using var tx = conn.BeginTransaction(IsolationLevel.Serializable);
 
         if (!await _sayimRepository.DepoAktifMiAsync(conn, tx, depoId, ct))
-            return ZayiKayitSonucu.Basarisiz("Secilen depo bulunamadi veya aktif degil.");
+            return ZayiKayitSonucu.Basarisiz("Seçilen depo bulunamadı veya aktif değil.");
         if (!await _sayimRepository.UrunAktifMiAsync(conn, tx, urunId, ct))
-            return ZayiKayitSonucu.Basarisiz("Urun bulunamadi veya aktif degil.");
+            return ZayiKayitSonucu.Basarisiz("Ürün bulunamadı veya aktif değil.");
 
         var bakiye = await _stokRepository.BakiyeAsync(conn, tx, urunId, depoId, ct);
         if (bakiye < miktar)
@@ -151,7 +177,7 @@ public class SayimService
         };
         zayi.Id = await _sayimRepository.ZayiEkleAsync(conn, tx, zayi, ct);
 
-        await _stokRepository.HareketEkleAsync(conn, tx, new StokHareket
+        var hareketId = await _stokRepository.HareketEkleAsync(conn, tx, new StokHareket
         {
             UrunId = urunId,
             DepoId = depoId,
@@ -161,6 +187,14 @@ public class SayimService
             KaynakId = zayi.Id,
             Aciklama = $"Zayi #{zayi.Id}: {temizSebep}"
         }, ct);
+
+        var maliyetSonucu = await _maliyetService.FifoTuketAsync(
+            conn, tx, urunId, depoId, hareketId, null, miktar, ct);
+        if (!maliyetSonucu.Basarili)
+        {
+            tx.Rollback();
+            return ZayiKayitSonucu.Basarisiz(maliyetSonucu.Hata!);
+        }
 
         tx.Commit();
         return new ZayiKayitSonucu

@@ -37,6 +37,11 @@
         <div class="bildirim bildirim-olumlu"><i class="ph ph-check-circle"></i> @mesaj</div>
     }
 
+    @if (!string.IsNullOrWhiteSpace(Model.Bilgi))
+    {
+        <div class="bildirim bildirim-bilgi"><i class="ph ph-info"></i> @Model.Bilgi</div>
+    }
+
     @if (!string.IsNullOrWhiteSpace(Model.Hata))
     {
         <div class="bildirim bildirim-olumsuz"><i class="ph ph-warning"></i> @Model.Hata</div>
@@ -52,15 +57,10 @@
     {
         var fis = Model.Fis;
 
-        @if (!fis.IadeEdilebilir)
-        {
-            <div class="bildirim bildirim-olumsuz">
-                <i class="ph ph-clock-counter-clockwise"></i>
-                Bu fiş için iade süresi dolmuş. Satır girişleri kapalı.
-            </div>
-        }
-
-        <form method="post" asp-action="Olustur" style="flex:1; display:flex; flex-direction:column; min-height:0">
+        <form id="iade-form"
+              method="post"
+              asp-action="Olustur"
+              style="flex:1; display:flex; flex-direction:column; min-height:0">
             <input type="hidden" name="FisNo" value="@fis.FisNo" />
 
             <div class="izgara-sarmal">
@@ -119,7 +119,10 @@
                        aria-label="İade açıklaması" />
 
                 <div class="arac-sag">
-                    <button type="submit" class="btn btn-danger" disabled="@(!fis.IadeEdilebilir)">
+                    <button type="submit"
+                            id="btn-iade-tamamla"
+                            class="btn btn-danger"
+                            disabled="@(!fis.IadeEdilebilir)">
                         <i class="ph ph-arrow-counter-clockwise"></i> İadeyi Tamamla
                     </button>
                 </div>
@@ -138,3 +141,7 @@
         </span>
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/js/iade.js" asp-append-version="true"></script>
+}

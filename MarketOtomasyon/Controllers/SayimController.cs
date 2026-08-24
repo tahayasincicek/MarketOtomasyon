@@ -2,16 +2,17 @@ using MarketOtomasyon.Data.Repositories;
 using MarketOtomasyon.Models.ViewModels;
 using MarketOtomasyon.Services;
 using Microsoft.AspNetCore.Mvc;
+using MarketOtomasyon.Security;
+using Microsoft.AspNetCore.Authorization;
 
 namespace MarketOtomasyon.Controllers;
 
 /// <summary>
 /// Fiziksel sayim ve zayi/fire girisi.
-/// GECICI: oturum acma gelene kadar kullanici Id 1 kabul edilir.
 /// </summary>
+[Authorize(Roles = Roller.Mudur)]
 public class SayimController : Controller
 {
-    private const int GeciciKullaniciId = 1;
     private const int SonHareketAdedi = 20;
 
     private readonly SayimRepository _sayimRepository;
@@ -48,16 +49,16 @@ public class SayimController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Kaydet(SayimEkranVm form, CancellationToken ct)
     {
-        var sonuc = await _sayimService.SayimKaydetAsync(form, GeciciKullaniciId, ct);
+        var sonuc = await _sayimService.SayimKaydetAsync(form, User.KullaniciId(), ct);
         if (!sonuc.Basarili)
         {
             ModelState.AddModelError(string.Empty, sonuc.Hata!);
             return View(nameof(Index), await SayimFormunuHazirlaAsync(form, ct));
         }
 
-        TempData["Mesaj"] = $"Sayim #{sonuc.SayimId} kaydedildi. "
-            + $"{sonuc.SayilanSatirSayisi} satir sayildi, "
-            + $"{sonuc.DuzeltmeHareketiSayisi} stok duzeltme hareketi olustu.";
+        TempData["Mesaj"] = $"Sayım #{sonuc.SayimId} kaydedildi. "
+            + $"{sonuc.SayilanSatirSayisi} satır sayıldı, "
+            + $"{sonuc.DuzeltmeHareketiSayisi} stok düzeltme hareketi oluştu.";
         return RedirectToAction(nameof(Index), new { depoId = form.DepoId });
     }
 
@@ -82,7 +83,7 @@ public class SayimController : Controller
             return View(await ZayiFormunuHazirlaAsync(form, ct));
 
         var sonuc = await _sayimService.ZayiKaydetAsync(
-            form.UrunId, form.DepoId, form.Miktar, form.Sebep, GeciciKullaniciId, ct);
+            form.UrunId, form.DepoId, form.Miktar, form.Sebep, User.KullaniciId(), ct);
         if (!sonuc.Basarili)
         {
             ModelState.AddModelError(string.Empty, sonuc.Hata!);

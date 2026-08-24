@@ -67,10 +67,10 @@ public class OdemeService
         CancellationToken ct = default)
     {
         var fis = await _fisRepository.AcikFisGetirAsync(vardiyaId, ct);
-        if (fis is null) return (new OdemeDurumVm(), "Odenecek acik fis yok.");
+        if (fis is null) return (new OdemeDurumVm(), "Ödenecek açık fiş yok.");
 
         if (fis.GenelToplam <= 0)
-            return (await DurumAsync(fis, ct), "Sepet bos, odeme alinamaz.");
+            return (await DurumAsync(fis, ct), "Sepet boş, ödeme alınamaz.");
 
         var odenen = await _odemeRepository.OdenenToplamAsync(fis.Id, ct);
         var kalan = OdemeHesaplayici.KalanHesapla(fis.GenelToplam, odenen);
@@ -134,7 +134,7 @@ public class OdemeService
         int fisId, int odemeId, CancellationToken ct = default)
     {
         var fis = await _fisRepository.GetirAsync(fisId, ct);
-        if (fis is null) return (new OdemeDurumVm(), "Fis bulunamadi.");
+        if (fis is null) return (new OdemeDurumVm(), "Fiş bulunamadı.");
 
         using var conn = await _factory.CreateOpenConnectionAsync(ct);
         using var tx = conn.BeginTransaction();
@@ -143,7 +143,7 @@ public class OdemeService
         if (silinen == 0)
         {
             tx.Rollback();
-            return (await DurumAsync(fis, ct), "Odeme bulunamadi.");
+            return (await DurumAsync(fis, ct), "Ödeme bulunamadı.");
         }
 
         // Fis kapanmissa satis geri aliniyor demektir: dusurulen stok da

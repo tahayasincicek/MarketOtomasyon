@@ -1,0 +1,95 @@
+@model MarketOtomasyon.Models.ViewModels.KarMarjiRaporVm
+@using System.Globalization
+@{
+    ViewData["Title"] = "Kâr Marjı";
+    var tr = CultureInfo.GetCultureInfo("tr-TR");
+    string Para(decimal tutar) => tutar.ToString("N2", tr);
+}
+
+<div class="ekran">
+    <div class="arac-cubugu">
+        <form method="get" class="d-flex align-items-center gap-2 flex-wrap">
+            <label class="arac-etiket" for="baslangic">Başlangıç</label>
+            <input id="baslangic" name="baslangic" class="form-control"
+                   style="width:10rem" type="date" value="@Model.Baslangic.ToString("yyyy-MM-dd")" />
+
+            <label class="arac-etiket" for="bitis">Bitiş</label>
+            <input id="bitis" name="bitis" class="form-control"
+                   style="width:10rem" type="date" value="@Model.Bitis.ToString("yyyy-MM-dd")" />
+
+            <button class="btn btn-primary" type="submit">
+                <i class="ph ph-funnel"></i> Raporla
+            </button>
+        </form>
+        <span class="ipucu arac-sag">Net satış KDV hariç, maliyet FIFO parti tüketimlerinden hesaplanır.</span>
+    </div>
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="bildirim bildirim-olumsuz">
+            <i class="ph ph-warning"></i>
+            <div asp-validation-summary="All" class="mb-0"></div>
+        </div>
+    }
+
+    <div class="panel-serit">
+        <div class="panel" style="flex:1">
+            <div class="panel-baslik"><span>Net satış</span></div>
+            <div class="panel-govde fs-4 fw-semibold">@Para(Model.ToplamNetSatis) ₺</div>
+        </div>
+        <div class="panel" style="flex:1">
+            <div class="panel-baslik"><span>Satış maliyeti</span></div>
+            <div class="panel-govde fs-4 fw-semibold">@Para(Model.ToplamMaliyet) ₺</div>
+        </div>
+        <div class="panel" style="flex:1">
+            <div class="panel-baslik"><span>Brüt kâr</span></div>
+            <div class="panel-govde fs-4 fw-semibold @(Model.ToplamKar < 0 ? "text-danger" : "text-success")">
+                @Para(Model.ToplamKar) ₺
+            </div>
+        </div>
+        <div class="panel" style="flex:1">
+            <div class="panel-baslik"><span>Kâr marjı</span></div>
+            <div class="panel-govde fs-4 fw-semibold">%@Model.ToplamKarMarji.ToString("N2", tr)</div>
+        </div>
+    </div>
+
+    <div class="panel" style="flex:1;min-height:0">
+        <div class="panel-baslik">
+            <span><i class="ph ph-chart-line-up"></i> Ürün bazında kârlılık</span>
+        </div>
+        <div class="izgara-sarmal">
+            <table class="izgara">
+                <thead>
+                    <tr>
+                        <th style="width:8rem">Kod</th>
+                        <th>Ürün</th>
+                        <th class="sayi" style="width:9rem">Satılan</th>
+                        <th class="sayi" style="width:10rem">Net satış</th>
+                        <th class="sayi" style="width:10rem">Maliyet</th>
+                        <th class="sayi" style="width:10rem">Brüt kâr</th>
+                        <th class="sayi" style="width:8rem">Marj</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var satir in Model.Satirlar)
+                    {
+                        <tr>
+                            <td class="kod">@satir.UrunKod</td>
+                            <td>@satir.UrunAd</td>
+                            <td class="sayi">@satir.SatilanMiktar.ToString("0.###", tr) @satir.Birim</td>
+                            <td class="sayi">@Para(satir.NetSatis) ₺</td>
+                            <td class="sayi">@Para(satir.SatisMaliyeti) ₺</td>
+                            <td class="sayi @(satir.Kar < 0 ? "text-danger" : "text-success")">@Para(satir.Kar) ₺</td>
+                            <td class="sayi fw-semibold">%@satir.KarMarji.ToString("N2", tr)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (Model.Satirlar.Count == 0)
+            {
+                <p class="veri-yok">Seçilen tarihlerde FIFO maliyeti hesaplanmış satış yok.</p>
+            }
+        </div>
+    </div>
+</div>

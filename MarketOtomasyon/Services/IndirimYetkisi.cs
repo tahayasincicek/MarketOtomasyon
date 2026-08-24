@@ -19,24 +19,24 @@ public static class IndirimYetkisi
     public const decimal MutlakLimitYuzde = 50m;
 
     public static (bool Yeterli, string? Hata) SatirIndirimiKontrol(byte rol, decimal yuzde)
-        => Kontrol(rol, yuzde, KasiyerSatirLimitiYuzde, "Satir");
+        => Kontrol(rol, yuzde, KasiyerSatirLimitiYuzde, "Satır");
 
     public static (bool Yeterli, string? Hata) FisIndirimiKontrol(byte rol, decimal yuzde)
-        => Kontrol(rol, yuzde, KasiyerFisLimitiYuzde, "Fis");
+        => Kontrol(rol, yuzde, KasiyerFisLimitiYuzde, "Fiş");
 
     private static (bool Yeterli, string? Hata) Kontrol(byte rol, decimal yuzde, decimal kasiyerLimiti, string kapsam)
     {
         if (yuzde <= 0)
-            return (false, "Indirim orani sifirdan buyuk olmalidir.");
+            return (false, "İndirim oranı sıfırdan büyük olmalıdır.");
 
         if (yuzde > MutlakLimitYuzde)
-            return (false, $"Indirim %{MutlakLimitYuzde:0.##} oranini asamaz.");
+            return (false, $"İndirim %{MutlakLimitYuzde:0.##} oranını aşamaz.");
 
         if (rol == RolMudur)
             return (true, null);
 
         if (yuzde > kasiyerLimiti)
-            return (false, $"{kapsam} indiriminde %{kasiyerLimiti:0.##} ustu mudur onayi gerektirir.");
+            return (false, $"{kapsam} indiriminde %{kasiyerLimiti:0.##} üstü müdür onayı gerektirir.");
 
         return (true, null);
     }

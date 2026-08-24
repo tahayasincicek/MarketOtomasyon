@@ -30,17 +30,17 @@ public class StokHareketSatirVm
     public string Birim { get; set; } = string.Empty;
     public string DepoAd { get; set; } = string.Empty;
 
-    public string YonAdi => Yon == 1 ? "Giris" : "Cikis";
+    public string YonAdi => Yon == 1 ? "Giriş" : "Çıkış";
 
     public string KaynakAdi => KaynakTip switch
     {
-        1 => "Satis",
-        2 => "Iade",
+        1 => "Satış",
+        2 => "İade",
         3 => "Mal kabul",
-        4 => "Sayim",
+        4 => "Sayım",
         5 => "Zayi",
-        6 => "Acilis",
-        _ => "Diger"
+        6 => "Açılış",
+        _ => "Diğer"
     };
 }
 
@@ -67,6 +67,7 @@ public class MalKabulVm
     public int UrunId { get; set; }
     public int DepoId { get; set; }
     public decimal Miktar { get; set; }
+    public decimal BirimMaliyet { get; set; }
     public string? Aciklama { get; set; }
 
     public IReadOnlyList<Depo> Depolar { get; set; } = [];

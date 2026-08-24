@@ -1,0 +1,256 @@
+﻿@model MarketOtomasyon.Models.ViewModels.RaporVm
+@using System.Globalization
+@using System.Text.Json
+@{
+    ViewData["Title"] = "Raporlar";
+    var tr = CultureInfo.GetCultureInfo("tr-TR");
+    string Para(decimal tutar) => tutar.ToString("N2", tr);
+
+    // Grafik verisi JS'e JSON olarak gecirilir. Sunucuda hazirlanir ki
+    // tarayici ayrica bir istek yapmasin.
+    var ciroEtiket = Model.GunlukCiro.Select(g => g.Gun.ToString("dd.MM")).ToList();
+    var ciroDeger = Model.GunlukCiro.Select(g => g.NetCiro).ToList();
+    var urunEtiket = Model.EnCokSatanlar.Select(u => u.UrunAd).ToList();
+    var urunDeger = Model.EnCokSatanlar.Select(u => u.Ciro).ToList();
+    var odemeEtiket = Model.OdemeDagilimi.Select(o => o.TipAdi).ToList();
+    var odemeDeger = Model.OdemeDagilimi.Select(o => o.Tutar).ToList();
+
+    // Saat grafiginde bosluk olmasin: 0-23 arasi tum saatler doldurulur,
+    // satis olmayan saat 0 olarak cizilir. Aksi halde 09 ve 13 yan yana
+    // gorunur ve arada satis yokmus gibi degil, o saatler hic yokmus gibi olur.
+    var saatSayilari = Enumerable.Range(0, 24)
+        .Select(s => Model.SaatYogunlugu.FirstOrDefault(y => y.Saat == s)?.FisSayisi ?? 0)
+        .ToList();
+    var saatEtiket = Enumerable.Range(0, 24).Select(s => $"{s:00}").ToList();
+}
+
+<div class="ekran">
+    <div class="arac-cubugu">
+        <form method="get" class="d-flex align-items-center gap-2 flex-wrap">
+            <label class="arac-etiket" for="baslangic">Başlangıç</label>
+            <input id="baslangic" name="baslangic" class="form-control" style="width:10rem"
+                   type="date" value="@Model.Baslangic.ToString("yyyy-MM-dd")" />
+
+            <label class="arac-etiket" for="bitis">Bitiş</label>
+            <input id="bitis" name="bitis" class="form-control" style="width:10rem"
+                   type="date" value="@Model.Bitis.ToString("yyyy-MM-dd")" />
+
+            <button class="btn btn-primary" type="submit">
+                <i class="ph ph-funnel"></i> Raporla
+            </button>
+        </form>
+        <span class="ipucu arac-sag">Saatler yerel saate göre gösterilir.</span>
+    </div>
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="bildirim bildirim-olumsuz">
+            <i class="ph ph-warning"></i>
+            <div asp-validation-summary="All" class="mb-0"></div>
+        </div>
+    }
+
+    @if (!Model.VeriVarMi)
+    {
+        <div class="bildirim bildirim-bilgi">
+            <i class="ph ph-info"></i>
+            Seçilen tarih aralığında tamamlanmış satış yok. Tarihleri genişletin.
+        </div>
+    }
+
+    <!-- Ozet satiri -->
+    <div class="panel-serit">
+        <div class="panel" style="flex:1">
+            <div class="panel-baslik"><span>Toplam ciro</span></div>
+            <div class="panel-govde fs-4 fw-semibold">@Para(Model.ToplamCiro) ₺</div>
+        </div>
+        <div class="panel" style="flex:1">
+            <div class="panel-baslik"><span>Fiş sayısı</span></div>
+            <div class="panel-govde fs-4 fw-semibold">@Model.ToplamFis</div>
+        </div>
+        <div class="panel" style="flex:1">
+            <div class="panel-baslik"><span>Ortalama sepet</span></div>
+            <div class="panel-govde fs-4 fw-semibold">@Para(Model.OrtalamaSepet) ₺</div>
+        </div>
+        <div class="panel" style="flex:1">
+            <div class="panel-baslik"><span>Kritik stok</span></div>
+            <div class="panel-govde fs-4 fw-semibold @(Model.KritikStoklar.Count > 0 ? "text-danger" : "")">
+                @Model.KritikStoklar.Count ürün
+            </div>
+        </div>
+    </div>
+
+    <!-- Grafikler -->
+    <div class="panel-serit">
+        <div class="panel" style="flex:2 1 28rem">
+            <div class="panel-baslik"><span><i class="ph ph-chart-line-up"></i> Günlük net ciro</span></div>
+            <div class="panel-govde"><canvas id="ciroGrafik" height="120"></canvas></div>
+        </div>
+        <div class="panel" style="flex:1 1 18rem">
+            <div class="panel-baslik"><span><i class="ph ph-chart-pie"></i> Ödeme dağılımı</span></div>
+            <div class="panel-govde"><canvas id="odemeGrafik" height="200"></canvas></div>
+        </div>
+    </div>
+
+    <div class="panel-serit">
+        <div class="panel" style="flex:1 1 26rem">
+            <div class="panel-baslik"><span><i class="ph ph-clock"></i> Saat bazlı yoğunluk</span></div>
+            <div class="panel-govde"><canvas id="saatGrafik" height="150"></canvas></div>
+        </div>
+        <div class="panel" style="flex:1 1 26rem">
+            <div class="panel-baslik"><span><i class="ph ph-trophy"></i> En çok satan 10 ürün</span></div>
+            <div class="panel-govde"><canvas id="urunGrafik" height="150"></canvas></div>
+        </div>
+    </div>
+
+    <!-- Kritik stok tablosu -->
+    <div class="panel" style="flex:1;min-height:0">
+        <div class="panel-baslik"><span><i class="ph ph-warning"></i> Kritik stok</span></div>
+        <div class="izgara-sarmal">
+            <table class="izgara">
+                <thead>
+                    <tr>
+                        <th style="width:8rem">Kod</th>
+                        <th>Ürün</th>
+                        <th class="sayi" style="width:9rem">Bakiye</th>
+                        <th class="sayi" style="width:9rem">Min. stok</th>
+                        <th class="sayi" style="width:9rem">Eksik</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var satir in Model.KritikStoklar)
+                    {
+                        <tr class="kritik">
+                            <td class="kod">@satir.Kod</td>
+                            <td>@satir.Ad</td>
+                            <td class="sayi">@satir.Bakiye.ToString("0.###", tr) @satir.Birim</td>
+                            <td class="sayi text-muted">@satir.MinStokSeviyesi.ToString("0.###", tr)</td>
+                            <td class="sayi fw-semibold text-danger">
+                                @satir.EksikMiktar.ToString("0.###", tr)
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (Model.KritikStoklar.Count == 0)
+            {
+                <p class="veri-yok">Kritik seviyede ürün yok.</p>
+            }
+        </div>
+    </div>
+
+    <div class="durum-cubugu">
+        <span>@Model.Baslangic.ToString("dd.MM.yyyy") – @Model.Bitis.ToString("dd.MM.yyyy")</span>
+        <span><strong>@Model.GunlukCiro.Count</strong> günde veri</span>
+        <span class="arac-sag ipucu">Ciro grafiğinde iadeler düşülmüş net tutar gösterilir.</span>
+    </div>
+</div>
+
+@section Scripts {
+    @* 6a veya 6b'de sectigin satir buraya *@
+    <script src="~/lib/chartjs/chart.umd.min.js" asp-append-version="true"></script>
+
+    <script>
+        (function() {
+            "use strict";
+            if (typeof Chart === "undefined") return;
+
+            // Ekran sistemiyle ayni renkler; grafikler arayuzden kopuk durmasin.
+            const MAVI = "#3b82f6", YESIL = "#16a34a", TURUNCU = "#ea580c",
+                MOR = "#7c3aed", GRI = "#9ca3af";
+
+            const paraBicimi = new Intl.NumberFormat("tr-TR",
+                { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            // Kasa ekraninda oldugu gibi rakamlar sabit genislikte okunsun.
+            Chart.defaults.font.family = "Inter, 'Segoe UI', system-ui, sans-serif";
+            Chart.defaults.animation = false;   // rapor ekrani, gosteri degil
+
+            const veri = @Html.Raw(JsonSerializer.Serialize(new
+                {
+                    ciroEtiket,
+                    ciroDeger,
+                    urunEtiket,
+                    urunDeger,
+                    odemeEtiket,
+                    odemeDeger,
+                    saatEtiket,
+                    saatSayilari
+                }));
+
+            const paraEkseni = {
+                beginAtZero: true,
+                ticks: { callback: v => paraBicimi.format(v) }
+            };
+
+            // 1) Gunluk net ciro
+            new Chart(document.getElementById("ciroGrafik"), {
+                type: "line",
+                data: {
+                    labels: veri.ciroEtiket,
+                    datasets: [{
+                        label: "Net ciro (₺)", data: veri.ciroDeger,
+                        borderColor: MAVI, backgroundColor: MAVI + "22",
+                        fill: true, tension: 0.25, pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true, scales: { y: paraEkseni },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // 2) Odeme dagilimi
+            new Chart(document.getElementById("odemeGrafik"), {
+                type: "doughnut",
+                data: {
+                    labels: veri.odemeEtiket,
+                    datasets: [{
+                        data: veri.odemeDeger,
+                        backgroundColor: [YESIL, MAVI, MOR, GRI]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: "bottom" },
+                        tooltip: {
+                            callbacks: {
+                                label: c => c.label + ": " + paraBicimi.format(c.parsed) + " ₺"
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 3) Saat bazli yogunluk
+            new Chart(document.getElementById("saatGrafik"), {
+                type: "bar",
+                data: {
+                    labels: veri.saatEtiket,
+                    datasets: [{ label: "Fiş", data: veri.saatSayilari, backgroundColor: TURUNCU }]
+                },
+                options: {
+                    responsive: true,
+                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // 4) En cok satanlar - yatay bar: urun adlari uzun, dikeyde sigmaz
+            new Chart(document.getElementById("urunGrafik"), {
+                type: "bar",
+                data: {
+                    labels: veri.urunEtiket,
+                    datasets: [{ label: "Ciro (₺)", data: veri.urunDeger, backgroundColor: MAVI }]
+                },
+                options: {
+                    indexAxis: "y", responsive: true,
+                    scales: { x: paraEkseni },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        })();
+    </script>
+}

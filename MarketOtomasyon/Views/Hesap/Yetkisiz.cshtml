@@ -1,0 +1,11 @@
+@{
+    ViewData["Title"] = "Yetkisiz Erişim";
+}
+
+<div class="container py-5">
+    <div class="alert alert-danger mx-auto" style="max-width:640px">
+        <h1 class="h4"><i class="ph ph-shield-warning me-2"></i>Bu işlem için yetkiniz yok</h1>
+        <p class="mb-3">Bu ekran yalnızca yetkili kullanıcılar tarafından açılabilir.</p>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-danger">Ana ekrana dön</a>
+    </div>
+</div>

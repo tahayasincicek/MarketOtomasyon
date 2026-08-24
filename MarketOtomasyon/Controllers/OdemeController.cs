@@ -1,18 +1,18 @@
 using MarketOtomasyon.Data.Repositories;
 using MarketOtomasyon.Services;
+using MarketOtomasyon.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MarketOtomasyon.Controllers;
 
 /// <summary>
 /// Odeme uclari. Kasa ekranindaki odeme penceresi bunlari cagirir.
-/// GECICI: oturum acma yok, kasiyer sabit (Id 1) kabul ediliyor.
 /// </summary>
 [Route("[controller]/[action]")]
+[Authorize(Roles = Roller.SatisRolleri)]
 public class OdemeController : Controller
 {
-    private const int GeciciKullaniciId = 1;
-
     private readonly OdemeService _odemeService;
     private readonly VardiyaRepository _vardiyaRepository;
 
@@ -50,7 +50,7 @@ public class OdemeController : Controller
 
     private async Task<int> VardiyaIdAsync(CancellationToken ct)
     {
-        var vardiya = await _vardiyaRepository.AcikVardiyaGetirAsync(GeciciKullaniciId, ct);
-        return vardiya?.Id ?? await _vardiyaRepository.AcAsync(GeciciKullaniciId, 0, ct);
+        var vardiya = await _vardiyaRepository.AcikVardiyaGetirAsync(User.KullaniciId(), ct);
+        return vardiya?.Id ?? -1;
     }
 }

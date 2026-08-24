@@ -313,8 +313,6 @@
 
     const indirimPaneli = document.getElementById("indirim-paneli");
     const indirimYuzde = document.getElementById("indirim-yuzde");
-    const indirimOnaylayan = document.getElementById("indirim-onaylayan");
-
     // "satir" veya "fis"; panel kapaliyken null.
     let indirimKapsami = null;
 
@@ -341,8 +339,7 @@
     }
 
     async function indirimUygula(yuzde) {
-        const onaylayan = indirimOnaylayan.value;
-        const veri = onaylayan ? { yuzde: yuzde, onaylayanKullaniciId: onaylayan } : { yuzde: yuzde };
+        const veri = { yuzde: yuzde };
 
         if (indirimKapsami === "satir") veri.satirId = seciliSatirId;
 
@@ -352,7 +349,7 @@
         indirimKapat();
         await islet(() => gonder(yol, veri));
 
-        // Yetki reddi gibi durumlarda panel yeniden acilir; kasiyer onay secebilsin.
+        // Yetki reddi gibi durumlarda panel yeniden acilir; mesaj kaybolmasin.
         if (!uyari.classList.contains("d-none")) {
             indirimKapsami = kapsam;
             indirimPaneli.classList.remove("d-none");

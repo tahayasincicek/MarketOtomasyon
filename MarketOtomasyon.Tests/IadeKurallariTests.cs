@@ -1,4 +1,5 @@
 using MarketOtomasyon.Services;
+using MarketOtomasyon.Models.ViewModels;
 
 namespace MarketOtomasyon.Tests;
 
@@ -24,7 +25,7 @@ public class IadeKurallariTests
         Assert.True(ilk.Gecerli);
         Assert.Equal(32.50m, iadeTutari);
         Assert.False(ikinci.Gecerli);
-        Assert.Contains("tamami daha once iade", ikinci.Hata);
+        Assert.Contains("tamamı daha önce iade", ikinci.Hata);
         Assert.Equal(0m, satirlar[0].IadeEdilen);
         Assert.Equal(0m, satirlar[2].IadeEdilen);
     }
@@ -58,12 +59,25 @@ public class IadeKurallariTests
     }
 
     [Fact]
+    public void KismiIade_AyniSatirdanKalanVarkenIkinciIadeKabulEdilir()
+    {
+        const decimal satilan = 10m;
+
+        var ilk = IadeKurallari.MiktarDogrula(satilan, iadeEdilenMiktar: 0m, istenenMiktar: 1m);
+        var ikinci = IadeKurallari.MiktarDogrula(satilan, iadeEdilenMiktar: 1m, istenenMiktar: 1m);
+
+        Assert.True(ilk.Gecerli);
+        Assert.True(ikinci.Gecerli);
+        Assert.Null(ikinci.Hata);
+    }
+
+    [Fact]
     public void IadeMiktari_KalanMiktariAsamaz()
     {
         var sonuc = IadeKurallari.MiktarDogrula(3m, 2m, 1.001m);
 
         Assert.False(sonuc.Gecerli);
-        Assert.Contains("kalan miktari", sonuc.Hata);
+        Assert.Contains("kalan miktarı", sonuc.Hata);
     }
 
     [Fact]
@@ -79,5 +93,23 @@ public class IadeKurallariTests
     public void IadeAyarlari_VarsayilanSureOtuzGun()
     {
         Assert.Equal(30, new IadeAyarlari().SureGun);
+    }
+
+    [Fact]
+    public void IadeFisi_TumMiktarlarIadeEdildiyseTamamlandiOlarakIsaretlenir()
+    {
+        var fis = new IadeFisVm
+        {
+            Durum = 2,
+            IadeSonTarihi = DateTime.UtcNow.AddDays(1),
+            Satirlar =
+            [
+                new IadeFisSatirVm { Miktar = 1m, IadeEdilenMiktar = 1m },
+                new IadeFisSatirVm { Miktar = 3m, IadeEdilenMiktar = 3m }
+            ]
+        };
+
+        Assert.True(fis.TumUrunlerIadeEdildi);
+        Assert.False(fis.IadeEdilebilir);
     }
 }

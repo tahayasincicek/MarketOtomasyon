@@ -17,8 +17,8 @@ public class FisYazdirVm
     public string DurumAdi => Fis.Durum switch
     {
         1 => "BEKLEMEDE",
-        2 => "SATIS FISI",
-        9 => "IPTAL",
+        2 => "SATIŞ FİŞİ",
+        9 => "İPTAL",
         _ => ""
     };
 }

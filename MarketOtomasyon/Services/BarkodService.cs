@@ -17,7 +17,7 @@ public class BarkodService
     {
         barkod = barkod?.Trim();
         if (string.IsNullOrEmpty(barkod))
-            return BarkodSonucVm.Basarisiz("Barkod bos olamaz.");
+            return BarkodSonucVm.Basarisiz("Barkod boş olamaz.");
 
         // Terazi barkodu once denenir: 13 hane oldugu icin normal EAN gibi gorunur,
         // ama tamami veritabaninda kayitli degildir; yalnizca ilk 7 hanesi aranir.
@@ -31,10 +31,10 @@ public class BarkodService
 
         var urun = await _barkodRepository.BarkodCozAsync(barkod, ct);
         if (urun is null)
-            return BarkodSonucVm.Basarisiz($"'{barkod}' barkodlu urun bulunamadi.");
+            return BarkodSonucVm.Basarisiz($"'{barkod}' barkodlu ürün bulunamadı.");
 
         if (urun.Fiyat is null)
-            return BarkodSonucVm.Basarisiz($"{urun.Ad} icin fiyat tanimli degil.");
+            return BarkodSonucVm.Basarisiz($"{urun.Ad} için fiyat tanımlı değil.");
 
         // Koli barkodunda carpan kadar adet sepete girer, tekli barkodda 1.
         var miktar = urun.BarkodTip == 2 ? urun.Carpan : 1m;
@@ -51,13 +51,13 @@ public class BarkodService
 
         var urun = await _barkodRepository.BarkodCozAsync(anahtar, ct);
         if (urun is null)
-            return BarkodSonucVm.Basarisiz($"Terazi kodu '{anahtar}' hicbir urune tanimli degil.");
+            return BarkodSonucVm.Basarisiz($"Terazi kodu '{anahtar}' hiçbir ürüne tanımlı değil.");
 
         if (urun.Fiyat is null)
-            return BarkodSonucVm.Basarisiz($"{urun.Ad} icin fiyat tanimli degil.");
+            return BarkodSonucVm.Basarisiz($"{urun.Ad} için fiyat tanımlı değil.");
 
         if (miktarKg <= 0)
-            return BarkodSonucVm.Basarisiz("Terazi barkodundaki gramaj sifir.");
+            return BarkodSonucVm.Basarisiz("Terazi barkodundaki gramaj sıfır.");
 
         return Sonuc(urun, miktarKg, "terazi");
     }

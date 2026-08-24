@@ -3,9 +3,12 @@ using MarketOtomasyon.Data;
 using MarketOtomasyon.Data.Repositories;
 using MarketOtomasyon.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using MarketOtomasyon.Security;
+using Microsoft.AspNetCore.Authorization;
 
 namespace MarketOtomasyon.Controllers;
 
+[Authorize(Roles = Roller.Mudur)]
 public class KampanyaController : Controller
 {
     private readonly IDbConnectionFactory _factory;

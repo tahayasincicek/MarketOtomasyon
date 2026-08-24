@@ -3,14 +3,12 @@ using MarketOtomasyon.Data.Repositories;
 using MarketOtomasyon.Models;
 using MarketOtomasyon.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using MarketOtomasyon.Security;
 
 namespace MarketOtomasyon.Controllers;
 
 public class HomeController : Controller
 {
-    // GECICI: oturum acma henuz yok, kasiyer sabit (Id 1) kabul ediliyor.
-    private const int GeciciKullaniciId = 1;
-
     private readonly ILogger<HomeController> _logger;
     private readonly UrunRepository _urunRepository;
     private readonly OzetRepository _ozetRepository;
@@ -30,13 +28,16 @@ public class HomeController : Controller
 
     public async Task<IActionResult> Index(CancellationToken ct)
     {
+        if (User.IsInRole(Roller.Kasiyer))
+            return RedirectToAction("Index", "Kasa");
+
         // "Bugun" yerel gundur; Tarih kolonlari UTC yazildigi icin
         // gun sinirlari UTC'ye cevrilerek sorgulanir.
         var bugun = DateTime.Now.Date;
         var baslangicUtc = bugun.ToUniversalTime();
         var bitisUtc = bugun.AddDays(1).ToUniversalTime();
 
-        var acik = await _vardiyaRepository.AcikVardiyaGetirAsync(GeciciKullaniciId, ct);
+        var acik = await _vardiyaRepository.AcikVardiyaGetirAsync(User.KullaniciId(), ct);
 
         return View(new AnaEkranVm
         {
@@ -50,7 +51,7 @@ public class HomeController : Controller
     public async Task<IActionResult> DbTest(CancellationToken ct)
     {
         var sayi = await _urunRepository.AktifUrunSayisiAsync(ct);
-        return Content($"Baglanti tamam. Aktif urun sayisi: {sayi}");
+        return Content($"Bağlantı tamam. Aktif ürün sayısı: {sayi}");
     }
 
     public IActionResult Privacy()

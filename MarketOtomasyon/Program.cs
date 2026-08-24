@@ -1,6 +1,10 @@
 using System.Globalization;
 using FluentValidation;
+using MarketOtomasyon.Models.Entities;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using MarketOtomasyon.Data;
 using MarketOtomasyon.Data.Repositories;
@@ -12,6 +16,29 @@ var builder = WebApplication.CreateBuilder(args);
 // otomatik "required" mesajlari kapali, kurallar FluentValidation'da.
 builder.Services.AddControllersWithViews(o =>
     o.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true);
+
+builder.Services
+    .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.Cookie.Name = "MarketOtomasyon.Oturum";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        options.LoginPath = "/Hesap/Giris";
+        options.AccessDeniedPath = "/Hesap/Yetkisiz";
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);
+        options.SlidingExpiration = true;
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
+
+builder.Services.AddScoped<IPasswordHasher<Kullanici>, PasswordHasher<Kullanici>>();
 
 // Dapper baglanti fabrikasi - tum repository'ler bunu kullanir.
 builder.Services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
@@ -34,6 +61,8 @@ builder.Services.AddScoped<OzetRepository>();
 builder.Services.AddScoped<UrunResimRepository>();
 builder.Services.AddScoped<SayimRepository>();
 builder.Services.AddScoped<HizliUrunRepository>();
+builder.Services.AddScoped<MaliyetRepository>();
+builder.Services.AddScoped<IslemLogRepository>();
 
 // Servisler
 builder.Services.AddScoped<UrunService>();
@@ -46,7 +75,10 @@ builder.Services.AddScoped<KampanyaService>();
 builder.Services.AddScoped<IadeService>();
 builder.Services.AddScoped<VardiyaService>();
 builder.Services.AddScoped<UrunResimService>();
+builder.Services.AddScoped<RaporRepository>();
 builder.Services.AddScoped<SayimService>();
+builder.Services.AddScoped<MaliyetService>();
+builder.Services.AddScoped<KimlikDogrulamaService>();
 
 // Isletmeye gore degisen satis kurallari
 builder.Services.Configure<SatisAyarlari>(builder.Configuration.GetSection("Satis"));
@@ -88,6 +120,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(

@@ -26,8 +26,50 @@
     // ---------- Yardimcilar ----------
 
     function sayiOku(girdi) {
-        const metin = girdi.value.trim().replace(",", ".");
-        return metin === "" ? null : parseFloat(metin);
+        let metin = girdi.value.trim().replace(/\s/g, "");
+        if (metin === "") return null;
+
+        // Odeme alanlari tr-TR biciminde gosterilir (ornegin 1.250,75).
+        // parseFloat bu degeri 1.25 olarak okudugu icin bin TL'yi asan
+        // odemelerde mahsup ve para ustu yanlis hesaplanirdi.
+        //
+        // Turkce girislerin yaninda barkod klavyesi/harici numpad ile
+        // yazilabilecek 1250.75 ve 1,250.75 bicimlerini de kabul ediyoruz.
+        if (!/^[+-]?[0-9.,]+$/.test(metin)) return null;
+
+        const isaret = /^[+-]/.test(metin) ? metin[0] : "";
+        if (isaret) metin = metin.slice(1);
+
+        const sonVirgul = metin.lastIndexOf(",");
+        const sonNokta = metin.lastIndexOf(".");
+        let normal;
+
+        if (sonVirgul >= 0 && sonNokta >= 0) {
+            // Iki ayirac da varsa en sondaki ondalik, digeri binliktir:
+            // 1.250,75 ve 1,250.75 ayni sonuca donusur.
+            const ondalikKonumu = Math.max(sonVirgul, sonNokta);
+            normal = metin.slice(0, ondalikKonumu).replace(/[.,]/g, "") +
+                "." + metin.slice(ondalikKonumu + 1).replace(/[.,]/g, "");
+        } else if (sonVirgul >= 0) {
+            // Uygulamanin ana giris bicimi: 1250,75.
+            normal = metin.slice(0, sonVirgul).replace(/,/g, "") +
+                "." + metin.slice(sonVirgul + 1).replace(/,/g, "");
+        } else if (sonNokta >= 0 && /^\d{1,3}(?:\.\d{3})+$/.test(metin)) {
+            // Yalnizca nokta ve uclu gruplar varsa Turkce binlik bicimidir:
+            // 1.250 veya 1.250.000.
+            normal = metin.replace(/\./g, "");
+        } else {
+            // 1250.75 gibi nokta ile ondalik girisi.
+            normal = metin;
+        }
+
+        const sayi = Number(isaret + normal);
+        return Number.isFinite(sayi) ? sayi : null;
+    }
+
+    function paraGirdisiniBicimlendir(girdi) {
+        const sayi = sayiOku(girdi);
+        if (sayi !== null) girdi.value = paraBicimi.format(sayi);
     }
 
     // Su an yalnizca nakit acik; kart POS entegrasyonuyla eklenecek.
@@ -149,7 +191,15 @@
     }
 
     async function odemeEkle() {
-        const tutar = sayiOku(tutarGirdi) ?? sonDurum.kalan;
+        const girilenTutar = sayiOku(tutarGirdi);
+        if (tutarGirdi.value.trim() !== "" && girilenTutar === null) {
+            uyariGoster("Geçerli bir mahsup tutarı girin.");
+            tutarGirdi.focus();
+            tutarGirdi.select();
+            return;
+        }
+
+        const tutar = girilenTutar ?? sonDurum.kalan;
 
         // Alinan tutar zorunlu: kasiyer musterinin ne kadar verdigini
         // acikca girmeden odeme tamamlanamaz. Bos birakip Enter'a basmak
@@ -157,8 +207,11 @@
         // verecegi bir sey, varsayilan degil.
         const alinan = sayiOku(alinanGirdi);
         if (alinan === null) {
-            uyariGoster("Müşteriden alınan tutarı girin.");
+            uyariGoster(alinanGirdi.value.trim() === ""
+                ? "Müşteriden alınan tutarı girin."
+                : "Müşteriden alınan tutar geçerli bir sayı olmalıdır.");
             alinanGirdi.focus();
+            alinanGirdi.select();
             return;
         }
 
@@ -287,6 +340,12 @@
     [tutarGirdi, alinanGirdi].forEach(function (girdi) {
         girdi.addEventListener("keydown", function (e) {
             if (e.key === "Enter") { e.preventDefault(); odemeEkle(); }
+        });
+
+        // Kasiyer alandan ayrildiginda okunan degeri gorerek kontrol edebilsin.
+        // 1500, 1.500 ve 1.500,00 ayni sekilde 1.500,00 olarak gosterilir.
+        girdi.addEventListener("blur", function () {
+            paraGirdisiniBicimlendir(girdi);
         });
     });
 

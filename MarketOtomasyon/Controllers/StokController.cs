@@ -2,9 +2,12 @@ using MarketOtomasyon.Data.Repositories;
 using MarketOtomasyon.Models.ViewModels;
 using MarketOtomasyon.Services;
 using Microsoft.AspNetCore.Mvc;
+using MarketOtomasyon.Security;
+using Microsoft.AspNetCore.Authorization;
 
 namespace MarketOtomasyon.Controllers;
 
+[Authorize(Roles = Roller.SatisRolleri)]
 public class StokController : Controller
 {
     private const int SayfaBoyutu = 20;
@@ -45,10 +48,12 @@ public class StokController : Controller
     }
 
     [HttpGet]
+    [Authorize(Roles = Roller.Mudur)]
     public async Task<IActionResult> Giris(CancellationToken ct)
         => View(await FormHazirlaAsync(new MalKabulVm(), ct));
 
     [HttpPost]
+    [Authorize(Roles = Roller.Mudur)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Giris(MalKabulVm form, CancellationToken ct)
     {
@@ -63,20 +68,29 @@ public class StokController : Controller
         }
 
         if (form.UrunId <= 0)
-            ModelState.AddModelError(nameof(form.UrunId), "Urun secilmedi veya barkoddan cozulemedi.");
+            ModelState.AddModelError(nameof(form.UrunId), "Ürün seçilmedi veya barkoddan çözülemedi.");
 
         if (form.DepoId <= 0)
-            ModelState.AddModelError(nameof(form.DepoId), "Depo seciniz.");
+            ModelState.AddModelError(nameof(form.DepoId), "Depo seçiniz.");
 
         if (form.Miktar <= 0)
-            ModelState.AddModelError(nameof(form.Miktar), "Miktar sifirdan buyuk olmalidir.");
+            ModelState.AddModelError(nameof(form.Miktar), "Miktar sıfırdan büyük olmalıdır.");
+
+        if (form.BirimMaliyet <= 0)
+            ModelState.AddModelError(nameof(form.BirimMaliyet), "Birim maliyet sıfırdan büyük olmalıdır.");
 
         if (!ModelState.IsValid)
             return View(await FormHazirlaAsync(form, ct));
 
-        var yeniBakiye = await _stokService.MalKabulAsync(form.UrunId, form.DepoId, form.Miktar, form.Aciklama, ct);
+        var yeniBakiye = await _stokService.MalKabulAsync(
+            form.UrunId,
+            form.DepoId,
+            form.Miktar,
+            form.BirimMaliyet,
+            form.Aciklama,
+            ct);
 
-        TempData["Mesaj"] = $"Giris islendi. Yeni bakiye: {yeniBakiye:0.###}";
+        TempData["Mesaj"] = $"Giriş ve FIFO partisi kaydedildi. Yeni bakiye: {yeniBakiye:0.###}";
         return RedirectToAction(nameof(Giris));
     }
 

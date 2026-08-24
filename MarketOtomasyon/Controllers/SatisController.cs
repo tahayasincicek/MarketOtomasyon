@@ -1,19 +1,19 @@
 using MarketOtomasyon.Data.Repositories;
 using MarketOtomasyon.Models.ViewModels;
 using MarketOtomasyon.Services;
+using MarketOtomasyon.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MarketOtomasyon.Controllers;
 
 /// <summary>
 /// Satis kapatma, askiya alma ve fis yazdirma.
-/// GECICI: oturum acma yok, kasiyer sabit (Id 1) kabul ediliyor.
 /// </summary>
 [Route("[controller]/[action]")]
+[Authorize(Roles = Roller.SatisRolleri)]
 public class SatisController : Controller
 {
-    private const int GeciciKullaniciId = 1;
-
     private readonly SatisService _satisService;
     private readonly VardiyaRepository _vardiyaRepository;
     private readonly FisRepository _fisRepository;
@@ -76,7 +76,7 @@ public class SatisController : Controller
 
     private async Task<int> VardiyaIdAsync(CancellationToken ct)
     {
-        var vardiya = await _vardiyaRepository.AcikVardiyaGetirAsync(GeciciKullaniciId, ct);
-        return vardiya?.Id ?? await _vardiyaRepository.AcAsync(GeciciKullaniciId, 0, ct);
+        var vardiya = await _vardiyaRepository.AcikVardiyaGetirAsync(User.KullaniciId(), ct);
+        return vardiya?.Id ?? -1;
     }
 }

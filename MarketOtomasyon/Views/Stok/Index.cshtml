@@ -3,18 +3,22 @@
 @{
     ViewData["Title"] = "Stok Durumu";
     var kritikSayisi = Model.Satirlar.Count(s => s.Kritik);
+    var mudur = User.IsInRole("Mudur");
 }
 
 <div class="ekran">
     <form method="get" class="arac-cubugu">
-        <a class="btn btn-primary" asp-action="Giris">
-            <i class="ph ph-tray-arrow-down"></i> Mal Kabul
-        </a>
-        <a class="btn btn-outline-secondary" asp-controller="Sayim" asp-action="Index">
-            <i class="ph ph-list-checks"></i> Sayım ve Zayi
-        </a>
+        @if (mudur)
+        {
+            <a class="btn btn-primary" asp-action="Giris">
+                <i class="ph ph-tray-arrow-down"></i> Mal Kabul
+            </a>
+            <a class="btn btn-outline-secondary" asp-controller="Sayim" asp-action="Index">
+                <i class="ph ph-list-checks"></i> Sayım ve Zayi
+            </a>
 
-        <span class="arac-ayrac"></span>
+            <span class="arac-ayrac"></span>
+        }
 
         <div class="arac-alan">
             <i class="ph ph-magnifying-glass text-muted"></i>

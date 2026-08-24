@@ -16,23 +16,36 @@ public class StokService
 
     private readonly IDbConnectionFactory _factory;
     private readonly StokRepository _stokRepository;
+    private readonly MaliyetService _maliyetService;
 
-    public StokService(IDbConnectionFactory factory, StokRepository stokRepository)
+    public StokService(
+        IDbConnectionFactory factory,
+        StokRepository stokRepository,
+        MaliyetService maliyetService)
     {
         _factory = factory;
         _stokRepository = stokRepository;
+        _maliyetService = maliyetService;
     }
 
     /// <summary>Mal kabul: depoya giris hareketi yazar ve olusan yeni bakiyeyi doner.</summary>
-    public async Task<decimal> MalKabulAsync(int urunId, int depoId, decimal miktar, string? aciklama, CancellationToken ct = default)
+    public async Task<decimal> MalKabulAsync(
+        int urunId,
+        int depoId,
+        decimal miktar,
+        decimal birimMaliyet,
+        string? aciklama,
+        CancellationToken ct = default)
     {
         if (miktar <= 0)
-            throw new ArgumentOutOfRangeException(nameof(miktar), "Mal kabul miktari sifirdan buyuk olmalidir.");
+            throw new ArgumentOutOfRangeException(nameof(miktar), "Mal kabul miktarı sıfırdan büyük olmalıdır.");
+        if (birimMaliyet <= 0)
+            throw new ArgumentOutOfRangeException(nameof(birimMaliyet), "Birim maliyet sıfırdan büyük olmalıdır.");
 
         using var conn = await _factory.CreateOpenConnectionAsync(ct);
         using var tx = conn.BeginTransaction();
 
-        await _stokRepository.HareketEkleAsync(conn, tx, new StokHareket
+        var hareketId = await _stokRepository.HareketEkleAsync(conn, tx, new StokHareket
         {
             UrunId = urunId,
             DepoId = depoId,
@@ -41,6 +54,17 @@ public class StokService
             KaynakTip = KaynakMalKabul,
             Aciklama = string.IsNullOrWhiteSpace(aciklama) ? null : aciklama.Trim()
         }, ct);
+
+        await _maliyetService.PartiAcAsync(
+            conn,
+            tx,
+            urunId,
+            depoId,
+            hareketId,
+            miktar,
+            birimMaliyet,
+            aciklama,
+            ct);
 
         tx.Commit();
 

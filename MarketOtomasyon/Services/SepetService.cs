@@ -2,6 +2,7 @@ using MarketOtomasyon.Data;
 using MarketOtomasyon.Data.Repositories;
 using MarketOtomasyon.Models.Entities;
 using MarketOtomasyon.Models.ViewModels;
+using System.Globalization;
 
 namespace MarketOtomasyon.Services;
 
@@ -16,17 +17,20 @@ public class SepetService
     private readonly FisRepository _fisRepository;
     private readonly BarkodService _barkodService;
     private readonly KampanyaService _kampanyaService;
+    private readonly IslemLogRepository _islemLogRepository;
 
     public SepetService(
         IDbConnectionFactory factory,
         FisRepository fisRepository,
         BarkodService barkodService,
-        KampanyaService kampanyaService)
+        KampanyaService kampanyaService,
+        IslemLogRepository islemLogRepository)
     {
         _factory = factory;
         _fisRepository = fisRepository;
         _barkodService = barkodService;
         _kampanyaService = kampanyaService;
+        _islemLogRepository = islemLogRepository;
     }
 
     /// <summary>Vardiyadaki acik sepeti getirir; yoksa bos sepet doner.</summary>
@@ -101,11 +105,11 @@ public class SepetService
         int vardiyaId, int satirId, decimal miktar, CancellationToken ct = default)
     {
         var fis = await _fisRepository.AcikFisGetirAsync(vardiyaId, ct);
-        if (fis is null) return (new SepetVm(), "Acik sepet yok.");
+        if (fis is null) return (new SepetVm(), "Açık sepet yok.");
 
         var satirlar = await _fisRepository.SatirlariGetirAsync(fis.Id, ct);
         var satir = satirlar.FirstOrDefault(s => s.SatirId == satirId);
-        if (satir is null) return (await GetirAsync(vardiyaId, ct), "Satir bulunamadi.");
+        if (satir is null) return (await GetirAsync(vardiyaId, ct), "Satır bulunamadı.");
 
         using var conn = await _factory.CreateOpenConnectionAsync(ct);
         using var tx = conn.BeginTransaction();
@@ -130,7 +134,7 @@ public class SepetService
         int vardiyaId, int satirId, CancellationToken ct = default)
     {
         var fis = await _fisRepository.AcikFisGetirAsync(vardiyaId, ct);
-        if (fis is null) return (new SepetVm(), "Acik sepet yok.");
+        if (fis is null) return (new SepetVm(), "Açık sepet yok.");
 
         using var conn = await _factory.CreateOpenConnectionAsync(ct);
         using var tx = conn.BeginTransaction();
@@ -139,7 +143,7 @@ public class SepetService
         await ToplamlariYazAsync(conn, tx, fis.Id, ct);
         tx.Commit();
 
-        return (await GetirAsync(vardiyaId, ct), silinen > 0 ? null : "Satir bulunamadi.");
+        return (await GetirAsync(vardiyaId, ct), silinen > 0 ? null : "Satır bulunamadı.");
     }
 
     /// <summary>
@@ -147,14 +151,19 @@ public class SepetService
     /// Onaylayan kullanici verilmezse islemi yapan kasiyerin yetkisine bakilir.
     /// </summary>
     public async Task<(SepetVm Sepet, string? Hata)> SatirIndirimiUygulaAsync(
-        int vardiyaId, int satirId, decimal yuzde, byte rol, CancellationToken ct = default)
+        int vardiyaId,
+        int satirId,
+        decimal yuzde,
+        byte rol,
+        int kullaniciId,
+        CancellationToken ct = default)
     {
         var fis = await _fisRepository.AcikFisGetirAsync(vardiyaId, ct);
-        if (fis is null) return (new SepetVm(), "Acik sepet yok.");
+        if (fis is null) return (new SepetVm(), "Açık sepet yok.");
 
         var satirlar = await _fisRepository.SatirlariGetirAsync(fis.Id, ct);
         var satir = satirlar.FirstOrDefault(s => s.SatirId == satirId);
-        if (satir is null) return (await GetirAsync(vardiyaId, ct), "Satir bulunamadi.");
+        if (satir is null) return (await GetirAsync(vardiyaId, ct), "Satır bulunamadı.");
 
         if (yuzde != 0)
         {
@@ -171,6 +180,17 @@ public class SepetService
         await _fisRepository.SatirIndirimGuncelleAsync(conn, tx, fis.Id, satirId, indirim,
             SepetHesaplayici.SatirToplamHesapla(satir.Miktar, satir.BirimFiyat, indirim), ct);
 
+        await _islemLogRepository.EkleAsync(conn, tx, new IslemLog
+        {
+            KullaniciId = kullaniciId,
+            IslemTipi = "ManuelIndirim",
+            HedefTipi = "FisSatir",
+            HedefId = satirId,
+            EskiDeger = Para(satir.IndirimTutari),
+            YeniDeger = Para(indirim),
+            Aciklama = $"Fiş #{fis.Id}, satır indirimi %{yuzde:0.##}"
+        }, ct);
+
         await ToplamlariYazAsync(conn, tx, fis.Id, ct);
         tx.Commit();
 
@@ -182,13 +202,17 @@ public class SepetService
     /// oraninda dagitilir; boylece her KDV orani kendi payini dogru dusurur.
     /// </summary>
     public async Task<(SepetVm Sepet, string? Hata)> FisIndirimiUygulaAsync(
-        int vardiyaId, decimal yuzde, byte rol, CancellationToken ct = default)
+        int vardiyaId,
+        decimal yuzde,
+        byte rol,
+        int kullaniciId,
+        CancellationToken ct = default)
     {
         var fis = await _fisRepository.AcikFisGetirAsync(vardiyaId, ct);
-        if (fis is null) return (new SepetVm(), "Acik sepet yok.");
+        if (fis is null) return (new SepetVm(), "Açık sepet yok.");
 
         var satirlar = await _fisRepository.SatirlariGetirAsync(fis.Id, ct);
-        if (satirlar.Count == 0) return (await GetirAsync(vardiyaId, ct), "Sepet bos.");
+        if (satirlar.Count == 0) return (await GetirAsync(vardiyaId, ct), "Sepet boş.");
 
         if (yuzde != 0)
         {
@@ -210,6 +234,17 @@ public class SepetService
                 SepetHesaplayici.SatirToplamHesapla(satir.Miktar, satir.BirimFiyat, pay), ct);
         }
 
+        await _islemLogRepository.EkleAsync(conn, tx, new IslemLog
+        {
+            KullaniciId = kullaniciId,
+            IslemTipi = "ManuelIndirim",
+            HedefTipi = "Fis",
+            HedefId = fis.Id,
+            EskiDeger = Para(satirlar.Sum(s => s.IndirimTutari)),
+            YeniDeger = Para(indirimTutari),
+            Aciklama = $"Fiş geneli indirimi %{yuzde:0.##}"
+        }, ct);
+
         await ToplamlariYazAsync(conn, tx, fis.Id, ct);
         tx.Commit();
 
@@ -217,7 +252,10 @@ public class SepetService
     }
 
     /// <summary>Sepeti bosaltir: fis iptal edilir (Durum 9), satirlari silinir.</summary>
-    public async Task<SepetVm> IptalEtAsync(int vardiyaId, CancellationToken ct = default)
+    public async Task<SepetVm> IptalEtAsync(
+        int vardiyaId,
+        int kullaniciId,
+        CancellationToken ct = default)
     {
         var fis = await _fisRepository.AcikFisGetirAsync(vardiyaId, ct);
         if (fis is null) return new SepetVm();
@@ -226,10 +264,23 @@ public class SepetService
         using var tx = conn.BeginTransaction();
 
         await _fisRepository.IptalEtAsync(conn, tx, fis.Id, ct);
+        await _islemLogRepository.EkleAsync(conn, tx, new IslemLog
+        {
+            KullaniciId = kullaniciId,
+            IslemTipi = "SatisIptali",
+            HedefTipi = "Fis",
+            HedefId = fis.Id,
+            EskiDeger = Para(fis.GenelToplam),
+            YeniDeger = Para(0),
+            Aciklama = $"{fis.FisNo} numaralı bekleyen fiş iptal edildi."
+        }, ct);
         tx.Commit();
 
         return new SepetVm();
     }
+
+    private static string Para(decimal tutar)
+        => tutar.ToString("0.00", CultureInfo.InvariantCulture);
 
     /// <summary>
     /// Once kampanyalari uygular, sonra fis basligindaki toplamlari yeniden yazar.
