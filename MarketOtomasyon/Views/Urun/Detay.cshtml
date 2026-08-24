@@ -56,7 +56,9 @@
                 <partial name="_UrunResmi"
                          model="@UrunResmiVm.Olustur(Model.Urun.ResimYolu, Model.Urun.Ad, "dev")" />
 
-                @* CC-BY-SA atif yukumlulugu: kaynak gizlenmez. *@
+                @* Kaynak yalnizca ucuncu taraf bir fotograf indirildiginde
+                   gosterilir (CC-BY-SA atif yukumlulugu). Yerel ikonlarda
+                   ResimKaynagi bos kalir -- atif gerekmez, kutu da cikmaz. *@
                 @if (!string.IsNullOrWhiteSpace(Model.Urun.ResimKaynagi))
                 {
                     <div class="resim-kaynak mt-2">
@@ -68,10 +70,10 @@
                         }
                     </div>
                 }
-                else
+                else if (string.IsNullOrWhiteSpace(Model.Urun.ResimYolu))
                 {
                     <div class="resim-kaynak mt-2">
-                        Fotoğraf yok. Ürün listesindeki <strong>Resimleri Çek</strong>
+                        Görsel yok. Ürün listesindeki <strong>Resimleri Çek</strong>
                         düğmesi barkodu olan ürünler için dener.
                     </div>
                 }

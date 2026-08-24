@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <defs><linearGradient id="e17" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F3E4C8"/>
+        <stop offset="1" stop-color="#DCC494"/>
+    </linearGradient>
+<radialGradient id="golge18" cx="0.5" cy="0.5" r="0.5">
+        <stop offset="0" stop-color="#000000" stop-opacity="0.16"/>
+        <stop offset="0.7" stop-color="#000000" stop-opacity="0.07"/>
+        <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient></defs>
+  <ellipse cx="120" cy="192" rx="84" ry="8" fill="url(#golge18)"/>
+  <path d="M 46 126 L 66 96 L 174 96 L 194 126 Z"
+        fill="#B8935A" stroke="#00000022" stroke-width="2.5" stroke-linejoin="round"/>
+  <rect x="36" y="122" width="168" height="62" rx="8" fill="url(#e17)" stroke="#00000022" stroke-width="2.5" stroke-linejoin="round"/>
+  <ellipse cx="66" cy="124" rx="17" ry="21" fill="#FBF6E9" stroke="#00000022" stroke-width="2.5" stroke-linejoin="round"/>
+  <ellipse cx="120" cy="124" rx="17" ry="21" fill="#FBF6E9" stroke="#00000022" stroke-width="2.5" stroke-linejoin="round"/>
+  <ellipse cx="174" cy="124" rx="17" ry="21" fill="#FBF6E9" stroke="#00000022" stroke-width="2.5" stroke-linejoin="round"/>
+</svg>

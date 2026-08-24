@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <defs><linearGradient id="t43" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#FDBA74"/>
+        <stop offset="1" stop-color="#EA580C"/>
+    </linearGradient>
+<radialGradient id="golge44" cx="0.5" cy="0.5" r="0.5">
+        <stop offset="0" stop-color="#000000" stop-opacity="0.16"/>
+        <stop offset="0.7" stop-color="#000000" stop-opacity="0.07"/>
+        <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient></defs>
+  <ellipse cx="120" cy="210" rx="59" ry="8" fill="url(#golge44)"/>
+  <path d="M 75 68
+        Q 120 56 165 68
+        L 179 186
+        Q 120 214 61 186
+        Z" fill="url(#t43)" stroke="#00000022" stroke-width="2.5" stroke-linejoin="round"/>
+  <line x1="81" y1="64" x2="81" y2="76" stroke="#000" stroke-opacity="0.12" stroke-width="2"/>
+  <line x1="100.5" y1="64" x2="100.5" y2="76" stroke="#000" stroke-opacity="0.12" stroke-width="2"/>
+  <line x1="120" y1="64" x2="120" y2="76" stroke="#000" stroke-opacity="0.12" stroke-width="2"/>
+  <line x1="139.5" y1="64" x2="139.5" y2="76" stroke="#000" stroke-opacity="0.12" stroke-width="2"/>
+  <line x1="159" y1="64" x2="159" y2="76" stroke="#000" stroke-opacity="0.12" stroke-width="2"/>
+  <rect x="78.7" y="125.96000000000001" width="82.6" height="30.36" rx="6" fill="#7C2D12"/>
+  <rect x="77" y="94" width="8" height="82" rx="6" fill="#ffffff" opacity="0.32"/>
+</svg>
