@@ -306,13 +306,43 @@
                 <button type="button" id="btn-odeme-vazgec" class="btn btn-outline-secondary">
                     Vazgeç ve sepete dön
                 </button>
-                @* Ayni sekmede acilir: kasa terminalinde her satista yeni sekme
-                   birakmak vardiya sonunda onlarca acik sekme demek. Fis
-                   sayfasindaki "Kasaya dön" butonu geri getirir. *@
-                <a id="btn-fis-yazdir" class="btn btn-outline-secondary d-none" href="#">
+                <button type="button" id="btn-fis-yazdir" class="btn btn-outline-secondary d-none">
                     <i class="bi bi-printer"></i> Fişi Yazdır
-                </a>
+                </button>
                 <button type="button" id="btn-odeme-kapat" class="btn btn-success d-none">Yeni Fiş</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Fiş önizleme: kasa ekranından ayrılmadan yalnızca fişi gösterir. -->
+<div class="modal fade" id="fis-onizleme-modal" tabindex="-1"
+     aria-labelledby="fis-onizleme-baslik" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered fis-onizleme-dialog">
+        <div class="modal-content">
+            <div class="modal-header py-2">
+                <h5 class="modal-title" id="fis-onizleme-baslik">
+                    <i class="bi bi-receipt me-1"></i> Fiş Önizleme
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+
+            <div class="modal-body fis-onizleme-govde">
+                <div id="fis-onizleme-yukleniyor" class="fis-onizleme-durum" role="status">
+                    <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                    Fiş hazırlanıyor…
+                </div>
+                <div id="fis-onizleme-hata" class="bildirim bildirim-olumsuz d-none" role="alert"></div>
+                <div id="fis-onizleme-icerik" class="fis-onizleme-icerik d-none"></div>
+            </div>
+
+            <div class="modal-footer py-2">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    Kasaya Dön
+                </button>
+                <button type="button" id="btn-fis-onizleme-yazdir" class="btn btn-primary" disabled>
+                    <i class="bi bi-printer"></i> Yazdır
+                </button>
             </div>
         </div>
     </div>

@@ -1,0 +1,113 @@
+@model MarketOtomasyon.Models.ViewModels.FisYazdirVm
+@{
+    var tr = new System.Globalization.CultureInfo("tr-TR");
+    string Para(decimal d) => d.ToString("N2", tr);
+}
+
+<article class="termal-fis" aria-label="Fiş @Model.Fis.FisNo">
+    <div class="orta baslik">MARKET OTOMASYONU</div>
+    <div class="orta kucuk">Örnek Mah. Test Cad. No:1</div>
+    <div class="orta kucuk">Tel: 0212 000 00 00</div>
+    <hr />
+
+    <table class="kucuk">
+        <tr>
+            <td>Fiş No</td>
+            <td class="sag kalin">@Model.Fis.FisNo</td>
+        </tr>
+        <tr>
+            <td>Tarih</td>
+            <td class="sag">@Model.Fis.Tarih.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+        </tr>
+        <tr>
+            <td>Kasiyer</td>
+            <td class="sag">@Model.KasiyerAdi</td>
+        </tr>
+    </table>
+
+    <hr />
+
+    <table>
+        @foreach (var s in Model.Satirlar)
+        {
+            <tr>
+                <td colspan="2" class="satir-ad">@s.Ad</td>
+            </tr>
+            <tr>
+                <td class="satir-detay kucuk">
+                    @s.Miktar.ToString("0.###", tr) @s.Birim x @Para(s.BirimFiyat)
+                    <span class="kucuk">(%@s.KdvOrani.ToString("0.##", tr))</span>
+                </td>
+                <td class="sag">@Para(s.SatirToplam)</td>
+            </tr>
+            @if (s.IndirimTutari > 0)
+            {
+                <tr>
+                    <td class="satir-detay kucuk">İndirim</td>
+                    <td class="sag kucuk">-@Para(s.IndirimTutari)</td>
+                </tr>
+            }
+        }
+    </table>
+
+    <hr />
+
+    <table>
+        @if (Model.Fis.ToplamIndirim > 0)
+        {
+            <tr>
+                <td>TOPLAM İNDİRİM</td>
+                <td class="sag">-@Para(Model.Fis.ToplamIndirim)</td>
+            </tr>
+        }
+        <tr>
+            <td>ARA TOPLAM</td>
+            <td class="sag">@Para(Model.Fis.AraToplam)</td>
+        </tr>
+        @foreach (var k in Model.KdvKirilimi)
+        {
+            <tr class="kucuk">
+                <td>KDV %@k.Oran.ToString("0.##", tr) (matrah @Para(k.Matrah))</td>
+                <td class="sag">@Para(k.KdvTutari)</td>
+            </tr>
+        }
+        <tr>
+            <td>TOPLAM KDV</td>
+            <td class="sag">@Para(Model.Fis.ToplamKdv)</td>
+        </tr>
+        <tr class="toplam-satiri kalin buyuk">
+            <td>TOPLAM</td>
+            <td class="sag">@Para(Model.Fis.GenelToplam)</td>
+        </tr>
+    </table>
+
+    <hr />
+
+    <table class="kucuk">
+        @foreach (var o in Model.Odemeler)
+        {
+            <tr>
+                <td>@o.TipAdi</td>
+                <td class="sag">@Para(o.Tutar)</td>
+            </tr>
+            @if (o.AlinanTutar is not null)
+            {
+                <tr>
+                    <td class="satir-detay">Alınan</td>
+                    <td class="sag">@Para(o.AlinanTutar.Value)</td>
+                </tr>
+            }
+        }
+        @if (Model.ToplamParaUstu > 0)
+        {
+            <tr class="kalin">
+                <td>PARA ÜSTÜ</td>
+                <td class="sag">@Para(Model.ToplamParaUstu)</td>
+            </tr>
+        }
+    </table>
+
+    <hr />
+    <div class="orta kalin">@Model.DurumAdi</div>
+    <div class="orta kucuk">Bizi tercih ettiğiniz için teşekkürler</div>
+</article>

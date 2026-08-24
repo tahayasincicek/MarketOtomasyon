@@ -8,11 +8,20 @@
     const modalElemani = document.getElementById("odeme-modal");
     const modal = new bootstrap.Modal(modalElemani);
 
+    const fisOnizlemeModalElemani = document.getElementById("fis-onizleme-modal");
+    const fisOnizlemeModal = new bootstrap.Modal(fisOnizlemeModalElemani);
+    const fisOnizlemeYukleniyor = document.getElementById("fis-onizleme-yukleniyor");
+    const fisOnizlemeHata = document.getElementById("fis-onizleme-hata");
+    const fisOnizlemeIcerik = document.getElementById("fis-onizleme-icerik");
+    const fisOnizlemeYazdir = document.getElementById("btn-fis-onizleme-yazdir");
+
     const uyari = document.getElementById("odeme-uyari");
     const tutarGirdi = document.getElementById("odeme-tutar");
     const alinanGirdi = document.getElementById("odeme-alinan");
 
     let sonDurum = null;
+    let fisOnizlemeAciliyor = false;
+    let fisIstekKontrolcusu = null;
 
     // ---------- Yardimcilar ----------
 
@@ -66,7 +75,12 @@
 
         const yazdir = document.getElementById("btn-fis-yazdir");
         yazdir.classList.toggle("d-none", !durum.tamamlandi);
-        if (durum.tamamlandi) yazdir.href = "/Satis/Fis/" + durum.fisId;
+        yazdir.disabled = !durum.tamamlandi;
+        if (durum.tamamlandi) {
+            yazdir.dataset.fisId = durum.fisId;
+        } else {
+            delete yazdir.dataset.fisId;
+        }
 
         // Stok bakiyesini asan satirlar varsa satis gecti ama kasiyer bilsin.
         const stokUyari = document.getElementById("stok-uyari");
@@ -166,10 +180,104 @@
         window.kasa.sepetiYenile();
     }
 
+    function odemePenceresiniKapat() {
+        return new Promise(function (tamamla) {
+            if (!modalElemani.classList.contains("show")) {
+                tamamla();
+                return;
+            }
+
+            modalElemani.addEventListener("hidden.bs.modal", tamamla, { once: true });
+            modal.hide();
+        });
+    }
+
+    function fisOnizlemeyiSifirla() {
+        fisOnizlemeYukleniyor.classList.remove("d-none");
+        fisOnizlemeHata.classList.add("d-none");
+        fisOnizlemeHata.textContent = "";
+        fisOnizlemeIcerik.classList.add("d-none");
+        fisOnizlemeIcerik.replaceChildren();
+        fisOnizlemeYazdir.disabled = true;
+    }
+
+    async function fisOnizlemeAc() {
+        const dugme = document.getElementById("btn-fis-yazdir");
+        const fisId = Number(dugme.dataset.fisId);
+        if (!fisId) {
+            uyariGoster("Yazdırılacak fiş bulunamadı.");
+            return;
+        }
+
+        dugme.disabled = true;
+        fisOnizlemeyiSifirla();
+        fisIstekKontrolcusu?.abort();
+        fisIstekKontrolcusu = new AbortController();
+
+        fisOnizlemeAciliyor = true;
+        await odemePenceresiniKapat();
+        fisOnizlemeAciliyor = false;
+        fisOnizlemeModal.show();
+
+        try {
+            const yanit = await fetch("/Satis/Fis/" + fisId + "?gomulu=true", {
+                headers: { "X-Requested-With": "XMLHttpRequest" },
+                signal: fisIstekKontrolcusu.signal
+            });
+
+            if (!yanit.ok) throw new Error("Fiş alınamadı (HTTP " + yanit.status + ").");
+
+            const html = await yanit.text();
+            fisOnizlemeIcerik.innerHTML = html;
+            fisOnizlemeYukleniyor.classList.add("d-none");
+            fisOnizlemeIcerik.classList.remove("d-none");
+            fisOnizlemeYazdir.disabled = false;
+            fisOnizlemeYazdir.focus();
+        } catch (hata) {
+            if (hata.name === "AbortError") return;
+            fisOnizlemeYukleniyor.classList.add("d-none");
+            fisOnizlemeHata.textContent = hata.message || "Fiş önizlemesi hazırlanamadı.";
+            fisOnizlemeHata.classList.remove("d-none");
+        } finally {
+            dugme.disabled = false;
+        }
+    }
+
+    function fisYazdir() {
+        const kaynak = fisOnizlemeIcerik.querySelector(".termal-fis");
+        if (!kaynak) return;
+
+        document.querySelector(".fis-baski-kopya")?.remove();
+
+        const baskiKopyasi = document.createElement("div");
+        baskiKopyasi.className = "fis-baski-kopya";
+        baskiKopyasi.appendChild(kaynak.cloneNode(true));
+        document.body.appendChild(baskiKopyasi);
+        document.body.classList.add("fis-yazdiriliyor");
+
+        let temizlendi = false;
+        function temizle() {
+            if (temizlendi) return;
+            temizlendi = true;
+            document.body.classList.remove("fis-yazdiriliyor");
+            baskiKopyasi.remove();
+        }
+
+        window.addEventListener("afterprint", temizle, { once: true });
+        try {
+            window.print();
+        } finally {
+            // window.print masaustu tarayicilarda diyalog kapanana kadar bekler.
+            setTimeout(temizle, 0);
+        }
+    }
+
     // ---------- Olaylar ----------
 
     document.getElementById("btn-odeme-ekle").addEventListener("click", odemeEkle);
     document.getElementById("btn-odeme-vazgec").addEventListener("click", vazgec);
+    document.getElementById("btn-fis-yazdir").addEventListener("click", fisOnizlemeAc);
+    fisOnizlemeYazdir.addEventListener("click", fisYazdir);
 
     document.getElementById("btn-odeme-kapat").addEventListener("click", function () {
         modal.hide();
@@ -182,8 +290,18 @@
         });
     });
 
-    // Pencere kapaninca odak barkod alanina doner.
-    modalElemani.addEventListener("hidden.bs.modal", () => window.kasa.odakla());
+    // Pencere kapaninca odak barkod alanina doner. Fis onizlemesine
+    // geciliyorsa aradaki modal gecisinde odagi arkaya kacirma.
+    modalElemani.addEventListener("hidden.bs.modal", function () {
+        if (!fisOnizlemeAciliyor) window.kasa.odakla();
+    });
+
+    fisOnizlemeModalElemani.addEventListener("hidden.bs.modal", function () {
+        fisIstekKontrolcusu?.abort();
+        fisIstekKontrolcusu = null;
+        fisOnizlemeyiSifirla();
+        window.kasa.odakla();
+    });
 
     window.odeme = { ac };
 })();

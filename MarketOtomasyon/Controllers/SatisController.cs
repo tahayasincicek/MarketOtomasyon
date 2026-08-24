@@ -34,9 +34,9 @@ public class SatisController : Controller
         _kullaniciRepository = kullaniciRepository;
     }
 
-    /// <summary>Yazdirilabilir fis. Yeni sekmede acilir, kendi sade duzenini kullanir.</summary>
+    /// <summary>Yazdirilabilir fis. Tam sayfa veya kasa icindeki onizleme olarak doner.</summary>
     [HttpGet("/Satis/Fis/{id:int}")]
-    public async Task<IActionResult> Fis(int id, CancellationToken ct)
+    public async Task<IActionResult> Fis(int id, [FromQuery] bool gomulu, CancellationToken ct)
     {
         var fis = await _fisRepository.GetirAsync(id, ct);
         if (fis is null) return NotFound();
@@ -44,14 +44,16 @@ public class SatisController : Controller
         var satirlar = await _fisRepository.SatirlariGetirAsync(id, ct);
         var sepet = SepetHesaplayici.Topla(satirlar);
 
-        return View(new FisYazdirVm
+        var model = new FisYazdirVm
         {
             Fis = fis,
             Satirlar = sepet.Satirlar,
             KdvKirilimi = sepet.KdvKirilimi,
             Odemeler = await _odemeRepository.FisOdemeleriAsync(id, ct),
             KasiyerAdi = await _kullaniciRepository.AdSoyadGetirAsync(fis.KullaniciId, ct) ?? ""
-        });
+        };
+
+        return gomulu ? PartialView("_FisIcerik", model) : View(model);
     }
 
     [HttpGet]

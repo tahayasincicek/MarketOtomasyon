@@ -907,3 +907,96 @@ table.izgara tbody tr.table-active:hover {
 .arac-cubugu .form-seffaf {
     display: contents;
 }
+
+/* ---------- Kasa ici fis onizleme ve termal yazdirma ---------- */
+
+.fis-onizleme-dialog {
+    width: calc(80mm + 2rem);
+    max-width: calc(100vw - 2rem);
+}
+
+.fis-onizleme-govde {
+    max-height: calc(100vh - 10rem);
+    overflow: auto;
+    padding: 1rem;
+    background: #e5e7eb;
+}
+
+.fis-onizleme-durum {
+    display: flex;
+    min-height: 8rem;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    color: #4b5563;
+}
+
+.termal-fis {
+    box-sizing: border-box;
+    width: 80mm;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 6mm 4mm;
+    background: #fff;
+    color: #000;
+    box-shadow: 0 .25rem 1rem rgba(0, 0, 0, .15);
+    font-family: "Consolas", "Courier New", monospace;
+    font-size: 12px;
+}
+
+.termal-fis .orta { text-align: center; }
+.termal-fis .sag { text-align: right; }
+.termal-fis .kalin { font-weight: 700; }
+.termal-fis .buyuk { font-size: 15px; }
+.termal-fis .baslik { font-size: 14px; font-weight: 700; letter-spacing: .05em; }
+.termal-fis .kucuk { font-size: 11px; }
+
+.termal-fis hr {
+    border: 0;
+    border-top: 1px dashed #000;
+    margin: 4px 0;
+    opacity: 1;
+}
+
+.termal-fis table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.termal-fis td {
+    padding: 1px 0;
+    vertical-align: top;
+}
+
+.termal-fis .satir-detay { padding-left: 4px; }
+.termal-fis .toplam-satiri td { padding-top: 2px; }
+
+/* Yalnizca yazdirma aninda body'nin dogrudan altina eklenen temiz kopya. */
+.fis-baski-kopya { display: none; }
+
+@media print {
+    body.fis-yazdiriliyor {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
+    }
+
+    body.fis-yazdiriliyor > *:not(.fis-baski-kopya) {
+        display: none !important;
+    }
+
+    body.fis-yazdiriliyor > .fis-baski-kopya {
+        display: block !important;
+        width: 80mm;
+        margin: 0;
+        padding: 0;
+    }
+
+    .fis-baski-kopya .termal-fis {
+        width: 80mm;
+        max-width: none;
+        margin: 0;
+        padding: 6mm 4mm;
+        box-shadow: none;
+    }
+}
