@@ -1,50 +1,319 @@
 ﻿/* =========================================================
-   Yazi tipi: Inter
-   Perakende/kasa arayuzlerinde yaygin kullanilan yazi ailesi -
-   yuksek okunabilirlik, dar ekranlarda bile net rakam ayrimi.
+   Yazi tipi: Manrope
+   Modern ve yumusak geometrisiyle yonetim/kasa ekranlarinda
+   basliklari belirgin, rakamlari ise kolay okunur tutar.
    CDN'e degil projeye gomulu: kasa terminali internetsiz de
    dogru fontla acilsin (Bootstrap Icons ile ayni gerekce).
    ========================================================= */
 @font-face {
-    font-family: "Inter";
-    src: url("/fonts/inter-regular.woff2") format("woff2");
-    font-weight: 400;
+    font-family: "Manrope";
+    src: url("/fonts/manrope-latin.woff2") format("woff2");
+    font-weight: 400 700;
     font-style: normal;
     font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
 @font-face {
-    font-family: "Inter";
-    src: url("/fonts/inter-500.woff2") format("woff2");
-    font-weight: 500;
+    font-family: "Manrope";
+    src: url("/fonts/manrope-latin-ext.woff2") format("woff2");
+    font-weight: 400 700;
     font-style: normal;
     font-display: swap;
-}
-
-@font-face {
-    font-family: "Inter";
-    src: url("/fonts/inter-600.woff2") format("woff2");
-    font-weight: 600;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: "Inter";
-    src: url("/fonts/inter-700.woff2") format("woff2");
-    font-weight: 700;
-    font-style: normal;
-    font-display: swap;
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
 html {
     font-size: 14px;
-    font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-family: "Manrope", "Segoe UI", system-ui, -apple-system, sans-serif;
 }
 
 body {
     /* Font-face yuklenene kadar da metin okunabilir kalsin. */
-    font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-family: "Manrope", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+/* =========================================================
+   Giris ekrani
+   Tek bir fotograf, yavas pan/zoom ve isik gecisiyle video hissi verir.
+   Hareket azaltma tercihi olan kullanicilarda animasyon kapatilir.
+   ========================================================= */
+
+.giris-sayfasi {
+    --giris-vurgu: #52565d;
+    --giris-vurgu-acik: #737780;
+    --giris-vurgu-koyu: #30333a;
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+    isolation: isolate;
+    background: #f3f4f6;
+}
+
+.giris-sayfasi::before {
+    content: "";
+    position: fixed;
+    z-index: -2;
+    inset: -3%;
+    background: url("/images/giris-pos-arka-plan-acik.png") center / cover no-repeat;
+    transform: scale(1.025);
+    animation: giris-arka-plan-hareketi 18s ease-in-out infinite alternate;
+    will-change: transform;
+}
+
+.giris-sayfasi::after {
+    content: "";
+    position: fixed;
+    z-index: -1;
+    inset: 0;
+    background:
+        linear-gradient(90deg, rgb(255 255 255 / 58%) 0%, rgb(255 255 255 / 38%) 39%, rgb(255 255 255 / 5%) 72%),
+        linear-gradient(0deg, rgb(226 232 240 / 18%), transparent 55%);
+    animation: giris-isik-hareketi 8s ease-in-out infinite alternate;
+}
+
+.giris-icerik {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+}
+
+.giris-karti {
+    position: relative;
+    overflow: hidden;
+    width: min(100%, 30rem);
+    padding: clamp(1.9rem, 3.5vw, 2.75rem);
+    color: #1f2937;
+    background: rgb(255 255 255 / 5%);
+    border: none;
+    border-radius: .7rem;
+    box-shadow: 0 1.5rem 4rem rgb(51 65 85 / 20%);
+    backdrop-filter: none;
+}
+
+.giris-karti::before {
+    content: none;
+}
+
+.giris-marka {
+    display: flex;
+    align-items: center;
+    gap: .85rem;
+}
+
+.giris-marka-ikonu {
+    display: inline-flex;
+    width: 2.75rem;
+    height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #34383e;
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.giris-market-arabasi {
+    width: 2.5rem;
+    height: 2.5rem;
+    overflow: visible;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.giris-ust-etiket {
+    display: block;
+    margin-bottom: .15rem;
+    color: #6b7280;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.giris-marka h1 {
+    margin: 0;
+    font-size: 1.45rem;
+    font-weight: 700;
+    letter-spacing: -.025em;
+    color: #17191d;
+}
+
+.giris-aciklama {
+    margin: 1.25rem 0 1.4rem;
+    color: #60656d;
+    line-height: 1.55;
+}
+
+.giris-karti .form-label {
+    margin-bottom: .35rem;
+    color: #34383f;
+    font-size: .8rem;
+    font-weight: 600;
+}
+
+.giris-alan {
+    position: relative;
+}
+
+.giris-alan > i {
+    position: absolute;
+    z-index: 2;
+    top: 50%;
+    left: .85rem;
+    color: #737982;
+    font-size: 1.05rem;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.giris-alan .form-control {
+    min-height: 2.85rem;
+    padding-left: 2.55rem;
+    color: #20242a;
+    background: rgb(255 255 255 / 88%);
+    border-color: #c8cbd0;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 70%);
+}
+
+.giris-alan .form-control:focus {
+    color: #17191d;
+    background: #fff;
+    border-color: #747982;
+    box-shadow: 0 0 0 .2rem rgb(107 114 128 / 14%);
+}
+
+.giris-alan .form-control::placeholder {
+    color: #9ca3af;
+}
+
+.giris-karti .alert-danger {
+    color: #991b1b;
+    background: rgb(254 226 226 / 88%);
+    border-color: #fecaca;
+}
+
+.giris-dugmesi {
+    min-height: 2.9rem;
+    background: linear-gradient(135deg, #5b5f67, #373a40);
+    border-color: #666a72;
+    border-radius: .45rem;
+    box-shadow: 0 .65rem 1.5rem rgb(0 0 0 / 30%);
+    font-weight: 600;
+}
+
+.giris-dugmesi:hover,
+.giris-dugmesi:focus {
+    background: linear-gradient(135deg, #70747c, #45484f);
+    border-color: #858a93;
+    box-shadow: 0 0 0 .22rem rgb(148 153 163 / 18%);
+}
+
+.giris-alt-bilgi {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    color: #6b7280;
+    border-top: 1px solid rgb(107 114 128 / 18%);
+    font-size: .72rem;
+    line-height: 1.4;
+}
+
+.giris-alt-bilgi i {
+    color: #6b7280;
+    font-size: 1rem;
+}
+
+@keyframes giris-arka-plan-hareketi {
+    from { transform: scale(1.025) translate3d(-.35%, 0, 0); }
+    to   { transform: scale(1.075) translate3d(.75%, -.35%, 0); }
+}
+
+@keyframes giris-isik-hareketi {
+    from { opacity: .9; }
+    to   { opacity: 1; }
+}
+
+@media (max-width: 767.98px) {
+    .giris-sayfasi::before {
+        inset: -3%;
+        background-position: 82% center;
+        background-size: cover;
+        transform: scale(1.025);
+        animation: giris-arka-plan-hareketi 18s ease-in-out infinite alternate;
+    }
+
+    .giris-icerik {
+        justify-content: center;
+        padding: .75rem;
+    }
+
+    .giris-karti {
+        width: min(100%, 24rem);
+        padding: 1.15rem 1.25rem;
+        border-radius: .55rem;
+        box-shadow: 0 1rem 2.5rem rgb(51 65 85 / 18%);
+    }
+
+    .giris-marka {
+        gap: .65rem;
+    }
+
+    .giris-marka-ikonu {
+        width: 2.25rem;
+        height: 2.25rem;
+    }
+
+    .giris-market-arabasi {
+        width: 2.1rem;
+        height: 2.1rem;
+    }
+
+    .giris-marka h1 {
+        font-size: 1.25rem;
+    }
+
+    .giris-aciklama {
+        margin: .75rem 0 .9rem;
+        font-size: .88rem;
+    }
+
+    .giris-karti .mb-3,
+    .giris-karti .mb-4 {
+        margin-bottom: .8rem !important;
+    }
+
+    .giris-alan .form-control {
+        min-height: 2.55rem;
+    }
+
+    .giris-dugmesi {
+        min-height: 2.6rem;
+    }
+
+    .giris-alt-bilgi {
+        margin-top: .8rem;
+        padding-top: .7rem;
+    }
+
+    .giris-sayfasi::after {
+        background: rgb(255 255 255 / 34%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .giris-sayfasi::before,
+    .giris-sayfasi::after {
+        animation: none;
+    }
 }
 
 /* Tutar ve miktar gosterilen her yerde rakamlar sabit genislikte
@@ -56,7 +325,7 @@ table.table td.text-end, .font-monospace {
 
 @media (min-width: 768px) {
     html {
-        font-size: 16px;
+        font-size: 15px;
     }
 }
 
@@ -794,6 +1063,60 @@ table.izgara tbody tr.table-active:hover {
     opacity: .55;
     cursor: not-allowed;
     transform: none;
+}
+
+/* Kasa ekrani, yaygin dizustu ekranlarinda odeme dugmesini sayfa
+   kaydirmadan gosterecek kadar yogun tutulur. Diger ekranlardaki urun
+   gorselleri ve toplam alanlari bu ayarlardan etkilenmez. */
+#kasa-ekrani .hizli-urun-serit {
+    min-height: 4rem;
+}
+
+#kasa-ekrani .hizli-urun-listesi {
+    padding: .3rem;
+}
+
+#kasa-ekrani .hizli-urun img,
+#kasa-ekrani .hizli-urun-resim-yok {
+    width: 2.3rem;
+    height: 2.3rem;
+}
+
+#kasa-ekrani .vardiya-gerekli {
+    padding: .5rem .7rem;
+}
+
+#kasa-ekrani .vardiya-gerekli-ikon {
+    width: 2.1rem;
+    height: 2.1rem;
+    font-size: 1.1rem;
+}
+
+#kasa-ekrani .panel-govde {
+    padding: .5rem .7rem;
+}
+
+#kasa-ekrani .son-okutulan {
+    gap: .25rem;
+    padding-block: .4rem;
+}
+
+#kasa-ekrani .urun-resim-buyuk {
+    width: 6.5rem;
+    height: 6.5rem;
+}
+
+#kasa-ekrani .cekmece {
+    padding: .55rem .8rem;
+}
+
+#kasa-ekrani .cekmece-toplam-tutar {
+    font-size: 2rem;
+}
+
+#kasa-ekrani #btn-odeme {
+    padding-block: .45rem;
+    font-size: .95rem;
 }
 
 @media (max-width: 575.98px) {
