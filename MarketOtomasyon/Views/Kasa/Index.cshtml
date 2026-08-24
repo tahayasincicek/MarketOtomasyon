@@ -1,3 +1,4 @@
+@model MarketOtomasyon.Models.ViewModels.KasaEkranVm
 @{
     ViewData["Title"] = "Kasa";
 }
@@ -5,30 +6,36 @@
 @* Kasa ekrani tek bir calisma yuzeyidir: solda barkod + sepet izgarasi,
    sagda fis ozeti ve tahsilat tuslari. Kutucuk yok -- kasiyerin gozu
    barkod alaninda baslar, sepette iner, sag alttaki toplamda biter. *@
-<div class="ekran">
+<div class="ekran" id="kasa-ekrani" data-vardiya-acik="@(Model.VardiyaAcik ? "true" : "false")">
     <div class="arac-cubugu">
         <span class="arac-etiket">Barkod</span>
         <input id="barkod" class="form-control font-monospace" style="width:22rem;font-size:1.1rem"
                autocomplete="off" autofocus
+               disabled="@(!Model.VardiyaAcik ? "disabled" : null)"
                placeholder="Okutun veya yazıp Enter'a basın" aria-label="Barkod" />
 
         <span class="arac-ayrac"></span>
 
-        <button type="button" id="btn-fis-indirim" class="btn btn-outline-secondary">
+        <button type="button" id="btn-fis-indirim" class="btn btn-outline-secondary"
+                disabled="@(!Model.VardiyaAcik ? "disabled" : null)">
             <i class="ph ph-percent"></i> Fişe İndirim
         </button>
-        <button type="button" id="btn-askiya-al" class="btn btn-outline-secondary">
+        <button type="button" id="btn-askiya-al" class="btn btn-outline-secondary"
+                disabled="@(!Model.VardiyaAcik ? "disabled" : null)">
             <i class="ph ph-pause-circle"></i> Askıya Al
         </button>
-        <button type="button" id="btn-bekleyenler" class="btn btn-outline-secondary position-relative">
+        <button type="button" id="btn-bekleyenler" class="btn btn-outline-secondary position-relative"
+                disabled="@(!Model.VardiyaAcik ? "disabled" : null)">
             <i class="ph ph-list-checks"></i> Bekleyenler
             <span id="bekleyen-sayisi"
                   class="badge bg-warning text-dark position-absolute top-0 start-100 translate-middle d-none">0</span>
         </button>
-        <button type="button" id="btn-iptal" class="btn btn-outline-danger">
+        <button type="button" id="btn-iptal" class="btn btn-outline-danger"
+                disabled="@(!Model.VardiyaAcik ? "disabled" : null)">
             <i class="ph ph-x-circle"></i> Fişi İptal Et
         </button>
-        <button type="button" id="btn-kamera" class="btn btn-outline-secondary">
+        <button type="button" id="btn-kamera" class="btn btn-outline-secondary"
+                disabled="@(!Model.VardiyaAcik ? "disabled" : null)">
             <i class="ph ph-video-camera"></i> Kamera
         </button>
 
@@ -38,7 +45,65 @@
         </div>
     </div>
 
+    @if (!Model.VardiyaAcik)
+    {
+        <div class="vardiya-gerekli" role="alert">
+            <div class="vardiya-gerekli-ikon" aria-hidden="true">
+                <i class="ph ph-lock-key"></i>
+            </div>
+            <div>
+                <strong>Satış işlemleri kilitli</strong>
+                <div>Açık vardiya bulunamadı. Kasayı kullanabilmek için çekmecedeki başlangıç nakdini girerek vardiya açın.</div>
+            </div>
+            <a class="btn btn-primary ms-auto"
+               asp-controller="Vardiya"
+               asp-action="Index"
+               asp-route-returnUrl="/Kasa">
+                <i class="ph ph-lock-open"></i> Vardiya Aç
+            </a>
+        </div>
+    }
+
     <div id="uyari" class="bildirim bildirim-olumsuz d-none" role="alert"></div>
+
+    @if (Model.HizliUrunler.Count > 0)
+    {
+        <section class="hizli-urun-serit" aria-labelledby="hizli-urun-baslik">
+            <div class="hizli-urun-etiket" id="hizli-urun-baslik">
+                <i class="ph ph-lightning"></i>
+                <span>Hızlı Ürünler</span>
+            </div>
+
+            <div class="hizli-urun-listesi">
+                @foreach (var urun in Model.HizliUrunler)
+                {
+                    <button type="button"
+                            class="hizli-urun"
+                            data-barkod="@urun.Barkod"
+                            disabled="@(!Model.VardiyaAcik ? "disabled" : null)"
+                            title="@urun.Ad ürününü sepete ekle"
+                            aria-label="@urun.Ad, @urun.Fiyat.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("tr-TR")) Türk lirası">
+                        @if (!string.IsNullOrWhiteSpace(urun.ResimYolu))
+                        {
+                            <img src="@urun.ResimYolu" alt="" loading="lazy" />
+                        }
+                        else
+                        {
+                            <span class="hizli-urun-resim-yok" aria-hidden="true">
+                                <i class="ph ph-package"></i>
+                            </span>
+                        }
+
+                        <span class="hizli-urun-metin">
+                            <strong>@urun.Ad</strong>
+                            <small>@urun.Fiyat.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("tr-TR")) ₺</small>
+                        </span>
+                    </button>
+                }
+            </div>
+        </section>
+    }
+
     @* Kamera paneli: kapaliyken hic yer kaplamaz, video akisi da baslamaz.
        Kamera acikken barkod alanindan odak kacmaz -- el terminali de
        kullanilabilsin diye ikisi ayni anda calisir. *@

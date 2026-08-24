@@ -1,4 +1,5 @@
 using MarketOtomasyon.Data.Repositories;
+using MarketOtomasyon.Models.ViewModels;
 using MarketOtomasyon.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,17 +21,35 @@ public class KasaController : Controller
     private readonly SepetService _sepetService;
     private readonly VardiyaRepository _vardiyaRepository;
     private readonly KullaniciRepository _kullaniciRepository;
+    private readonly HizliUrunRepository _hizliUrunRepository;
 
-    public KasaController(SepetService sepetService, VardiyaRepository vardiyaRepository, KullaniciRepository kullaniciRepository)
+    public KasaController(
+        SepetService sepetService,
+        VardiyaRepository vardiyaRepository,
+        KullaniciRepository kullaniciRepository,
+        HizliUrunRepository hizliUrunRepository)
     {
         _sepetService = sepetService;
         _vardiyaRepository = vardiyaRepository;
         _kullaniciRepository = kullaniciRepository;
+        _hizliUrunRepository = hizliUrunRepository;
     }
 
     [HttpGet("/Kasa")]
     [HttpGet]
-    public IActionResult Index() => View();
+    public async Task<IActionResult> Index(CancellationToken ct)
+    {
+        var hizliUrunlerTask = _hizliUrunRepository.ListeleAsync(ct: ct);
+        var vardiyaTask = _vardiyaRepository.AcikVardiyaGetirAsync(GeciciKullaniciId, ct);
+
+        await Task.WhenAll(hizliUrunlerTask, vardiyaTask);
+
+        return View(new KasaEkranVm
+        {
+            HizliUrunler = await hizliUrunlerTask,
+            AcikVardiyaId = (await vardiyaTask)?.Id
+        });
+    }
 
     [HttpGet]
     public async Task<IActionResult> Sepet(CancellationToken ct)

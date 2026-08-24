@@ -17,24 +17,30 @@ public class VardiyaController : Controller
     public VardiyaController(VardiyaService vardiyaService) => _vardiyaService = vardiyaService;
 
     [HttpGet]
-    public async Task<IActionResult> Index(CancellationToken ct)
-        => View(await _vardiyaService.EkranAsync(GeciciKullaniciId, ct));
+    public async Task<IActionResult> Index(string? returnUrl, CancellationToken ct)
+    {
+        var vm = await _vardiyaService.EkranAsync(GeciciKullaniciId, ct);
+        vm.ReturnUrl = YerelDonusAdresi(returnUrl);
+        return View(vm);
+    }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Ac(decimal acilisTutari, CancellationToken ct)
+    public async Task<IActionResult> Ac(decimal acilisTutari, string? returnUrl, CancellationToken ct)
     {
+        returnUrl = YerelDonusAdresi(returnUrl);
         var hata = await _vardiyaService.AcAsync(GeciciKullaniciId, acilisTutari, ct);
         if (hata is not null)
         {
             var vm = await _vardiyaService.EkranAsync(GeciciKullaniciId, ct);
             vm.Hata = hata;
             vm.AcilisTutari = acilisTutari;
+            vm.ReturnUrl = returnUrl;
             return View(nameof(Index), vm);
         }
 
         TempData["Mesaj"] = $"Vardiya açıldı. Açılış tutarı: {acilisTutari:N2} TL";
-        return RedirectToAction(nameof(Index));
+        return returnUrl is not null ? LocalRedirect(returnUrl) : RedirectToAction(nameof(Index));
     }
 
     // Kapanistan sonra dogrudan Z raporuna gidilir: kasiyerin gormesi gereken sayfa odur.
@@ -60,4 +66,9 @@ public class VardiyaController : Controller
         var rapor = await _vardiyaService.RaporAsync(id, ct);
         return rapor is null ? NotFound() : View(rapor);
     }
+
+    private string? YerelDonusAdresi(string? returnUrl)
+        => !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl)
+            ? returnUrl
+            : null;
 }

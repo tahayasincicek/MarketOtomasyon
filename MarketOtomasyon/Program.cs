@@ -33,6 +33,7 @@ builder.Services.AddScoped<IadeRepository>();
 builder.Services.AddScoped<OzetRepository>();
 builder.Services.AddScoped<UrunResimRepository>();
 builder.Services.AddScoped<SayimRepository>();
+builder.Services.AddScoped<HizliUrunRepository>();
 
 // Servisler
 builder.Services.AddScoped<UrunService>();

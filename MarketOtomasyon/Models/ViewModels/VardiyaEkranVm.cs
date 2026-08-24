@@ -13,4 +13,7 @@ public class VardiyaEkranVm
     public decimal SayilanTutar { get; set; }
 
     public string? Hata { get; set; }
+
+    /// <summary>Kasa uzerinden gelindiyse vardiya acildiktan sonra geri donulecek yer.</summary>
+    public string? ReturnUrl { get; set; }
 }

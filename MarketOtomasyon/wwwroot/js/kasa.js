@@ -7,6 +7,8 @@
     const sepetGovde = document.getElementById("sepet-govde");
     const bosSepet = document.getElementById("bos-sepet");
     const uyari = document.getElementById("uyari");
+    const kasaEkrani = document.getElementById("kasa-ekrani");
+    const vardiyaAcik = kasaEkrani && kasaEkrani.dataset.vardiyaAcik === "true";
 
     const paraBicimi = new Intl.NumberFormat("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const miktarBicimi = new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 3 });
@@ -263,19 +265,30 @@
 
     // ---------- Olaylar ----------
 
-    barkodGirdi.addEventListener("keydown", function (e) {
-        if (e.key !== "Enter") return;
-        e.preventDefault();
+    function barkoduSirayaAl(barkod) {
+        if (!vardiyaAcik) return;
 
-        const barkod = barkodGirdi.value.trim();
+        barkod = (barkod || "").trim();
         if (!barkod) return;
 
         // Alan sunucu cevabi BEKLENMEDEN temizlenir: barkod okuyucu cok hizli
         // yazar, sonraki okutma cevap gelmeden baslarsa iki barkod birlesirdi.
         barkodGirdi.value = "";
 
-        // Istekler sirayla islenir; ust uste okutmada sepet yanlis sirada cizilmesin.
+        // Kamera, el terminali ve hizli urun tuslari ayni sunucu akisini kullanir.
         siraya(() => islet(() => gonder("/Kasa/Ekle", { barkod: barkod }), true));
+    }
+
+    barkodGirdi.addEventListener("keydown", function (e) {
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        barkoduSirayaAl(barkodGirdi.value);
+    });
+
+    document.querySelectorAll(".hizli-urun").forEach(function (dugme) {
+        dugme.addEventListener("click", function () {
+            barkoduSirayaAl(dugme.dataset.barkod);
+        });
     });
 
     document.getElementById("btn-iptal").addEventListener("click", fisiIptalEt);
@@ -364,6 +377,8 @@
 
     // Kisayollar sayfanin herhangi bir yerinde calisir.
     document.addEventListener("keydown", async function (e) {
+        if (!vardiyaAcik) return;
+
         if (e.key === "F2") {
             e.preventDefault();
             document.getElementById("btn-odeme").click();
@@ -384,5 +399,5 @@
         }
     });
 
-    sepetiYukle().then(odakla);
+    if (vardiyaAcik) sepetiYukle().then(odakla);
 })();

@@ -141,11 +141,23 @@
         sonOkunan.textContent = "Son okunan: " + deger;
         durumYaz("Barkod bekleniyor…");
 
-        // kasa.js'in kendi akisini kullan: alana yaz, Enter'i taklit et.
-        // Boylece kampanya, koli carpani ve terazi cozumu ayni yoldan gecer.
+        // Her ekran okunan barkodu kendi is akisi ile ele alabilsin.
+        // Olay preventDefault() ile iptal edilirse Kasa'ya ozel Enter akisi calismaz.
+        const olay = new CustomEvent("barkod-kamera-okundu", {
+            detail: { barkod: deger },
+            bubbles: false,
+            cancelable: true
+        });
+
+        const varsayilanAkisDevamEtsin = document.dispatchEvent(olay);
+        if (!varsayilanAkisDevamEtsin) return;
+
+        // Olay iptal edilmediyse Kasa'nin mevcut akisini kullan.
         barkodGirdi.value = deger;
         barkodGirdi.dispatchEvent(new KeyboardEvent("keydown", {
-            key: "Enter", bubbles: true, cancelable: true
+            key: "Enter",
+            bubbles: true,
+            cancelable: true
         }));
     }
 
