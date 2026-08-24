@@ -10,7 +10,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - MarketOtomasyon</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" />
+    @* Phosphor Icons: yazarkasa, kasa kasasi, depo, barkod gibi market
+       otomasyonuna ozgu ikonlari tek sette bulunduran nadir setlerden.
+       Yazi tipiyle ayni gerekce: CDN degil, projeye gomulu. *@
+    <link rel="stylesheet" href="~/lib/phosphor-icons/phosphor.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/MarketOtomasyon.styles.css" asp-append-version="true" />
 </head>
@@ -20,27 +23,27 @@
             <nav class="menu">
                 <div class="menu-baslik">Satış</div>
                 <a class="menu-oge @Aktif("Kasa")" asp-controller="Kasa" asp-action="Index">
-                    <i class="menu-ikon bi bi-cash-stack"></i> Kasa
+                    <i class="menu-ikon ph ph-cash-register"></i> Kasa
                 </a>
                 <a class="menu-oge @Aktif("Iade")" asp-controller="Iade" asp-action="Index">
-                    <i class="menu-ikon bi bi-arrow-counterclockwise"></i> İade
+                    <i class="menu-ikon ph ph-arrow-counter-clockwise"></i> İade
                 </a>
                 <a class="menu-oge @Aktif("Vardiya")" asp-controller="Vardiya" asp-action="Index">
-                    <i class="menu-ikon bi bi-safe2"></i> Vardiya
+                    <i class="menu-ikon ph ph-vault"></i> Vardiya
                 </a>
 
                 <div class="menu-baslik">Yönetim</div>
                 <a class="menu-oge @Aktif("Urun")" asp-controller="Urun" asp-action="Index">
-                    <i class="menu-ikon bi bi-box-seam"></i> Ürünler
+                    <i class="menu-ikon ph ph-package"></i> Ürünler
                 </a>
                 <a class="menu-oge @Aktif("Stok")" asp-controller="Stok" asp-action="Index">
-                    <i class="menu-ikon bi bi-clipboard-data"></i> Stok
+                    <i class="menu-ikon ph ph-warehouse"></i> Stok
                 </a>
                 <a class="menu-oge @Aktif("Sayim")" asp-controller="Sayim" asp-action="Index">
-                    <i class="menu-ikon bi bi-clipboard-check"></i> Sayım ve Zayi
+                    <i class="menu-ikon ph ph-list-checks"></i> Sayım ve Zayi
                 </a>
                 <a class="menu-oge @Aktif("Kampanya")" asp-controller="Kampanya" asp-action="Index">
-                    <i class="menu-ikon bi bi-tags"></i> Kampanyalar
+                    <i class="menu-ikon ph ph-tag"></i> Kampanyalar
                 </a>
             </nav>
 
@@ -52,7 +55,7 @@
                vardiyanin acik olup olmadigi (sag). Kasiyer bunlari sormak icin
                ekran degistirmez. *@
             <header class="ust-serit">
-                <button type="button" class="menu-dugmesi" id="menu-dugmesi" aria-label="Menüyü aç/kapat"><i class="bi bi-list"></i></button>
+                <button type="button" class="menu-dugmesi" id="menu-dugmesi" aria-label="Menüyü aç/kapat"><i class="ph ph-list"></i></button>
                 <span class="sayfa-basligi">@ViewData["Title"]</span>
 
                 <div class="arac-sag serit-grup">

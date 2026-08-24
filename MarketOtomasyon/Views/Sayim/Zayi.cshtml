@@ -5,28 +5,28 @@
 
 <div class="ekran">
     <div class="arac-cubugu">
-        <a class="btn btn-outline-secondary" asp-action="Index"><i class="bi bi-clipboard-check"></i> Sayım</a>
-        <a class="btn btn-primary" asp-action="Zayi"><i class="bi bi-trash3"></i> Zayi / Fire</a>
+        <a class="btn btn-outline-secondary" asp-action="Index"><i class="ph ph-list-checks"></i> Sayım</a>
+        <a class="btn btn-primary" asp-action="Zayi"><i class="ph ph-trash"></i> Zayi / Fire</a>
         <span class="arac-ayrac"></span>
         <span class="ipucu">Zayi kaydı stoktan çıkış yapar; sebep alanı zorunludur.</span>
     </div>
 
     @if (TempData["Mesaj"] is string mesaj)
     {
-        <div class="bildirim bildirim-olumlu"><i class="bi bi-check-circle"></i> @mesaj</div>
+        <div class="bildirim bildirim-olumlu"><i class="ph ph-check-circle"></i> @mesaj</div>
     }
 
     @if (!ViewData.ModelState.IsValid)
     {
         <div class="bildirim bildirim-olumsuz">
-            <i class="bi bi-exclamation-triangle"></i>
+            <i class="ph ph-warning"></i>
             <div asp-validation-summary="All" class="mb-0"></div>
         </div>
     }
 
     <div class="panel-serit" style="align-items:stretch">
         <div class="panel" style="flex:1 1 28rem">
-            <div class="panel-baslik"><span><i class="bi bi-trash3"></i> Yeni zayi / fire</span></div>
+            <div class="panel-baslik"><span><i class="ph ph-trash"></i> Yeni zayi / fire</span></div>
             <div class="panel-govde">
                 <form method="post" asp-action="Zayi">
                     <div class="alan">
@@ -78,7 +78,7 @@
                         <label></label>
                         <div class="deger">
                             <button type="submit" class="btn btn-danger">
-                                <i class="bi bi-check-lg"></i> Zayiyi Kaydet
+                                <i class="ph ph-check"></i> Zayiyi Kaydet
                             </button>
                         </div>
                     </div>

@@ -7,10 +7,10 @@
 <div class="ekran">
     <div class="arac-cubugu">
         <a class="btn btn-outline-secondary" asp-action="Index">
-            <i class="bi bi-arrow-left"></i> Liste
+            <i class="ph ph-arrow-left"></i> Liste
         </a>
         <a class="btn btn-primary" asp-action="Duzenle" asp-route-id="@Model.Urun.Id">
-            <i class="bi bi-pencil"></i> Düzenle
+            <i class="ph ph-pencil-simple"></i> Düzenle
         </a>
 
         <span class="arac-ayrac"></span>
@@ -44,14 +44,14 @@
 
     @if (TempData["Mesaj"] is string mesaj)
     {
-        <div class="bildirim bildirim-olumlu"><i class="bi bi-check-circle"></i> @mesaj</div>
+        <div class="bildirim bildirim-olumlu"><i class="ph ph-check-circle"></i> @mesaj</div>
     }
 
     <div class="panel-serit" style="flex:1; min-height:0; align-items:stretch">
 
         <!-- Fotograf -->
         <div class="panel" style="flex:0 1 16rem">
-            <div class="panel-baslik"><span><i class="bi bi-image"></i> Fotoğraf</span></div>
+            <div class="panel-baslik"><span><i class="ph ph-image"></i> Fotoğraf</span></div>
             <div class="panel-govde text-center">
                 <partial name="_UrunResmi"
                          model="@UrunResmiVm.Olustur(Model.Urun.ResimYolu, Model.Urun.Ad, "dev")" />
@@ -82,7 +82,7 @@
 
         <!-- Barkodlar -->
         <div class="panel" style="flex:3 1 28rem">
-            <div class="panel-baslik"><span><i class="bi bi-upc-scan"></i> Barkodlar</span></div>
+            <div class="panel-baslik"><span><i class="ph ph-barcode"></i> Barkodlar</span></div>
 
             <div class="izgara-sarmal">
                 <table class="izgara">
@@ -115,7 +115,7 @@
                                         <input type="hidden" name="id" value="@barkod.Id" />
                                         <input type="hidden" name="urunId" value="@Model.Urun.Id" />
                                         <button type="submit" class="btn btn-outline-danger" title="Barkodu sil">
-                                            <i class="bi bi-trash"></i>
+                                            <i class="ph ph-trash"></i>
                                         </button>
                                     </form>
                                 </td>
@@ -150,7 +150,7 @@
                        type="number" step="0.001" min="0" placeholder="Çarpan" aria-label="Çarpan" />
 
                 <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-plus-lg"></i> Ekle
+                    <i class="ph ph-plus"></i> Ekle
                 </button>
 
                 <span class="hata" asp-validation-for="YeniBarkod.Barkod"></span>
@@ -164,7 +164,7 @@
 
         <!-- Fiyat gecmisi -->
         <div class="panel" style="flex:2 1 22rem">
-            <div class="panel-baslik"><span><i class="bi bi-clock-history"></i> Fiyat geçmişi</span></div>
+            <div class="panel-baslik"><span><i class="ph ph-clock-counter-clockwise"></i> Fiyat geçmişi</span></div>
 
             <div class="izgara-sarmal">
                 <table class="izgara">

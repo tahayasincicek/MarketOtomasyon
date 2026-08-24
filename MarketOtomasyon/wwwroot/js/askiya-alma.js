@@ -58,7 +58,7 @@
         const dugme = document.createElement("button");
         dugme.type = "button";
         dugme.className = "btn btn-sm btn-primary";
-        dugme.innerHTML = '<i class="bi bi-arrow-return-left"></i> Geri Çağır';
+        dugme.innerHTML = '<i class="ph ph-arrow-u-down-left"></i> Geri Çağır';
         dugme.addEventListener("click", async function () {
             const { basarili, hata } = await gonder("/Satis/GeriCagir", { fisId: fisId });
             if (!basarili) { window.kasa.uyariGoster(hata); return; }

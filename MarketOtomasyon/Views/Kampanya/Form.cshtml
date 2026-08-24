@@ -11,10 +11,10 @@
 
     <div class="arac-cubugu">
         <button type="submit" class="btn btn-primary">
-            <i class="bi bi-check-lg"></i> Kaydet
+            <i class="ph ph-check"></i> Kaydet
         </button>
         <a class="btn btn-outline-secondary" asp-action="Index">
-            <i class="bi bi-x-lg"></i> Vazgeç
+            <i class="ph ph-x"></i> Vazgeç
         </a>
         <span class="arac-ayrac"></span>
         <span class="ipucu">Kampanyalar kasada otomatik uygulanır.</span>
@@ -23,7 +23,7 @@
     @if (!ViewData.ModelState.IsValid)
     {
         <div class="bildirim bildirim-olumsuz">
-            <i class="bi bi-exclamation-triangle"></i>
+            <i class="ph ph-warning"></i>
             <div asp-validation-summary="All" class="mb-0"></div>
         </div>
     }

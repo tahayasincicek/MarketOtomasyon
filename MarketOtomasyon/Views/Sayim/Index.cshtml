@@ -5,8 +5,8 @@
 
 <div class="ekran">
     <div class="arac-cubugu">
-        <a class="btn btn-primary" asp-action="Index"><i class="bi bi-clipboard-check"></i> Sayım</a>
-        <a class="btn btn-outline-secondary" asp-action="Zayi"><i class="bi bi-trash3"></i> Zayi / Fire</a>
+        <a class="btn btn-primary" asp-action="Index"><i class="ph ph-list-checks"></i> Sayım</a>
+        <a class="btn btn-outline-secondary" asp-action="Zayi"><i class="ph ph-trash"></i> Zayi / Fire</a>
         <span class="arac-ayrac"></span>
         <span class="ipucu">Boş bıraktığınız ürünler bu sayıma dahil edilmez.</span>
     </div>
@@ -14,20 +14,20 @@
     @if (TempData["Mesaj"] is string mesaj)
     {
         <div class="bildirim bildirim-olumlu bildirim-sabit" role="status">
-            <i class="bi bi-check-circle"></i> @mesaj
+            <i class="ph ph-check-circle"></i> @mesaj
         </div>
     }
 
     @if (!ViewData.ModelState.IsValid)
     {
         <div class="bildirim bildirim-olumsuz">
-            <i class="bi bi-exclamation-triangle"></i>
+            <i class="ph ph-warning"></i>
             <div asp-validation-summary="All" class="mb-0"></div>
         </div>
     }
 
     <div class="panel">
-        <div class="panel-baslik"><span><i class="bi bi-building"></i> Sayım deposu</span></div>
+        <div class="panel-baslik"><span><i class="ph ph-warehouse"></i> Sayım deposu</span></div>
         <div class="panel-govde">
             <form method="get" asp-action="Index" class="d-flex gap-2 align-items-center">
                 <select class="form-select orta-genislik" name="depoId" onchange="this.form.submit()">
@@ -49,7 +49,7 @@
 
             <div class="panel mt-3">
                 <div class="panel-baslik">
-                    <span><i class="bi bi-list-check"></i> Sayım satırları</span>
+                    <span><i class="ph ph-list-checks"></i> Sayım satırları</span>
                     <button type="button" class="btn btn-sm btn-outline-secondary" id="sistemle-doldur">
                         Sistem miktarlarını doldur
                     </button>
@@ -95,7 +95,7 @@
                     @if (!ViewData.ModelState.IsValid)
                     {
                         <div class="bildirim bildirim-olumsuz mb-3" role="alert">
-                            <i class="bi bi-exclamation-triangle"></i>
+                            <i class="ph ph-warning"></i>
                             <div asp-validation-summary="All" class="mb-0"></div>
                         </div>
                     }
@@ -112,7 +112,7 @@
                         <label></label>
                         <div class="deger">
                             <button type="submit" class="btn btn-primary" id="sayim-kaydet">
-                                <i class="bi bi-check-lg"></i> Sayımı Kaydet ve Stoku Düzelt
+                                <i class="ph ph-check"></i> Sayımı Kaydet ve Stoku Düzelt
                             </button>
                         </div>
                     </div>
@@ -162,7 +162,7 @@
 
                 if (!girilenVar) {
                     event.preventDefault();
-                    hata.innerHTML = '<i class="bi bi-exclamation-triangle"></i> En az bir ürünün sayılan miktarını girin.';
+                    hata.innerHTML = '<i class="ph ph-warning"></i> En az bir ürünün sayılan miktarını girin.';
                     hata.classList.remove('d-none');
                     document.querySelector('.sayilan-miktar')?.focus();
                     return;

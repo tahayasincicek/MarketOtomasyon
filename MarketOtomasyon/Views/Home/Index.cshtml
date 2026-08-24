@@ -11,7 +11,7 @@
     @if (!Model.VardiyaAcik)
     {
         <div class="bildirim bildirim-olumsuz">
-            <i class="bi bi-exclamation-triangle"></i>
+            <i class="ph ph-warning"></i>
             <span>Açık vardiya yok — kasada satış yapılamaz.</span>
             <a class="btn btn-sm btn-danger ms-2" asp-controller="Vardiya" asp-action="Index">Vardiya Aç</a>
         </div>
@@ -21,32 +21,32 @@
        otomasyonlarinda gun icinde en cok basilan tuslar buradadir. *@
     <div class="kisayol-izgara">
         <a class="kisayol" asp-controller="Kasa" asp-action="Index">
-            <i class="bi bi-cash-stack"></i>
+            <i class="ph ph-cash-register"></i>
             <span class="kisayol-ad">Kasa</span>
             <span class="kisayol-tus">Satış ekranı</span>
         </a>
         <a class="kisayol" asp-controller="Iade" asp-action="Index">
-            <i class="bi bi-arrow-counterclockwise"></i>
+            <i class="ph ph-arrow-counter-clockwise"></i>
             <span class="kisayol-ad">İade</span>
             <span class="kisayol-tus">Fişten iade al</span>
         </a>
         <a class="kisayol" asp-controller="Vardiya" asp-action="Index">
-            <i class="bi bi-safe2"></i>
+            <i class="ph ph-vault"></i>
             <span class="kisayol-ad">Vardiya</span>
             <span class="kisayol-tus">Aç / kapat, Z raporu</span>
         </a>
         <a class="kisayol" asp-controller="Stok" asp-action="Giris">
-            <i class="bi bi-box-arrow-in-down"></i>
+            <i class="ph ph-tray-arrow-down"></i>
             <span class="kisayol-ad">Mal Kabul</span>
             <span class="kisayol-tus">Stok girişi</span>
         </a>
         <a class="kisayol" asp-controller="Urun" asp-action="Index">
-            <i class="bi bi-box-seam"></i>
+            <i class="ph ph-package"></i>
             <span class="kisayol-ad">Ürünler</span>
             <span class="kisayol-tus">Kart ve fiyat</span>
         </a>
         <a class="kisayol" asp-controller="Kampanya" asp-action="Index">
-            <i class="bi bi-tags"></i>
+            <i class="ph ph-tag"></i>
             <span class="kisayol-ad">Kampanyalar</span>
             <span class="kisayol-tus">İndirim tanımla</span>
         </a>

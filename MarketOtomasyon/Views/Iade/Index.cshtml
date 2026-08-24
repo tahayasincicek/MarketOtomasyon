@@ -15,7 +15,7 @@
                value="@Model.FisNo" autocomplete="off" autofocus
                placeholder="20260821-00001" aria-label="Fiş numarası" />
         <button type="submit" class="btn btn-primary">
-            <i class="bi bi-search"></i> Satışı Bul
+            <i class="ph ph-magnifying-glass"></i> Satışı Bul
         </button>
 
         @if (Model.Fis is not null)
@@ -34,12 +34,12 @@
 
     @if (TempData["Mesaj"] is string mesaj)
     {
-        <div class="bildirim bildirim-olumlu"><i class="bi bi-check-circle"></i> @mesaj</div>
+        <div class="bildirim bildirim-olumlu"><i class="ph ph-check-circle"></i> @mesaj</div>
     }
 
     @if (!string.IsNullOrWhiteSpace(Model.Hata))
     {
-        <div class="bildirim bildirim-olumsuz"><i class="bi bi-exclamation-triangle"></i> @Model.Hata</div>
+        <div class="bildirim bildirim-olumsuz"><i class="ph ph-warning"></i> @Model.Hata</div>
     }
 
     @if (Model.Fis is null)
@@ -55,7 +55,7 @@
         @if (!fis.IadeEdilebilir)
         {
             <div class="bildirim bildirim-olumsuz">
-                <i class="bi bi-clock-history"></i>
+                <i class="ph ph-clock-counter-clockwise"></i>
                 Bu fiş için iade süresi dolmuş. Satır girişleri kapalı.
             </div>
         }
@@ -120,7 +120,7 @@
 
                 <div class="arac-sag">
                     <button type="submit" class="btn btn-danger" disabled="@(!fis.IadeEdilebilir)">
-                        <i class="bi bi-arrow-counterclockwise"></i> İadeyi Tamamla
+                        <i class="ph ph-arrow-counter-clockwise"></i> İadeyi Tamamla
                     </button>
                 </div>
             </div>

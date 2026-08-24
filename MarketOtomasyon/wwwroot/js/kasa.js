@@ -134,7 +134,7 @@
         const dugme = document.createElement("button");
         dugme.type = "button";
         dugme.className = "btn btn-sm btn-outline-danger";
-        dugme.innerHTML = '<i class="bi bi-trash"></i>';
+        dugme.innerHTML = '<i class="ph ph-trash"></i>';
         dugme.title = "Satırı sil";
         dugme.addEventListener("click", async function (e) {
             e.stopPropagation();
@@ -179,7 +179,7 @@
             ? '<img class="' + sinif + '" src="' + metniKacir(yol) + '" alt="' + metniKacir(ad) +
               '" loading="lazy" decoding="async" />'
             : '<span class="' + sinif + ' urun-resim-yok" role="img" aria-label="' +
-              metniKacir(ad) + ' — fotoğraf yok"><i class="bi bi-box-seam"></i></span>';
+              metniKacir(ad) + ' — fotoğraf yok"><i class="ph ph-package"></i></span>';
     }
 
     function uyariGoster(mesaj) {
@@ -223,7 +223,7 @@
         kap.innerHTML = son
             ? resimEtiketi(son.resimYolu, son.ad, "buyuk")
             : '<span class="urun-resim urun-resim-yok urun-resim-buyuk" role="img" ' +
-              'aria-label="Son okutulan ürün"><i class="bi bi-upc-scan"></i></span>';
+              'aria-label="Son okutulan ürün"><i class="ph ph-barcode"></i></span>';
 
         const yeni = kap.firstElementChild;
         yeni.id = "son-resim";

@@ -89,7 +89,7 @@
 
             acik = true;
             dugme.classList.replace("btn-outline-secondary", "btn-danger");
-            dugme.innerHTML = '<i class="bi bi-camera-video-off"></i> Kamerayı Kapat';
+            dugme.innerHTML = '<i class="ph ph-video-camera-slash"></i> Kamerayı Kapat';
         } catch (e) {
             durumYaz(hataMesaji(e), true);
             temizle();
@@ -155,7 +155,7 @@
         panel.classList.add("d-none");
         durumYaz("Kamera kapalı.");
         dugme.classList.replace("btn-danger", "btn-outline-secondary");
-        dugme.innerHTML = '<i class="bi bi-camera-video"></i> Kamera';
+        dugme.innerHTML = '<i class="ph ph-video-camera"></i> Kamera';
         if (barkodGirdi) barkodGirdi.focus();
     }
 

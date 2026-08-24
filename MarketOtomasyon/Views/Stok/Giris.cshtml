@@ -6,7 +6,7 @@
 <div class="ekran">
     <div class="arac-cubugu">
         <a class="btn btn-outline-secondary" asp-action="Index">
-            <i class="bi bi-arrow-left"></i> Stok Durumu
+            <i class="ph ph-arrow-left"></i> Stok Durumu
         </a>
         <span class="arac-ayrac"></span>
         <span class="ipucu">
@@ -16,13 +16,13 @@
 
     @if (TempData["Mesaj"] is string mesaj)
     {
-        <div class="bildirim bildirim-olumlu"><i class="bi bi-check-circle"></i> @mesaj</div>
+        <div class="bildirim bildirim-olumlu"><i class="ph ph-check-circle"></i> @mesaj</div>
     }
 
     @if (!ViewData.ModelState.IsValid)
     {
         <div class="bildirim bildirim-olumsuz">
-            <i class="bi bi-exclamation-triangle"></i>
+            <i class="ph ph-warning"></i>
             <div asp-validation-summary="All" class="mb-0"></div>
         </div>
     }
@@ -31,7 +31,7 @@
 
         <!-- Giris formu -->
         <div class="panel" style="flex:1 1 24rem">
-            <div class="panel-baslik"><span><i class="bi bi-box-arrow-in-down"></i> Giriş</span></div>
+            <div class="panel-baslik"><span><i class="ph ph-tray-arrow-down"></i> Giriş</span></div>
             <div class="panel-govde">
                 <form method="post" asp-action="Giris">
                     <div class="alan">
@@ -83,7 +83,7 @@
                         <label></label>
                         <div class="deger">
                             <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-check-lg"></i> Girişi Kaydet
+                                <i class="ph ph-check"></i> Girişi Kaydet
                             </button>
                         </div>
                     </div>
@@ -93,7 +93,7 @@
 
         <!-- Son hareketler -->
         <div class="panel" style="flex:2 1 32rem">
-            <div class="panel-baslik"><span><i class="bi bi-list-ul"></i> Son hareketler</span></div>
+            <div class="panel-baslik"><span><i class="ph ph-list-bullets"></i> Son hareketler</span></div>
 
             <div class="izgara-sarmal">
                 <table class="izgara">

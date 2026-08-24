@@ -7,11 +7,11 @@
 <div class="ekran">
     @if (TempData["Mesaj"] is string mesaj)
     {
-        <div class="bildirim bildirim-olumlu"><i class="bi bi-check-circle"></i> @mesaj</div>
+        <div class="bildirim bildirim-olumlu"><i class="ph ph-check-circle"></i> @mesaj</div>
     }
 
     <div class="bildirim bildirim-bilgi">
-        <i class="bi bi-info-circle"></i>
+        <i class="ph ph-info"></i>
         <span>
             Kampanyalar kasada otomatik uygulanır. Bir satıra birden fazla kampanya uyuyorsa
             <strong>müşteri lehine en yüksek indirim</strong> seçilir; eşitlikte önceliği küçük olan kazanır.
@@ -21,7 +21,7 @@
 
     <div class="arac-cubugu">
         <a class="btn btn-primary" asp-action="Ekle">
-            <i class="bi bi-plus-lg"></i> Yeni Kampanya
+            <i class="ph ph-plus"></i> Yeni Kampanya
         </a>
     </div>
 
@@ -75,7 +75,7 @@
                         </td>
                         <td class="islem">
                             <a class="btn btn-outline-primary" asp-action="Duzenle" asp-route-id="@kampanya.Id"
-                               title="Düzenle"><i class="bi bi-pencil"></i></a>
+                               title="Düzenle"><i class="ph ph-pencil-simple"></i></a>
                         </td>
                     </tr>
                 }
