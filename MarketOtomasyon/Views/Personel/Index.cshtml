@@ -1,0 +1,190 @@
+@model MarketOtomasyon.Models.ViewModels.PersonelEkranVm
+@using MarketOtomasyon.Security
+@{
+    ViewData["Title"] = "Personel";
+}
+
+<div class="ekran">
+    @if (TempData["Mesaj"] is string mesaj)
+    {
+        <div class="bildirim bildirim-olumlu"><i class="ph ph-check-circle"></i> @mesaj</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.Hata))
+    {
+        <div class="bildirim bildirim-olumsuz"><i class="ph ph-warning"></i> @Model.Hata</div>
+    }
+
+    @* Yeni personel formu listenin ustunde: ekleme en sik yapilan islem. *@
+    <form method="post" asp-action="Olustur" class="arac-cubugu">
+        <span class="arac-etiket">Yeni personel</span>
+
+        <input class="form-control" style="width:10rem" asp-for="YeniPersonel.KullaniciAdi"
+               autocomplete="off" placeholder="Kullanıcı adı" aria-label="Kullanıcı adı" />
+
+        <input class="form-control" style="width:13rem" asp-for="YeniPersonel.AdSoyad"
+               autocomplete="off" placeholder="Ad soyad" aria-label="Ad soyad" />
+
+        <select class="form-select" style="width:8rem" asp-for="YeniPersonel.Rol" aria-label="Rol">
+            <option value="@Roller.KasiyerKodu">Kasiyer</option>
+            <option value="@Roller.MudurKodu">Müdür</option>
+        </select>
+
+        <input class="form-control" style="width:11rem" asp-for="YeniPersonel.Sifre"
+               type="password" autocomplete="new-password"
+               placeholder="Şifre" aria-label="Şifre" />
+
+        <button type="submit" class="btn btn-primary">
+            <i class="ph ph-user-plus"></i> Ekle
+        </button>
+
+        <span class="ipucu arac-sag">
+            Şifre en az 8 karakter olmalı, harf ve rakam içermeli.
+        </span>
+    </form>
+
+    <div class="izgara-sarmal">
+        <table class="izgara">
+            <thead>
+                <tr>
+                    <th style="width:10rem">Kullanıcı adı</th>
+                    <th>Ad soyad</th>
+                    <th style="width:7rem">Rol</th>
+                    <th style="width:8rem">Durum</th>
+                    <th style="width:9rem">Vardiya</th>
+                    <th class="islem" style="width:24rem"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var kisi in Model.Satirlar)
+                {
+                    var kendisi = kisi.Id == Model.OturumdakiKullaniciId;
+                    var sonMudur = kisi.Rol == Roller.MudurKodu && Model.AktifMudurSayisi <= 1 && kisi.Aktif;
+
+                    <tr class="@(kisi.Aktif ? "" : "pasif")">
+                        <td class="kod">@kisi.KullaniciAdi</td>
+                        <td>
+                            @kisi.AdSoyad
+                            @if (kendisi)
+                            {
+                                <span class="rozet rozet-notr ms-1">siz</span>
+                            }
+                        </td>
+                        <td>
+                            @if (kisi.Rol == Roller.MudurKodu)
+                            {
+                                <span class="rozet rozet-vurgu">Müdür</span>
+                            }
+                            else
+                            {
+                                <span class="rozet rozet-notr">Kasiyer</span>
+                            }
+                        </td>
+                        <td>
+                            @if (kisi.Aktif)
+                            {
+                                <span class="rozet rozet-olumlu">aktif</span>
+                            }
+                            else
+                            {
+                                <span class="rozet rozet-notr">pasif</span>
+                            }
+                        </td>
+                        <td>
+                            @if (kisi.VardiyadaMi)
+                            {
+                                <span class="rozet rozet-uyari">vardiyada</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+                        <td class="islem">
+                            @* Kendi hesabina ve son mudure islem yapilamaz; dugmeler
+                               gizlenmez, sebebi title'da yazar. Gizlenen dugme
+                               "neden yok" sorusunu dogurur. *@
+                            @* Renk islevi anlatir: mavi yetki artirir, gri geri alir,
+                               kirmizi erisimi keser, yesil geri acar, sari sifre gibi
+                               dikkat isteyen ama yikici olmayan islem. *@
+                            @if (kisi.Rol == Roller.KasiyerKodu)
+                            {
+                                <form method="post" asp-action="RolDegistir" class="form-seffaf">
+                                    <input type="hidden" name="id" value="@kisi.Id" />
+                                    <input type="hidden" name="rol" value="@Roller.MudurKodu" />
+                                    <button type="submit" class="btn btn-primary"
+                                            disabled="@kendisi"
+                                            title="@(kendisi ? "Kendi rolünüzü değiştiremezsiniz" : "Müdür yap")">
+                                        <i class="ph ph-arrow-fat-line-up"></i> Müdür yap
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <form method="post" asp-action="RolDegistir" class="form-seffaf">
+                                    <input type="hidden" name="id" value="@kisi.Id" />
+                                    <input type="hidden" name="rol" value="@Roller.KasiyerKodu" />
+                                    <button type="submit" class="btn btn-secondary"
+                                            disabled="@(kendisi || sonMudur)"
+                                            title="@(kendisi ? "Kendi rolünüzü değiştiremezsiniz"
+                                                   : sonMudur ? "Sistemdeki son aktif müdür" : "Kasiyer yap")">
+                                        <i class="ph ph-arrow-fat-line-down"></i> Kasiyer yap
+                                    </button>
+                                </form>
+                            }
+
+                            <form method="post" asp-action="AktiflikDegistir" class="form-seffaf">
+                                <input type="hidden" name="id" value="@kisi.Id" />
+                                <input type="hidden" name="aktif" value="@(!kisi.Aktif)" />
+                                @if (kisi.Aktif)
+                                {
+                                    <button type="submit" class="btn btn-danger"
+                                            disabled="@(kendisi || sonMudur || kisi.VardiyadaMi)"
+                                            title="@(kendisi ? "Kendi hesabınızı pasife alamazsınız"
+                                                   : sonMudur ? "Sistemdeki son aktif müdür"
+                                                   : kisi.VardiyadaMi ? "Açık vardiyası var, önce kapatılmalı"
+                                                   : "Pasife al")">
+                                        <i class="ph ph-prohibit"></i> Pasife al
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button type="submit" class="btn btn-success" title="Aktife al">
+                                        <i class="ph ph-check"></i> Aktife al
+                                    </button>
+                                }
+                            </form>
+
+                            <form method="post" asp-action="SifreSifirla" class="form-seffaf">
+                                <input type="hidden" name="id" value="@kisi.Id" />
+                                <input class="form-control" style="width:9rem" type="password"
+                                       name="yeniSifre" autocomplete="new-password"
+                                       placeholder="Yeni şifre" aria-label="Yeni şifre" />
+                                <button type="submit" class="btn btn-warning" title="Şifreyi sıfırla">
+                                    <i class="ph ph-key"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        @if (Model.Satirlar.Count == 0)
+        {
+            <p class="veri-yok">Kayıtlı personel yok.</p>
+        }
+    </div>
+
+    <div class="durum-cubugu">
+        <span><strong>@Model.Satirlar.Count</strong> personel</span>
+        <span>@Model.Satirlar.Count(s => s.Aktif) aktif</span>
+        <span>@Model.AktifMudurSayisi müdür</span>
+        @if (Model.AktifMudurSayisi <= 1)
+        {
+            <span class="rozet rozet-uyari">
+                tek müdür var: pasife alınamaz ve rolü değiştirilemez
+            </span>
+        }
+    </div>
+</div>
