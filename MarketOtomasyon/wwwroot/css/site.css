@@ -389,6 +389,14 @@ html, body {
     flex: 1;
 }
 
+/* ---------- Menu gruplari ----------
+   Baslik artik bir etiket degil, acilir-kapanir grubun dugmesi.
+   Sol seritte on bir madde birden asili durunca goz hicbirini
+   secemiyordu; artik yalnizca icinde bulunulan grup acik gelir. */
+.menu-grup {
+    border: none;
+}
+
 .menu-baslik {
     padding: .75rem 1.1rem .35rem;
     font-size: .8rem;
@@ -396,6 +404,41 @@ html, body {
     letter-spacing: .08em;
     font-weight: 600;
     color: #71717a;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    list-style: none;             /* Firefox */
+}
+
+/* Tarayicinin kendi ucgen isareti gizlenir; kendi okumuzu koyuyoruz
+   ki yon ve hizalama menunun geri kalaniyla tutarli olsun. */
+.menu-baslik::-webkit-details-marker { display: none; }
+.menu-baslik::marker { content: ""; }
+
+.menu-baslik:hover {
+    color: var(--menu-metin-acik);
+}
+
+.menu-grup-ok {
+    font-size: .7rem;
+    transition: transform 120ms ease;
+}
+
+.menu-grup[open] > .menu-baslik > .menu-grup-ok {
+    transform: rotate(90deg);
+}
+
+/* Klavyeyle gezilirken hangi baslikta oldugu gorunsun. */
+.menu-baslik:focus-visible {
+    outline: 2px solid var(--menu-vurgu);
+    outline-offset: -2px;
+    border-radius: .2rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .menu-grup-ok { transition: none; }
 }
 
 .menu-oge {
@@ -679,9 +722,26 @@ table.izgara .islem {
 }
 
 table.izgara .islem .btn {
-    --bs-btn-padding-y: .12rem;
-    --bs-btn-padding-x: .4rem;
+    --bs-btn-padding-y: .2rem;
+    --bs-btn-padding-x: .55rem;
     --bs-btn-font-size: .78rem;
+}
+
+/* Islem hucresindeki dugmeler ve kucuk formlar bitisik diziliyordu:
+   yanlis dugmeye basmak kolaydi ve "pasife al" gibi geri alinmasi
+   zahmetli islemler komsusuna yapisiyordu.
+
+   Form'lar inline-flex yapiliyor - td'nin kendisi flex YAPILMAZ, o
+   zaman tablo hucresi olmaktan cikar ve sutun genislikleri bozulur. */
+table.izgara .islem > form {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    vertical-align: middle;
+}
+
+table.izgara .islem > * + * {
+    margin-left: .4rem;
 }
 
 /* Satir durumlari: renk yalnizca burada. */
@@ -723,6 +783,9 @@ table.izgara tbody tr.table-active:hover {
 .rozet-uyari   { color: #b45309; border-color: #fcd34d; background: #fffbeb; }
 .rozet-olumsuz { color: #b91c1c; border-color: #fca5a5; background: #fef2f2; }
 .rozet-notr    { color: #4b5563; border-color: #d1d5db; background: #f9fafb; }
+/* Durum degil, ayricalik bildirir: mudur yetkisi gibi. Olumlu/olumsuz
+   yesil-kirmizi ekseninden ayri dursun diye menuyle ayni mavi. */
+.rozet-vurgu   { color: #1d4ed8; border-color: #bfdbfe; background: #eff6ff; }
 
 /* ---------- Alt durum cubugu ---------- */
 
