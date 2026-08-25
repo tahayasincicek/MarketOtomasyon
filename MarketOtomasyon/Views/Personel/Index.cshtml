@@ -135,7 +135,13 @@
 
                             <form method="post" asp-action="AktiflikDegistir" class="form-seffaf">
                                 <input type="hidden" name="id" value="@kisi.Id" />
-                                <input type="hidden" name="aktif" value="@(!kisi.Aktif)" />
+                                @* Deger METIN olarak yaziliyor. value="@(!kisi.Aktif)"
+                                   yazilsaydi Razor bunu bir HTML boolean attribute
+                                   sanip true icin value="value" basar, false icin
+                                   attribute'u hic basmazdi; her iki halde de sunucuya
+                                   false giderdi ve pasif kullanici aktife alinamazdi. *@
+                                <input type="hidden" name="aktif"
+                                       value="@(kisi.Aktif ? "false" : "true")" />
                                 @if (kisi.Aktif)
                                 {
                                     <button type="submit" class="btn btn-danger"
