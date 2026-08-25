@@ -485,7 +485,10 @@ $RECYCLE.BIN/
 appsettings.Development.json
 *.user
 
-# Yerel staj notlari ve uygulama rehberleri repoya girmez
+# Yerel calisma notlari ve taslaklar repoya girmez
 staj-defteri*.md
 Gun-*-Staj-Defteri.md
 Gun-*-Rehber.md
+*-Rehberi.md
+Gun-*-Test-Karti.html
+format.ps1
