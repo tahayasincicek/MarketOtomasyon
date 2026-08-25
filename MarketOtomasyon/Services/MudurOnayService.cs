@@ -13,9 +13,15 @@ namespace MarketOtomasyon.Services;
 public sealed class MudurOnayService
 {
     private readonly KimlikDogrulamaService _kimlikDogrulama;
+    private readonly ILogger<MudurOnayService> _kayit;
 
-    public MudurOnayService(KimlikDogrulamaService kimlikDogrulama)
-        => _kimlikDogrulama = kimlikDogrulama;
+    public MudurOnayService(
+        KimlikDogrulamaService kimlikDogrulama,
+        ILogger<MudurOnayService> kayit)
+    {
+        _kimlikDogrulama = kimlikDogrulama;
+        _kayit = kayit;
+    }
 
     /// <summary>
     /// Basarili olursa onaylayan mudurun Id'sini doner.
@@ -37,11 +43,29 @@ public sealed class MudurOnayService
         // bir mudur hesabi onay veremez.
         var mudur = await _kimlikDogrulama.GirisDogrulaAsync(kullaniciAdi, sifre, ct);
         if (mudur is null)
+        {
+            // Kasada mudur sifresi deneyen biri, bir saldirinin ilk
+            // isaretidir. SIFRE ASLA LOGLANMAZ; yalnizca denenen ad.
+            _kayit.LogWarning(
+                "Mudur onayi basarisiz: kullanici bulunamadi veya sifre hatali {DenenenKullanici}",
+                kullaniciAdi.Trim());
+
             return (null, "Müdür bilgileri doğrulanamadı.");
+        }
 
         // Sifrenin dogru olmasi yetmez: hesap gercekten mudur olmali.
         if (mudur.Rol != Roller.MudurKodu)
+        {
+            // Sifre dogru ama hesap mudur degil: yetki asma denemesi.
+            _kayit.LogWarning(
+                "Mudur onayi reddedildi: hesap mudur rolunde degil {DenenenKullanici} {Rol}",
+                mudur.KullaniciAdi, mudur.Rol);
+
             return (null, "Müdür bilgileri doğrulanamadı.");
+        }
+
+        _kayit.LogInformation("Mudur onayi verildi {OnaylayanId} {OnaylayanKullanici}",
+            mudur.Id, mudur.KullaniciAdi);
 
         return (mudur.Id, null);
     }

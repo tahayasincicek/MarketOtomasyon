@@ -9,16 +9,13 @@ namespace MarketOtomasyon.Controllers;
 
 public class HomeController : Controller
 {
-    private readonly ILogger<HomeController> _logger;
     private readonly OzetRepository _ozetRepository;
     private readonly VardiyaRepository _vardiyaRepository;
 
     public HomeController(
-        ILogger<HomeController> logger,
         OzetRepository ozetRepository,
         VardiyaRepository vardiyaRepository)
     {
-        _logger = logger;
         _ozetRepository = ozetRepository;
         _vardiyaRepository = vardiyaRepository;
     }

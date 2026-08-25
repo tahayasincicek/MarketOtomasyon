@@ -30,6 +30,7 @@ public class SatisService
     private readonly DepoRepository _depoRepository;
     private readonly MaliyetService _maliyetService;
     private readonly SatisAyarlari _ayarlar;
+    private readonly ILogger<SatisService> _kayit;
 
     public SatisService(
         IDbConnectionFactory factory,
@@ -38,7 +39,8 @@ public class SatisService
         StokRepository stokRepository,
         DepoRepository depoRepository,
         MaliyetService maliyetService,
-        IOptions<SatisAyarlari> ayarlar)
+        IOptions<SatisAyarlari> ayarlar,
+        ILogger<SatisService> kayit)
     {
         _factory = factory;
         _fisRepository = fisRepository;
@@ -46,6 +48,7 @@ public class SatisService
         _stokRepository = stokRepository;
         _depoRepository = depoRepository;
         _maliyetService = maliyetService;
+        _kayit = kayit;
         _ayarlar = ayarlar.Value;
     }
 
@@ -64,7 +67,22 @@ public class SatisService
 
         var sonuc = await TamamlaAsync(conn, tx, fis, ct);
 
-        if (sonuc.Basarili) tx.Commit(); else tx.Rollback();
+        if (sonuc.Basarili)
+        {
+            tx.Commit();
+
+            // Gunluk hacmi bu satir belirler: kasada saatte 30 satis varsa
+            // 30 satir duser. Bir sorun arastirilirken baslangic noktasi.
+            _kayit.LogInformation("Satis tamamlandi {FisNo} {Tutar} {VardiyaId}",
+                sonuc.FisNo, fis.GenelToplam, fis.VardiyaId);
+        }
+        else
+        {
+            tx.Rollback();
+
+            _kayit.LogWarning("Satis tamamlanamadi {FisId} {Hata}", fisId, sonuc.Hata);
+        }
+
         return sonuc;
     }
 

@@ -20,8 +20,13 @@ public class VardiyaService
     private const decimal TutarTavani = 100_000m;
 
     private readonly VardiyaRepository _vardiyaRepository;
+    private readonly ILogger<VardiyaService> _kayit;
 
-    public VardiyaService(VardiyaRepository vardiyaRepository) => _vardiyaRepository = vardiyaRepository;
+    public VardiyaService(VardiyaRepository vardiyaRepository, ILogger<VardiyaService> kayit)
+    {
+        _vardiyaRepository = vardiyaRepository;
+        _kayit = kayit;
+    }
 
     public async Task<VardiyaEkranVm> EkranAsync(int kullaniciId, CancellationToken ct = default)
     {
@@ -73,6 +78,12 @@ public class VardiyaService
         var etkilenen = await _vardiyaRepository.KapatAsync(acik.Id, sayilanTutar, beklenen, fark, ct);
         if (etkilenen != 1)
             return (null, "Vardiya başka bir işlemde kapatılmış.");
+
+        // Kasa farki gun sonu mutabakatinin cikis noktasi; fark sifir
+        // olsa bile kapanis kaydi tutulur.
+        _kayit.LogInformation(
+            "Vardiya kapandi {VardiyaId} {KullaniciId} {Beklenen} {Sayilan} {Fark}",
+            acik.Id, kullaniciId, beklenen, sayilanTutar, fark);
 
         return (await _vardiyaRepository.ZRaporAsync(acik.Id, ct), null);
     }
