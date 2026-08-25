@@ -25,11 +25,10 @@ public class HomeController : Controller
 
     public async Task<IActionResult> Index(CancellationToken ct)
     {
-        if (User.IsInRole(Roller.Kasiyer))
-            return RedirectToAction("Index", "Kasa");
-
-        // "Bugun" yerel gundur; Tarih kolonlari UTC yazildigi icin
-        // gun sinirlari UTC'ye cevrilerek sorgulanir.
+        // Kasiyer eskiden buradan koskulsuz Kasa'ya yonlendiriliyordu, yani
+        // ana ekrani hic goremiyordu. Artik gorebiliyor; gunluk ciro ozeti
+        // ise yalnizca mudure cizilir (Views/Home/Index.cshtml), cunku
+        // isletmenin toplam cirosu kasiyerin isi degildir.
         var bugun = DateTime.Now.Date;
         var baslangicUtc = bugun.ToUniversalTime();
         var bitisUtc = bugun.AddDays(1).ToUniversalTime();

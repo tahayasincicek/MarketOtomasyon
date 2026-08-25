@@ -40,19 +40,61 @@
             <span class="kisayol-ad">Mal Kabul</span>
             <span class="kisayol-tus">Stok girişi</span>
         </a>
+        <a class="kisayol" asp-controller="Stok" asp-action="Index">
+            <i class="ph ph-warehouse"></i>
+            <span class="kisayol-ad">Stok</span>
+            <span class="kisayol-tus">Bakiye ve hareketler</span>
+        </a>
         <a class="kisayol" asp-controller="Urun" asp-action="Index">
             <i class="ph ph-package"></i>
             <span class="kisayol-ad">Ürünler</span>
             <span class="kisayol-tus">Kart ve fiyat</span>
         </a>
-        <a class="kisayol" asp-controller="Kampanya" asp-action="Index">
-            <i class="ph ph-tag"></i>
-            <span class="kisayol-ad">Kampanyalar</span>
-            <span class="kisayol-tus">İndirim tanımla</span>
-        </a>
+
+        @* Menudeki "Yonetim" bolumuyle ayni kosul. Ana ekrani bugun
+           yalnizca mudur goruyor (HomeController kasiyeri Kasa'ya
+           yonlendirir) ama kosul yine de burada duruyor: o yonlendirme
+           degisirse kisayollar sessizce acilmasin. *@
+        @if (User.IsInRole(MarketOtomasyon.Security.Roller.Mudur))
+        {
+            <a class="kisayol" asp-controller="Sayim" asp-action="Index">
+                <i class="ph ph-list-checks"></i>
+                <span class="kisayol-ad">Sayım ve Zayi</span>
+                <span class="kisayol-tus">Envanter ve fire</span>
+            </a>
+            <a class="kisayol" asp-controller="Kampanya" asp-action="Index">
+                <i class="ph ph-tag"></i>
+                <span class="kisayol-ad">Kampanyalar</span>
+                <span class="kisayol-tus">İndirim tanımla</span>
+            </a>
+            <a class="kisayol" asp-controller="Maliyet" asp-action="Index">
+                <i class="ph ph-chart-line-up"></i>
+                <span class="kisayol-ad">Kâr Marjı</span>
+                <span class="kisayol-tus">FIFO maliyet</span>
+            </a>
+            <a class="kisayol" asp-controller="Rapor" asp-action="Index">
+                <i class="ph ph-chart-bar"></i>
+                <span class="kisayol-ad">Raporlar</span>
+                <span class="kisayol-tus">Ciro ve satış analizi</span>
+            </a>
+            <a class="kisayol" asp-controller="Personel" asp-action="Index">
+                <i class="ph ph-users-three"></i>
+                <span class="kisayol-ad">Personel</span>
+                <span class="kisayol-tus">Kullanıcı ve rol</span>
+            </a>
+            <a class="kisayol" asp-controller="IslemLog" asp-action="Index">
+                <i class="ph ph-list-magnifying-glass"></i>
+                <span class="kisayol-ad">İşlem Logları</span>
+                <span class="kisayol-tus">Denetim kaydı</span>
+            </a>
+        }
     </div>
 
     <div class="panel-serit">
+        @* Gunluk ciro isletmenin toplam bilgisi; kasiyerin isi degil.
+           Kasiyer ana ekranda vardiyasini ve kisayollari gorur. *@
+        @if (User.IsInRole(MarketOtomasyon.Security.Roller.Mudur))
+        {
         <div class="panel" style="flex:2 1 26rem">
             <div class="panel-baslik">
                 <span>Bugünün satışı</span>
@@ -93,6 +135,7 @@
                 </div>
             </div>
         </div>
+        }
 
         <div class="panel" style="flex:1 1 18rem">
             <div class="panel-baslik">Dikkat edilecekler</div>
