@@ -29,8 +29,8 @@
 
         // Hata durumunda sunucu { sepet, hata } sarmalayicisi doner.
         return yanit.ok
-            ? { sepet: govde, hata: null }
-            : { sepet: govde.sepet, hata: govde.hata };
+            ? { sepet: govde, hata: null, onayGerekli: false }
+            : { sepet: govde.sepet, hata: govde.hata, onayGerekli: govde.onayGerekli === true };
     }
 
     async function sepetiYukle() {
@@ -235,15 +235,20 @@
     /// Ortak akis: istegi calistir, sonucu ciz, odagi barkod alanina geri ver.
     async function islet(istek, sonuOkutulanGuncelle) {
         try {
-            const { sepet, hata } = await istek();
+            const { sepet, hata, onayGerekli } = await istek();
 
             if (hata) uyariGoster(hata); else uyariGizle();
             if (sepet) {
                 ciz(sepet);
                 if (sonuOkutulanGuncelle && !hata) sonOkutulan(sepet);
             }
+
+            // Cagiran, mudur onayi penceresinin acilmasi gerekip
+            // gerekmedigini bu donusten ogrenir.
+            return { hata: hata, onayGerekli: onayGerekli === true };
         } catch (e) {
             uyariGoster("Sunucuya ulaşılamadı.");
+            return { hata: "Sunucuya ulaşılamadı.", onayGerekli: false };
         } finally {
             odakla();
         }
@@ -338,6 +343,76 @@
         odakla();
     }
 
+    // ---------- Mudur onayi ----------
+
+    const onayPaneli = document.getElementById("onay-paneli");
+    const onayKullanici = document.getElementById("onay-kullanici");
+    const onaySifre = document.getElementById("onay-sifre");
+    const onaySebep = document.getElementById("onay-sebep");
+
+    // Onay penceresi acilirken beklemeye alinan indirim: { yol, veri, kapsam }.
+    let bekleyenIndirim = null;
+
+    function onayAc(istek) {
+        bekleyenIndirim = istek;
+        indirimPaneli.classList.add("d-none");
+        onayPaneli.classList.remove("d-none");
+
+        onayKullanici.value = "";
+        onaySifre.value = "";
+        onaySebep.value = "";
+        onayKullanici.focus();
+    }
+
+    function onayKapat() {
+        bekleyenIndirim = null;
+        onayPaneli.classList.add("d-none");
+
+        // Sifre DOM'da kalmasin.
+        onaySifre.value = "";
+        odakla();
+    }
+
+    async function onayGonder() {
+        if (!bekleyenIndirim) return;
+
+        const veri = Object.assign({}, bekleyenIndirim.veri, {
+            onayKullaniciAdi: onayKullanici.value.trim(),
+            onaySifre: onaySifre.value,
+            onaySebebi: onaySebep.value.trim()
+        });
+
+        const yol = bekleyenIndirim.yol;
+        const kapsam = bekleyenIndirim.kapsam;
+
+        const sonuc = await islet(() => gonder(yol, veri));
+
+        // Sifre, istek sonuclanir sonuclanmaz temizlenir; basarisiz
+        // denemede bile ekranda asili kalmaz.
+        onaySifre.value = "";
+
+        if (!sonuc.hata) {
+            onayKapat();
+            return;
+        }
+
+        // Onay reddedildi: pencere acik kalir, kasiyer tekrar deneyebilir.
+        // Sebep alani korunur, yeniden yazdirmaya gerek yok.
+        bekleyenIndirim = { yol: yol, veri: bekleyenIndirim.veri, kapsam: kapsam };
+        onayPaneli.classList.remove("d-none");
+        onaySifre.focus();
+    }
+
+    document.getElementById("btn-onay-ver").addEventListener("click", onayGonder);
+    document.getElementById("btn-onay-vazgec").addEventListener("click", onayKapat);
+
+    [onayKullanici, onaySifre, onaySebep].forEach(function (alan) {
+        alan.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") { e.preventDefault(); onayGonder(); }
+            if (e.key === "Escape") { e.preventDefault(); onayKapat(); }
+        });
+    });
+
     async function indirimUygula(yuzde) {
         const veri = { yuzde: yuzde };
 
@@ -347,10 +422,18 @@
         const kapsam = indirimKapsami;
 
         indirimKapat();
-        await islet(() => gonder(yol, veri));
+        const sonuc = await islet(() => gonder(yol, veri));
 
-        // Yetki reddi gibi durumlarda panel yeniden acilir; mesaj kaybolmasin.
-        if (!uyari.classList.contains("d-none")) {
+        // Kasiyer limiti asildi: reddetmek yerine mudur onayi istenir.
+        // Mutlak limit asiminda sunucu bu bayragi false dondurur, pencere
+        // acilmaz - onay o siniri da kaldirmaz.
+        if (sonuc.onayGerekli) {
+            onayAc({ yol: yol, veri: veri, kapsam: kapsam });
+            return;
+        }
+
+        // Diger hatalarda indirim paneli yeniden acilir; mesaj kaybolmasin.
+        if (sonuc.hata) {
             indirimKapsami = kapsam;
             indirimPaneli.classList.remove("d-none");
         }

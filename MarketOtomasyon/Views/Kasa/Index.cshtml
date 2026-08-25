@@ -147,6 +147,35 @@
         </span>
     </div>
 
+    @* Mudur onayi penceresi.
+
+       Kasiyer limiti asan bir indirim denendiginde acilir. Onceden bu
+       durumda islem dogrudan reddediliyordu; gercekte olan sey mudurun
+       kasiyerin acik oturumunda islemi kendisi yapmasiydi ve log yanlis
+       kisiyi gosteriyordu.
+
+       Buradaki onay bir OTURUM DEGILDIR: yalnizca o tek indirim icin
+       gecerlidir, kasiyerin oturumu degismez. *@
+    <div id="onay-paneli" class="arac-cubugu d-none" style="background:#eff6ff">
+        <span class="arac-etiket"><i class="ph ph-shield-check"></i> Müdür onayı</span>
+
+        <input id="onay-kullanici" class="form-control form-control-sm" style="width:9rem"
+               autocomplete="off" placeholder="Müdür kullanıcı adı" aria-label="Müdür kullanıcı adı" />
+
+        <input id="onay-sifre" type="password" class="form-control form-control-sm" style="width:9rem"
+               autocomplete="off" placeholder="Şifre" aria-label="Müdür şifresi" />
+
+        <input id="onay-sebep" class="form-control form-control-sm" style="width:16rem"
+               autocomplete="off" placeholder="Onay sebebi" aria-label="Onay sebebi" />
+
+        <button type="button" id="btn-onay-ver" class="btn btn-primary">Onayla</button>
+        <button type="button" id="btn-onay-vazgec" class="btn btn-link btn-sm">Vazgeç</button>
+
+        <span class="ipucu arac-sag">
+            Onay yalnızca bu işlem için geçerlidir. Onaylayan müdür ve sebep işlem loglarına yazılır.
+        </span>
+    </div>
+
     <div class="panel-serit" style="flex:1; min-height:0; align-items:stretch">
 
         <!-- Sepet -->

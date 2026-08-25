@@ -10,5 +10,11 @@ public sealed class IslemLog
     public string? EskiDeger { get; set; }
     public string? YeniDeger { get; set; }
     public string? Aciklama { get; set; }
+
+    /// <summary>Limit asan islemi onaylayan mudur; onaysiz islemlerde null.</summary>
+    public int? OnaylayanKullaniciId { get; set; }
+
+    /// <summary>Mudurun onay gerekcesi; onaysiz islemlerde null.</summary>
+    public string? OnaySebebi { get; set; }
     public DateTime Tarih { get; set; }
 }

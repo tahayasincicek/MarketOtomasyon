@@ -18,19 +18,22 @@ public class SepetService
     private readonly BarkodService _barkodService;
     private readonly KampanyaService _kampanyaService;
     private readonly IslemLogRepository _islemLogRepository;
+    private readonly MudurOnayService _mudurOnayService;
 
     public SepetService(
         IDbConnectionFactory factory,
         FisRepository fisRepository,
         BarkodService barkodService,
         KampanyaService kampanyaService,
-        IslemLogRepository islemLogRepository)
+        IslemLogRepository islemLogRepository,
+        MudurOnayService mudurOnayService)
     {
         _factory = factory;
         _fisRepository = fisRepository;
         _barkodService = barkodService;
         _kampanyaService = kampanyaService;
         _islemLogRepository = islemLogRepository;
+        _mudurOnayService = mudurOnayService;
     }
 
     /// <summary>Vardiyadaki acik sepeti getirir; yoksa bos sepet doner.</summary>
@@ -156,6 +159,9 @@ public class SepetService
         decimal yuzde,
         byte rol,
         int kullaniciId,
+        string? onayKullaniciAdi = null,
+        string? onaySifre = null,
+        string? onaySebebi = null,
         CancellationToken ct = default)
     {
         var fis = await _fisRepository.AcikFisGetirAsync(vardiyaId, ct);
@@ -165,10 +171,15 @@ public class SepetService
         var satir = satirlar.FirstOrDefault(s => s.SatirId == satirId);
         if (satir is null) return (await GetirAsync(vardiyaId, ct), "Satır bulunamadı.");
 
+        int? onaylayanId = null;
         if (yuzde != 0)
         {
-            var (yeterli, hata) = IndirimYetkisi.SatirIndirimiKontrol(rol, yuzde);
-            if (!yeterli) return (await GetirAsync(vardiyaId, ct), hata);
+            var (izin, onayVeren, hata) = await OnayCozumleAsync(
+                rol, yuzde, IndirimYetkisi.KasiyerSatirLimitiYuzde, "Satır",
+                onayKullaniciAdi, onaySifre, onaySebebi, kullaniciId, ct);
+
+            if (!izin) return (await GetirAsync(vardiyaId, ct), hata);
+            onaylayanId = onayVeren;
         }
 
         var brut = SepetHesaplayici.BrutHesapla(satir.Miktar, satir.BirimFiyat);
@@ -188,7 +199,9 @@ public class SepetService
             HedefId = satirId,
             EskiDeger = Para(satir.IndirimTutari),
             YeniDeger = Para(indirim),
-            Aciklama = $"Fiş #{fis.Id}, satır indirimi %{yuzde:0.##}"
+            Aciklama = $"Fiş #{fis.Id}, satır indirimi %{yuzde:0.##}",
+            OnaylayanKullaniciId = onaylayanId,
+            OnaySebebi = onaylayanId is null ? null : onaySebebi?.Trim()
         }, ct);
 
         await ToplamlariYazAsync(conn, tx, fis.Id, ct);
@@ -206,6 +219,9 @@ public class SepetService
         decimal yuzde,
         byte rol,
         int kullaniciId,
+        string? onayKullaniciAdi = null,
+        string? onaySifre = null,
+        string? onaySebebi = null,
         CancellationToken ct = default)
     {
         var fis = await _fisRepository.AcikFisGetirAsync(vardiyaId, ct);
@@ -214,10 +230,15 @@ public class SepetService
         var satirlar = await _fisRepository.SatirlariGetirAsync(fis.Id, ct);
         if (satirlar.Count == 0) return (await GetirAsync(vardiyaId, ct), "Sepet boş.");
 
+        int? onaylayanId = null;
         if (yuzde != 0)
         {
-            var (yeterli, hata) = IndirimYetkisi.FisIndirimiKontrol(rol, yuzde);
-            if (!yeterli) return (await GetirAsync(vardiyaId, ct), hata);
+            var (izin, onayVeren, hata) = await OnayCozumleAsync(
+                rol, yuzde, IndirimYetkisi.KasiyerFisLimitiYuzde, "Fiş",
+                onayKullaniciAdi, onaySifre, onaySebebi, kullaniciId, ct);
+
+            if (!izin) return (await GetirAsync(vardiyaId, ct), hata);
+            onaylayanId = onayVeren;
         }
 
         var toplamBrut = satirlar.Sum(s => SepetHesaplayici.BrutHesapla(s.Miktar, s.BirimFiyat));
@@ -242,7 +263,9 @@ public class SepetService
             HedefId = fis.Id,
             EskiDeger = Para(satirlar.Sum(s => s.IndirimTutari)),
             YeniDeger = Para(indirimTutari),
-            Aciklama = $"Fiş geneli indirimi %{yuzde:0.##}"
+            Aciklama = $"Fiş geneli indirimi %{yuzde:0.##}",
+            OnaylayanKullaniciId = onaylayanId,
+            OnaySebebi = onaylayanId is null ? null : onaySebebi?.Trim()
         }, ct);
 
         await ToplamlariYazAsync(conn, tx, fis.Id, ct);
@@ -300,5 +323,89 @@ public class SepetService
 
         await _fisRepository.ToplamlariGuncelleAsync(conn, tx, fisId,
             sepet.AraToplam, sepet.ToplamIndirim, sepet.ToplamKdv, sepet.GenelToplam, ct);
+    }
+
+    /// <summary>
+    /// Indirim yetkisini ve gerekiyorsa mudur onayini birlikte cozer.
+    ///
+    /// Donen izin true ise islem yapilabilir; onaylayan Id null ise
+    /// onaya hic gerek olmamistir (kasiyer kendi limiti icinde kaldi
+    /// veya islemi zaten mudur yapiyor).
+    ///
+    /// Basarisiz onay denemesi de loglanir: kasada mudur sifresi deneyen
+    /// biri, en az basarili onay kadar onemli bir denetim olayidir.
+    /// </summary>
+    private async Task<(bool Izin, int? OnaylayanId, string? Hata)> OnayCozumleAsync(
+        byte rol,
+        decimal yuzde,
+        decimal kasiyerLimiti,
+        string kapsam,
+        string? onayKullaniciAdi,
+        string? onaySifre,
+        string? onaySebebi,
+        int kullaniciId,
+        CancellationToken ct)
+    {
+        var durum = MudurOnayiKurallari.Degerlendir(rol, yuzde, kasiyerLimiti);
+
+        switch (durum)
+        {
+            case OnayDurumu.Gecersiz:
+                return (false, null, "İndirim oranı sıfırdan büyük olmalıdır.");
+
+            // Mutlak limit onayla da asilamaz; bu dal bilerek onay
+            // istemeden reddeder.
+            case OnayDurumu.OnaylaDaAsilamaz:
+                return (false, null,
+                    $"İndirim %{IndirimYetkisi.MutlakLimitYuzde:0.##} oranını aşamaz. " +
+                    "Müdür onayı da bu sınırı kaldırmaz.");
+
+            case OnayDurumu.Gerekmez:
+                return (true, null, null);
+        }
+
+        // Buradan sonrasi: onay gerekli.
+        if (string.IsNullOrWhiteSpace(onayKullaniciAdi) && string.IsNullOrEmpty(onaySifre))
+            return (false, null,
+                $"{kapsam} indiriminde %{kasiyerLimiti:0.##} üstü müdür onayı gerektirir.");
+
+        var (sebepGecerli, sebepHatasi) = MudurOnayiKurallari.SebepGecerliMi(onaySebebi);
+        if (!sebepGecerli) return (false, null, sebepHatasi);
+
+        var (onaylayanId, onayHatasi) = await _mudurOnayService.DogrulaAsync(
+            onayKullaniciAdi, onaySifre, ct);
+
+        if (onaylayanId is null)
+        {
+            await BasarisizOnayLoglaAsync(kullaniciId, yuzde, kapsam, onayKullaniciAdi, ct);
+            return (false, null, onayHatasi);
+        }
+
+        return (true, onaylayanId, null);
+    }
+
+    /// <summary>
+    /// Basarisiz onay denemesi kendi transaction'inda yazilir: asil islem
+    /// zaten yapilmayacak, ama deneme kaydi kaybolmamali.
+    ///
+    /// Girilen sifre HICBIR sekilde loglanmaz; yalnizca denenen kullanici
+    /// adi tutulur.
+    /// </summary>
+    private async Task BasarisizOnayLoglaAsync(
+        int kullaniciId, decimal yuzde, string kapsam, string? denenenKullaniciAdi, CancellationToken ct)
+    {
+        using var conn = await _factory.CreateOpenConnectionAsync(ct);
+        using var tx = conn.BeginTransaction();
+
+        await _islemLogRepository.EkleAsync(conn, tx, new IslemLog
+        {
+            KullaniciId = kullaniciId,
+            IslemTipi = "MudurOnayiBasarisiz",
+            HedefTipi = "Indirim",
+            Aciklama = $"{kapsam} indirimi %{yuzde:0.##} için başarısız onay denemesi " +
+                       $"(denenen kullanıcı: {denenenKullaniciAdi})"
+        }, ct);
+
+        tx.Commit();
     }
 }

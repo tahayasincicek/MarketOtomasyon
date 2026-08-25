@@ -18,13 +18,14 @@
                     <th>Hedef</th>
                     <th>Eski değer</th>
                     <th>Yeni değer</th>
+                    <th>Onaylayan</th>
                     <th>Açıklama</th>
                 </tr>
             </thead>
             <tbody>
             @if (Model.Count == 0)
             {
-                <tr><td colspan="7" class="text-center text-muted py-5">Henüz hassas işlem kaydı yok.</td></tr>
+                <tr><td colspan="8" class="text-center text-muted py-5">Henüz hassas işlem kaydı yok.</td></tr>
             }
             else
             {
@@ -37,6 +38,17 @@
                         <td>@kayit.HedefTipi @(kayit.HedefId is null ? "" : $"#{kayit.HedefId}")</td>
                         <td>@(kayit.EskiDeger ?? "—")</td>
                         <td>@(kayit.YeniDeger ?? "—")</td>
+                        <td>
+                            @if (kayit.OnayliMi)
+                            {
+                                <span class="rozet rozet-vurgu">@kayit.OnaylayanAdSoyad</span>
+                                <span class="d-block text-muted small">@kayit.OnaySebebi</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
                         <td>@(kayit.Aciklama ?? "—")</td>
                     </tr>
                 }

@@ -13,17 +13,23 @@ public sealed class IslemLogRepository
 
     private const string SqlEkle = @"
 INSERT INTO IslemLog
-    (KullaniciId, IslemTipi, HedefTipi, HedefId, EskiDeger, YeniDeger, Aciklama)
+    (KullaniciId, IslemTipi, HedefTipi, HedefId, EskiDeger, YeniDeger, Aciklama,
+     OnaylayanKullaniciId, OnaySebebi)
 VALUES
-    (@KullaniciId, @IslemTipi, @HedefTipi, @HedefId, @EskiDeger, @YeniDeger, @Aciklama);";
+    (@KullaniciId, @IslemTipi, @HedefTipi, @HedefId, @EskiDeger, @YeniDeger, @Aciklama,
+     @OnaylayanKullaniciId, @OnaySebebi);";
 
     private const string SqlSonKayitlar = @"
 SELECT TOP (@adet)
        l.Id, l.Tarih, k.KullaniciAdi, k.AdSoyad,
        l.IslemTipi, l.HedefTipi, l.HedefId,
-       l.EskiDeger, l.YeniDeger, l.Aciklama
+       l.EskiDeger, l.YeniDeger, l.Aciklama,
+       l.OnaySebebi,
+       OnaylayanAdSoyad = o.AdSoyad,
+       OnaylayanKullaniciAdi = o.KullaniciAdi
 FROM IslemLog l
 JOIN Kullanici k ON k.Id = l.KullaniciId
+LEFT JOIN Kullanici o ON o.Id = l.OnaylayanKullaniciId
 ORDER BY l.Tarih DESC, l.Id DESC;";
 
     public async Task EkleAsync(

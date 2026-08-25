@@ -91,26 +91,34 @@ public class KasaController : Controller
     /// <summary>Yetki, formdan gelen bir kimlige degil oturumdaki role gore denetlenir.</summary>
     [HttpPost]
     public async Task<IActionResult> SatirIndirimi(
-        [FromForm] int satirId, [FromForm] decimal yuzde, CancellationToken ct)
+        [FromForm] int satirId, [FromForm] decimal yuzde,
+        [FromForm] string? onayKullaniciAdi, [FromForm] string? onaySifre,
+        [FromForm] string? onaySebebi, CancellationToken ct)
     {
         var vardiyaId = await VardiyaIdAsync(ct);
         if (vardiyaId < 0) return VardiyaYok();
 
         var (sepet, hata) = await _sepetService.SatirIndirimiUygulaAsync(
-            vardiyaId, satirId, yuzde, User.RolKodu(), User.KullaniciId(), ct);
-        return hata is null ? Ok(sepet) : BadRequest(new { sepet, hata });
+            vardiyaId, satirId, yuzde, User.RolKodu(), User.KullaniciId(),
+            onayKullaniciAdi, onaySifre, onaySebebi, ct);
+
+        return IndirimSonucu(sepet, hata, yuzde, IndirimYetkisi.KasiyerSatirLimitiYuzde, onayKullaniciAdi);
     }
 
     [HttpPost]
     public async Task<IActionResult> FisIndirimi(
-        [FromForm] decimal yuzde, CancellationToken ct)
+        [FromForm] decimal yuzde,
+        [FromForm] string? onayKullaniciAdi, [FromForm] string? onaySifre,
+        [FromForm] string? onaySebebi, CancellationToken ct)
     {
         var vardiyaId = await VardiyaIdAsync(ct);
         if (vardiyaId < 0) return VardiyaYok();
 
         var (sepet, hata) = await _sepetService.FisIndirimiUygulaAsync(
-            vardiyaId, yuzde, User.RolKodu(), User.KullaniciId(), ct);
-        return hata is null ? Ok(sepet) : BadRequest(new { sepet, hata });
+            vardiyaId, yuzde, User.RolKodu(), User.KullaniciId(),
+            onayKullaniciAdi, onaySifre, onaySebebi, ct);
+
+        return IndirimSonucu(sepet, hata, yuzde, IndirimYetkisi.KasiyerFisLimitiYuzde, onayKullaniciAdi);
     }
 
     [HttpPost]
@@ -129,4 +137,28 @@ public class KasaController : Controller
     // Kasa ekranindaki JS, basarisiz yanitlarda govdedeki "hata" alanini gosterir.
     private ConflictObjectResult VardiyaYok()
         => Conflict(new { hata = "Açık vardiya yok. Vardiya ekranından vardiya açın." });
+
+    /// <summary>
+    /// Indirim sonucunu doner ve reddedilmisse istemciye onayin
+    /// istenebilir olup olmadigini bildirir.
+    ///
+    /// onayGerekli bayragi, kasa ekraninin mudur onayi penceresini ne
+    /// zaman acacagini bilmesi icin. Limitler istemciye kopyalanmiyor:
+    /// karar yine sunucudaki ayni saf kurala (MudurOnayiKurallari) ait,
+    /// istemci sadece sonucu ogreniyor.
+    ///
+    /// Mutlak limit asildiginda bayrak false doner; o pencere hic
+    /// acilmamali, cunku onay da o siniri kaldirmaz.
+    /// </summary>
+    private IActionResult IndirimSonucu(
+        SepetVm sepet, string? hata, decimal yuzde, decimal kasiyerLimiti, string? onayKullaniciAdi)
+    {
+        if (hata is null) return Ok(sepet);
+
+        var onayGerekli =
+            MudurOnayiKurallari.Degerlendir(User.RolKodu(), yuzde, kasiyerLimiti) == OnayDurumu.Gerekli
+            && string.IsNullOrWhiteSpace(onayKullaniciAdi);
+
+        return BadRequest(new { sepet, hata, onayGerekli });
+    }
 }

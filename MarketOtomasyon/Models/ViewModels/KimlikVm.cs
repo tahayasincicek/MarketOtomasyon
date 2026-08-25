@@ -28,4 +28,13 @@ public sealed class IslemLogSatirVm
     public string? EskiDeger { get; set; }
     public string? YeniDeger { get; set; }
     public string? Aciklama { get; set; }
+
+    /* Onay alanlari: limit asan islemlerde dolu, digerlerinde null.
+       Onaylayan Aciklama metnine gomulmuyor ki "hangi mudur kac onay
+       verdi" sorusu sorgulanabilir kalsin. */
+    public string? OnaylayanAdSoyad { get; set; }
+    public string? OnaylayanKullaniciAdi { get; set; }
+    public string? OnaySebebi { get; set; }
+
+    public bool OnayliMi => OnaylayanAdSoyad is not null;
 }
