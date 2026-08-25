@@ -15,9 +15,6 @@ public class UrunRepository
 
     public UrunRepository(IDbConnectionFactory factory) => _factory = factory;
 
-    private const string SqlAktifUrunSayisi = @"
-SELECT COUNT(*) FROM Urun WHERE Aktif = 1;";
-
     // Iki sonuc kumesi tek gidiste: once toplam kayit, sonra sayfa satirlari.
     private const string SqlListele = @"
 SELECT COUNT(*)
@@ -67,12 +64,6 @@ SET Kod = @Kod, Ad = @Ad, KategoriId = @KategoriId, Birim = @Birim,
     KdvOrani = @KdvOrani, MinStokSeviyesi = @MinStokSeviyesi,
     Tartili = @Tartili, Aktif = @Aktif
 WHERE Id = @Id;";
-
-    public async Task<int> AktifUrunSayisiAsync(CancellationToken ct = default)
-    {
-        using var conn = await _factory.CreateOpenConnectionAsync(ct);
-        return await conn.ExecuteScalarAsync<int>(new CommandDefinition(SqlAktifUrunSayisi, cancellationToken: ct));
-    }
 
     public async Task<(IReadOnlyList<UrunListeSatirVm> Satirlar, int ToplamKayit)> ListeleAsync(
         string? arama, int? kategoriId, bool sadeceAktif, int sayfa, int sayfaBoyutu, CancellationToken ct = default)
