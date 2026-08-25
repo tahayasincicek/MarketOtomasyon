@@ -185,7 +185,17 @@ public class UrunController : Controller
     [HttpPost]
     [Authorize(Roles = Roller.Mudur)]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> BarkodEkle(BarkodFormVm form, CancellationToken ct)
+    /// <remarks>
+    /// Bind onegi sart: form alanlari detay ekraninda UrunDetayVm.YeniBarkod
+    /// uzerinden ciziliyor, yani tarayici "YeniBarkod.Barkod" adiyla
+    /// gonderiyor. Onek verilmezse model binder hicbir alani baglayamaz;
+    /// form.UrunId 0 kalir, dogrulama "Barkod zorunludur" der ve hata
+    /// dalindaki DetayHazirlaAsync(0) urunu bulamayip NotFound doner.
+    /// Disaridan gorunen sonuc: barkod eklemeye calisinca 404.
+    /// </remarks>
+    public async Task<IActionResult> BarkodEkle(
+        [Bind(Prefix = nameof(UrunDetayVm.YeniBarkod))] BarkodFormVm form,
+        CancellationToken ct)
     {
         var sonuc = await _barkodValidator.ValidateAsync(form, ct);
         if (!sonuc.IsValid)
