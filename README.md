@@ -71,6 +71,7 @@ Hepsi `MarketOtomasyon/Data/Sql/` altında.
 | 7 | `08_sayim_zayi.sql` | Sayım ve zayi kayıtları |
 | 8 | `03_maliyet.sql` | FIFO maliyet: `StokParti`, `StokPartiTuketim` |
 | 9 | `12_yetkilendirme_log.sql` | `IslemLog` tablosu, geliştirme hesaplarının şifre hash'leri |
+| 10 | `13_mudur_onayi.sql` | `IslemLog`'a onaylayan müdür ve onay sebebi kolonları |
 
 > İki tane `03_` var: `03_kampanya.sql` ve `03_maliyet.sql`. Maliyet
 > dosyası aslında çok daha sonra (Gün 17) eklendi, numarası yanlış verildi.
@@ -81,7 +82,7 @@ Hepsi `MarketOtomasyon/Data/Sql/` altında.
 
 | # | Dosya | Ne yapar |
 |---|---|---|
-| 10 | `90_ornek_veri.sql` | 2 depo, 2 kullanıcı, 6 kategori, 30 ürün, barkodlar, açılış fiyatları ve açılış stokları |
+| 11 | `90_ornek_veri.sql` | 2 depo, 2 kullanıcı, 6 kategori, 30 ürün, barkodlar, açılış fiyatları ve açılış stokları |
 
 ### 3. Veriyi güncelleyen betikler (örnek veriden **sonra**)
 
@@ -90,16 +91,16 @@ Bu dörtlü `90_ornek_veri.sql`'in eklediği kayıtları düzeltir/zenginleştir
 
 | # | Dosya | Ne yapar |
 |---|---|---|
-| 11 | `07_gercek_barkodlar.sql` | Uydurma barkodları Open Food Facts'te karşılığı olan gerçek barkodlarla değiştirir |
-| 12 | `09_profesyonel_urun_gorselleri.sql` | Ürünleri `wwwroot/urun-gorsel/*.webp` dosyalarına bağlar |
-| 13 | `10_hizli_urun.sql` | Kasa ekranındaki hızlı ürün tuşlarını tanımlar |
-| 14 | `11_turkce_karakter_duzeltmeleri.sql` | Örnek verideki Türkçe karakterleri düzeltir |
+| 12 | `07_gercek_barkodlar.sql` | Uydurma barkodları Open Food Facts'te karşılığı olan gerçek barkodlarla değiştirir |
+| 13 | `09_profesyonel_urun_gorselleri.sql` | Ürünleri `wwwroot/urun-gorsel/*.webp` dosyalarına bağlar |
+| 14 | `10_hizli_urun.sql` | Kasa ekranındaki hızlı ürün tuşlarını tanımlar |
+| 15 | `11_turkce_karakter_duzeltmeleri.sql` | Örnek verideki Türkçe karakterleri düzeltir |
 
 ### 4. Demo verisi (isteğe bağlı)
 
 | # | Dosya | Ne yapar |
 |---|---|---|
-| 15 | `91_demo_veri.sql` | Son 30 günün satış geçmişi: vardiyalar, fişler, ödemeler, iadeler |
+| 16 | `91_demo_veri.sql` | Son 30 günün satış geçmişi: vardiyalar, fişler, ödemeler, iadeler |
 
 Raporlar, kâr marjı ve Z raporu ekranları geçmiş satış olmadan boş görünür.
 Bu betik onları dolduran gerçekçi bir geçmiş üretir. Ayrıntı için aşağıdaki
@@ -114,6 +115,7 @@ $sql = "MarketOtomasyon\Data\Sql"
 $sira = @(
   "01_ilk_sema", "02_askiya_alma", "03_kampanya", "04_iade", "05_vardiya",
   "06_urun_resim", "08_sayim_zayi", "03_maliyet", "12_yetkilendirme_log",
+  "13_mudur_onayi",
   "90_ornek_veri",
   "07_gercek_barkodlar", "09_profesyonel_urun_gorselleri", "10_hizli_urun",
   "11_turkce_karakter_duzeltmeleri",
@@ -230,6 +232,7 @@ devam etmesi gerekir.
 | Kampanya | `/Kampanya` | İndirim kuralları |
 | Kâr Marjı | `/Maliyet` | FIFO maliyet, ürün bazında kâr |
 | Raporlar | `/Rapor` | Günlük ciro, en çok satan, ödeme dağılımı, saat yoğunluğu, kritik stok |
+| Personel | `/Personel` | Kullanıcı oluşturma, rol değiştirme, pasifleştirme, şifre sıfırlama |
 | İşlem Logları | `/IslemLog` | Hassas işlemlerin denetim kaydı |
 
 Barkod okuma iki yolla çalışır: USB barkod okuyucu (klavye gibi davranır)
