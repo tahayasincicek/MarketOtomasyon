@@ -5,6 +5,11 @@ public sealed class StokPartiKalanVm
     public long StokPartiId { get; set; }
     public decimal KalanMiktar { get; set; }
     public decimal BirimMaliyet { get; set; }
+
+    /* Siralama SQL tarafinda yapiliyor; bu iki alan hata mesajlari ve
+       ileride SKT uyarilari icin tasiniyor. */
+    public DateTime? SonKullanmaTarihi { get; set; }
+    public string? LotNo { get; set; }
 }
 
 public sealed class FifoTuketimVm

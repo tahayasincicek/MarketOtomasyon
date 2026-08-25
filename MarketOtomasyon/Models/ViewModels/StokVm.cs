@@ -70,6 +70,13 @@ public class MalKabulVm
     public decimal BirimMaliyet { get; set; }
     public string? Aciklama { get; set; }
 
+    /* Parti bilgileri. Son kullanma tarihi bos birakilirsa parti FEFO
+       sirasinin sonuna duser; bu yuzden gida urunlerinde zorunludur
+       (Urun.SonKullanmaZorunlu). */
+    public DateTime? SonKullanmaTarihi { get; set; }
+    public string? LotNo { get; set; }
+    public string? TedarikciAdi { get; set; }
+
     public IReadOnlyList<Depo> Depolar { get; set; } = [];
     public IReadOnlyList<StokHareketSatirVm> SonHareketler { get; set; } = [];
 }

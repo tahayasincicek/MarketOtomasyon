@@ -22,6 +22,9 @@ public sealed class MaliyetService
         decimal miktar,
         decimal birimMaliyet,
         string? aciklama,
+        DateTime? sonKullanmaTarihi = null,
+        string? lotNo = null,
+        string? tedarikciAdi = null,
         CancellationToken ct = default)
     {
         if (miktar <= 0)
@@ -37,7 +40,14 @@ public sealed class MaliyetService
             GirisMiktari = miktar,
             KalanMiktar = miktar,
             BirimMaliyet = birimMaliyet,
-            Aciklama = string.IsNullOrWhiteSpace(aciklama) ? "Mal kabul" : aciklama.Trim()
+            Aciklama = string.IsNullOrWhiteSpace(aciklama) ? "Mal kabul" : aciklama.Trim(),
+
+            /* Bos metin null'a cevriliyor: aksi halde tabloda "" ile NULL
+               karisik durur ve "lotu olmayan partiler" sorgusu iki kosul
+               yazmayi gerektirir. */
+            SonKullanmaTarihi = sonKullanmaTarihi?.Date,
+            LotNo = string.IsNullOrWhiteSpace(lotNo) ? null : lotNo.Trim(),
+            TedarikciAdi = string.IsNullOrWhiteSpace(tedarikciAdi) ? null : tedarikciAdi.Trim()
         }, ct);
     }
 
@@ -77,9 +87,18 @@ public sealed class MaliyetService
             conn, tx, urunId, depoId, ct);
 
         return await PartiAcAsync(
-            conn, tx, urunId, depoId, stokHareketId, miktar, ortalamaMaliyet, aciklama, ct);
+            conn, tx, urunId, depoId, stokHareketId, miktar, ortalamaMaliyet, aciklama, ct: ct);
     }
 
+    /// <remarks>
+    /// Iade partisinde SonKullanmaTarihi bilerek NULL birakilir.
+    ///
+    /// Teorik olarak orijinal partiden okunabilirdi (StokPartiTuketim ->
+    /// StokParti) ama musteri hangi partiden aldigini soylemez ve iade
+    /// edilen urunun raf omrunun neresinde oldugu belirsizdir. Uydurulmus
+    /// bir tarih FEFO siralamasini yanlis yonlendirir; NULL birakmak
+    /// "bilmiyorum" demenin durust yolu ve o parti sirada sona duser.
+    /// </remarks>
     public async Task<long> IadePartisiAcAsync(
         IDbConnection conn,
         IDbTransaction tx,
@@ -97,6 +116,6 @@ public sealed class MaliyetService
         var birimMaliyet = satisMaliyeti ?? Math.Max(0, varsayilanBirimMaliyet);
 
         return await PartiAcAsync(
-            conn, tx, urunId, depoId, stokHareketId, miktar, birimMaliyet, aciklama, ct);
+            conn, tx, urunId, depoId, stokHareketId, miktar, birimMaliyet, aciklama, ct: ct);
     }
 }

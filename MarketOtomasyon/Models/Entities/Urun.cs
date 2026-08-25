@@ -23,4 +23,11 @@ public class Urun
     public string? ResimKaynagi { get; set; }
 
     public DateTime? ResimTarihi { get; set; }
+
+    /// <summary>
+    /// Mal kabulde son kullanma tarihi zorunlu mu. Gida ve raf omru olan
+    /// urunlerde true. Bos birakilan tarih, partiyi FEFO sirasinin sonuna
+    /// atar ve urun en son satilir - bu bayrak o hatayi girişte engeller.
+    /// </summary>
+    public bool SonKullanmaZorunlu { get; set; }
 }

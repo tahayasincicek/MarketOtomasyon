@@ -2,7 +2,15 @@ using MarketOtomasyon.Models.ViewModels;
 
 namespace MarketOtomasyon.Services;
 
-/// <summary>Veritabanından bağımsız FIFO miktar ve maliyet dağıtıcısı.</summary>
+/// <summary>
+/// Veritabanindan bagimsiz miktar ve maliyet dagiticisi.
+///
+/// SIRALAMA YAPMAZ: kendisine verilen listeyi bastan sona tuketir. Sira
+/// MaliyetRepository.SqlAcikPartiler icindeki ORDER BY tarafindan
+/// belirlenir ve artik FEFO'dur (son kullanma tarihi en yakin once).
+/// Sinif adi FIFO diyor cunku once oyle yazildi; davranisi siradan
+/// bagimsiz oldugu icin FEFO gecisinde degistirilmedi.
+/// </summary>
 public static class FifoMaliyetHesaplayici
 {
     public static FifoTuketimSonucu Tuket(

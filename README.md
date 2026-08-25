@@ -69,9 +69,10 @@ Hepsi `MarketOtomasyon/Data/Sql/` altında.
 | 5 | `05_vardiya.sql` | İadenin vardiyaya bağlanması |
 | 6 | `06_urun_resim.sql` | Ürün görselinin dosya yolu ve kaynağı |
 | 7 | `08_sayim_zayi.sql` | Sayım ve zayi kayıtları |
-| 8 | `03_maliyet.sql` | FIFO maliyet: `StokParti`, `StokPartiTuketim` |
+| 8 | `03_maliyet.sql` | Parti maliyeti: `StokParti`, `StokPartiTuketim` |
 | 9 | `12_yetkilendirme_log.sql` | `IslemLog` tablosu, geliştirme hesaplarının şifre hash'leri |
 | 10 | `13_mudur_onayi.sql` | `IslemLog`'a onaylayan müdür ve onay sebebi kolonları |
+| 11 | `14_skt_lot.sql` | `StokParti`ye son kullanma tarihi, lot ve tedarikçi; `Urun`a SKT zorunluluk bayrağı |
 
 > İki tane `03_` var: `03_kampanya.sql` ve `03_maliyet.sql`. Maliyet
 > dosyası aslında çok daha sonra (Gün 17) eklendi, numarası yanlış verildi.
@@ -82,7 +83,7 @@ Hepsi `MarketOtomasyon/Data/Sql/` altında.
 
 | # | Dosya | Ne yapar |
 |---|---|---|
-| 11 | `90_ornek_veri.sql` | 2 depo, 2 kullanıcı, 6 kategori, 30 ürün, barkodlar, açılış fiyatları ve açılış stokları |
+| 12 | `90_ornek_veri.sql` | 2 depo, 2 kullanıcı, 6 kategori, 30 ürün, barkodlar, açılış fiyatları ve açılış stokları |
 
 ### 3. Veriyi güncelleyen betikler (örnek veriden **sonra**)
 
@@ -91,16 +92,16 @@ Bu dörtlü `90_ornek_veri.sql`'in eklediği kayıtları düzeltir/zenginleştir
 
 | # | Dosya | Ne yapar |
 |---|---|---|
-| 12 | `07_gercek_barkodlar.sql` | Uydurma barkodları Open Food Facts'te karşılığı olan gerçek barkodlarla değiştirir |
-| 13 | `09_profesyonel_urun_gorselleri.sql` | Ürünleri `wwwroot/urun-gorsel/*.webp` dosyalarına bağlar |
-| 14 | `10_hizli_urun.sql` | Kasa ekranındaki hızlı ürün tuşlarını tanımlar |
-| 15 | `11_turkce_karakter_duzeltmeleri.sql` | Örnek verideki Türkçe karakterleri düzeltir |
+| 13 | `07_gercek_barkodlar.sql` | Uydurma barkodları Open Food Facts'te karşılığı olan gerçek barkodlarla değiştirir |
+| 14 | `09_profesyonel_urun_gorselleri.sql` | Ürünleri `wwwroot/urun-gorsel/*.webp` dosyalarına bağlar |
+| 15 | `10_hizli_urun.sql` | Kasa ekranındaki hızlı ürün tuşlarını tanımlar |
+| 16 | `11_turkce_karakter_duzeltmeleri.sql` | Örnek verideki Türkçe karakterleri düzeltir |
 
 ### 4. Demo verisi (isteğe bağlı)
 
 | # | Dosya | Ne yapar |
 |---|---|---|
-| 16 | `91_demo_veri.sql` | Son 30 günün satış geçmişi: vardiyalar, fişler, ödemeler, iadeler |
+| 17 | `91_demo_veri.sql` | Son 30 günün satış geçmişi: vardiyalar, fişler, ödemeler, iadeler |
 
 Raporlar, kâr marjı ve Z raporu ekranları geçmiş satış olmadan boş görünür.
 Bu betik onları dolduran gerçekçi bir geçmiş üretir. Ayrıntı için aşağıdaki
@@ -115,7 +116,7 @@ $sql = "MarketOtomasyon\Data\Sql"
 $sira = @(
   "01_ilk_sema", "02_askiya_alma", "03_kampanya", "04_iade", "05_vardiya",
   "06_urun_resim", "08_sayim_zayi", "03_maliyet", "12_yetkilendirme_log",
-  "13_mudur_onayi",
+  "13_mudur_onayi", "14_skt_lot",
   "90_ornek_veri",
   "07_gercek_barkodlar", "09_profesyonel_urun_gorselleri", "10_hizli_urun",
   "11_turkce_karakter_duzeltmeleri",
@@ -161,7 +162,8 @@ Bu yüzden birim testleri kolay ve hızlı:
 - `IadeKurallari` — iade miktarı geçerli mi, iade tutarı ne
 - `SayimKurallari` — sayım farkından stok düzeltmesi
 - `OdemeHesaplayici` — para üstü
-- `FifoMaliyetHesaplayici` — hangi partiden ne kadar tüketilir
+- `FifoMaliyetHesaplayici` — verilen sıradaki partilerden ne kadar tüketilir
+- `PartiKurallari` — son kullanma tarihi ve lot doğrulaması
 - `BarkodCozumleyici` — terazi barkodundan ürün kodu ve gramaj
 
 **Orkestrasyon servisleri** — transaction açar, saf hesaplayıcıları çağırır,
@@ -186,6 +188,20 @@ diye bir alan yok. Bakiye her zaman `StokHareket` tablosundaki giriş ve
 çıkışların toplamıdır (`vw_StokBakiye` view'i). Böyle olunca "stok neden
 eksi göründü" sorusunun cevabı her zaman hareket listesinde durur ve
 eşzamanlı iki satış birbirinin sayacını ezemez.
+
+**Sevk sırası FEFO'dur.** Raftan önce son kullanma tarihi en yakın
+parti çıkar; satılan malın maliyeti de o partinin maliyetidir. Son
+kullanma tarihi olmayan ürünler (kırtasiye, züccaciye) sıranın sonunda
+kalır ve fiilen FIFO ile tüketilir.
+
+Sıralama tek bir yerde, `MaliyetRepository.SqlAcikPartiler` içindeki
+`ORDER BY`da tanımlıdır. İlk satırı (`CASE WHEN SonKullanmaTarihi IS NULL`)
+silmek sessiz bir hataya yol açar: SQL Server `NULL`'ları başa koyar ve
+tarihsiz ürünler, yarın bozulacak sütten önce tüketilir.
+
+Gıda ürünlerinde mal kabulde tarih zorunludur (`Urun.SonKullanmaZorunlu`).
+Boş bırakılan tarih partiyi sıranın sonuna atar; yani unutmak, ürünü "en
+son satılacak" partiye çevirir.
 
 **Fiyat fiş satırında saklanır.** `FisSatir.BirimFiyat`, ürün kartından
 okunmaz; satış anındaki fiyat oraya kopyalanır. Ürünün fiyatı sonra
@@ -230,7 +246,7 @@ devam etmesi gerekir.
 | Stok | `/Stok` | Stok hareketleri, mal kabul |
 | Sayım ve Zayi | `/Sayim` | Envanter sayımı, fire kaydı |
 | Kampanya | `/Kampanya` | İndirim kuralları |
-| Kâr Marjı | `/Maliyet` | FIFO maliyet, ürün bazında kâr |
+| Kâr Marjı | `/Maliyet` | Parti maliyeti (FEFO), ürün bazında kâr |
 | Raporlar | `/Rapor` | Günlük ciro, en çok satan, ödeme dağılımı, saat yoğunluğu, kritik stok |
 | Personel | `/Personel` | Kullanıcı oluşturma, rol değiştirme, pasifleştirme, şifre sıfırlama |
 | İşlem Logları | `/IslemLog` | Hassas işlemlerin denetim kaydı |

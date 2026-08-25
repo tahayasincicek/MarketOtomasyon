@@ -14,18 +14,37 @@ public sealed class MaliyetRepository
 
     private const string SqlPartiEkle = @"
 INSERT INTO StokParti
-    (UrunId, DepoId, StokHareketId, GirisMiktari, KalanMiktar, BirimMaliyet, Aciklama)
+    (UrunId, DepoId, StokHareketId, GirisMiktari, KalanMiktar, BirimMaliyet, Aciklama,
+     SonKullanmaTarihi, LotNo, TedarikciAdi)
 OUTPUT INSERTED.Id
 VALUES
-    (@UrunId, @DepoId, @StokHareketId, @GirisMiktari, @KalanMiktar, @BirimMaliyet, @Aciklama);";
+    (@UrunId, @DepoId, @StokHareketId, @GirisMiktari, @KalanMiktar, @BirimMaliyet, @Aciklama,
+     @SonKullanmaTarihi, @LotNo, @TedarikciAdi);";
 
+    /// <summary>
+    /// FEFO: raftan once son kullanma tarihi en yakin parti cikar.
+    ///
+    /// ORDER BY'daki ilk satir sart. SQL Server varsayilan olarak NULL'lari
+    /// BASA koyar; o satir olmadan son kullanma tarihi OLMAYAN urunler
+    /// (kirtasiye, zuccaciye) yarin bozulacak sutten once tuketilir. Hata
+    /// vermez, sessizce yanlis calisir.
+    ///
+    /// Tarihi ayni olan partiler arasinda GirisTarihi devreye girer, yani
+    /// FIFO davranisi korunur. Tarihsiz urunler de fiilen FIFO ile akar.
+    ///
+    /// UPDLOCK/ROWLOCK/HOLDLOCK korunmali: es zamanli iki satisin ayni
+    /// partiyi iki kez tuketmesini bu engelliyor.
+    /// </summary>
     private const string SqlAcikPartiler = @"
-SELECT Id AS StokPartiId, KalanMiktar, BirimMaliyet
+SELECT Id AS StokPartiId, KalanMiktar, BirimMaliyet, SonKullanmaTarihi, LotNo
 FROM StokParti WITH (UPDLOCK, ROWLOCK, HOLDLOCK)
 WHERE UrunId = @urunId
   AND DepoId = @depoId
   AND KalanMiktar > 0
-ORDER BY GirisTarihi, Id;";
+ORDER BY CASE WHEN SonKullanmaTarihi IS NULL THEN 1 ELSE 0 END,
+         SonKullanmaTarihi,
+         GirisTarihi,
+         Id;";
 
     private const string SqlTuketimYaz = @"
 UPDATE StokParti

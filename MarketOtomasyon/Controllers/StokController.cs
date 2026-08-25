@@ -82,15 +82,39 @@ public class StokController : Controller
         if (!ModelState.IsValid)
             return View(await FormHazirlaAsync(form, ct));
 
-        var yeniBakiye = await _stokService.MalKabulAsync(
-            form.UrunId,
-            form.DepoId,
-            form.Miktar,
-            form.BirimMaliyet,
-            form.Aciklama,
-            ct);
+        decimal yeniBakiye;
+        try
+        {
+            yeniBakiye = await _stokService.MalKabulAsync(
+                form.UrunId,
+                form.DepoId,
+                form.Miktar,
+                form.BirimMaliyet,
+                form.Aciklama,
+                form.SonKullanmaTarihi,
+                form.LotNo,
+                form.TedarikciAdi,
+                ct);
+        }
+        catch (ArgumentException ex)
+        {
+            // Parti kurallari (son kullanma zorunlulugu, gecmis tarih, lot
+            // uzunlugu) servisten exception olarak geliyor. Yakalanmazsa
+            // kullanici hata sayfasi gorur; oysa bunlar duzeltilebilir
+            // form hatalari.
+            var alan = ex.ParamName switch
+            {
+                "sonKullanmaTarihi" => nameof(form.SonKullanmaTarihi),
+                "lotNo" => nameof(form.LotNo),
+                "urunId" => nameof(form.UrunId),
+                _ => string.Empty
+            };
 
-        TempData["Mesaj"] = $"Giriş ve FIFO partisi kaydedildi. Yeni bakiye: {yeniBakiye:0.###}";
+            ModelState.AddModelError(alan, ex.Message.Split(" (Parameter")[0]);
+            return View(await FormHazirlaAsync(form, ct));
+
+        }
+        TempData["Mesaj"] = $"Giriş ve stok partisi kaydedildi. Yeni bakiye: {yeniBakiye:0.###}";
         return RedirectToAction(nameof(Giris));
     }
 

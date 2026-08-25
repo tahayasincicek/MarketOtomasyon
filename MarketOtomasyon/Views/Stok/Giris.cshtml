@@ -135,6 +135,42 @@
                             <div class="ipucu mt-1">KDV hariç alış birim maliyetini girin.</div>
                         </div>
                     </div>
+                    @* Parti bilgileri. Son kullanma tarihi FEFO sirasini belirler:
+                       bos birakilan tarih partiyi siranin SONUNA atar, yani urun
+                       en son satilir. Gida urunlerinde bu yuzden zorunludur
+                       (Urun.SonKullanmaZorunlu). *@
+                    <div class="alan">
+                        <label asp-for="SonKullanmaTarihi">Son kullanma tarihi</label>
+                        <div class="deger">
+                            <input class="form-control dar" asp-for="SonKullanmaTarihi" type="date" />
+                            <span class="hata" asp-validation-for="SonKullanmaTarihi"></span>
+                            <div class="ipucu mt-1">
+                                Raftan önce tarihi en yakın parti çıkar. Gıda ürünlerinde zorunludur;
+                                kırtasiye gibi raf ömrü olmayan ürünlerde boş bırakılabilir.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alan">
+                        <label asp-for="LotNo">Lot no</label>
+                        <div class="deger">
+                            <input class="form-control dar" asp-for="LotNo" autocomplete="off"
+                                   placeholder="Tedarikçi lot numarası" />
+                            <span class="hata" asp-validation-for="LotNo"></span>
+                            <div class="ipucu mt-1">
+                                Bir lot geri çağrıldığında hangi fişlerde satıldığını bulmayı sağlar.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alan">
+                        <label asp-for="TedarikciAdi">Tedarikçi</label>
+                        <div class="deger">
+                            <input class="form-control" asp-for="TedarikciAdi" autocomplete="off"
+                                   placeholder="Firma adı" />
+                        </div>
+                    </div>
+
 
                     <div class="alan">
                         <label asp-for="Aciklama">Açıklama</label>

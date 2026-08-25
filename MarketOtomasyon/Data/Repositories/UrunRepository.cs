@@ -37,6 +37,7 @@ OFFSET @atla ROWS FETCH NEXT @adet ROWS ONLY;";
     // Kampanya formundaki urun secim listesi icin; sayfalama gerekmez.
     private const string SqlAktifListe = @"
 SELECT Id, Kod, Ad, KategoriId, Birim, KdvOrani, MinStokSeviyesi, Tartili, Aktif, OlusturmaTarihi,
+       SonKullanmaZorunlu,
        ResimYolu, ResimKaynagi, ResimTarihi
 FROM Urun
 WHERE Aktif = 1
@@ -44,6 +45,7 @@ ORDER BY Ad;";
 
     private const string SqlGetir = @"
 SELECT Id, Kod, Ad, KategoriId, Birim, KdvOrani, MinStokSeviyesi, Tartili, Aktif, OlusturmaTarihi,
+       SonKullanmaZorunlu,
        ResimYolu, ResimKaynagi, ResimTarihi
 FROM Urun
 WHERE Id = @id;";
