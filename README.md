@@ -73,6 +73,7 @@ Hepsi `MarketOtomasyon/Data/Sql/` altında.
 | 9 | `12_yetkilendirme_log.sql` | `IslemLog` tablosu, geliştirme hesaplarının şifre hash'leri |
 | 10 | `13_mudur_onayi.sql` | `IslemLog`'a onaylayan müdür ve onay sebebi kolonları |
 | 11 | `14_skt_lot.sql` | `StokParti`ye son kullanma tarihi, lot ve tedarikçi; `Urun`a SKT zorunluluk bayrağı |
+| 12 | `15_depo_transfer.sql` | `StokTransfer` / `StokTransferSatir`, transfer numarası sequence'i |
 
 > İki tane `03_` var: `03_kampanya.sql` ve `03_maliyet.sql`. Maliyet
 > dosyası aslında çok daha sonra (Gün 17) eklendi, numarası yanlış verildi.
@@ -83,7 +84,7 @@ Hepsi `MarketOtomasyon/Data/Sql/` altında.
 
 | # | Dosya | Ne yapar |
 |---|---|---|
-| 12 | `90_ornek_veri.sql` | 2 depo, 2 kullanıcı, 6 kategori, 30 ürün, barkodlar, açılış fiyatları ve açılış stokları |
+| 13 | `90_ornek_veri.sql` | 2 depo, 2 kullanıcı, 6 kategori, 30 ürün, barkodlar, açılış fiyatları ve açılış stokları |
 
 ### 3. Veriyi güncelleyen betikler (örnek veriden **sonra**)
 
@@ -92,16 +93,16 @@ Bu dörtlü `90_ornek_veri.sql`'in eklediği kayıtları düzeltir/zenginleştir
 
 | # | Dosya | Ne yapar |
 |---|---|---|
-| 13 | `07_gercek_barkodlar.sql` | Uydurma barkodları Open Food Facts'te karşılığı olan gerçek barkodlarla değiştirir |
-| 14 | `09_profesyonel_urun_gorselleri.sql` | Ürünleri `wwwroot/urun-gorsel/*.webp` dosyalarına bağlar |
-| 15 | `10_hizli_urun.sql` | Kasa ekranındaki hızlı ürün tuşlarını tanımlar |
-| 16 | `11_turkce_karakter_duzeltmeleri.sql` | Örnek verideki Türkçe karakterleri düzeltir |
+| 14 | `07_gercek_barkodlar.sql` | Uydurma barkodları Open Food Facts'te karşılığı olan gerçek barkodlarla değiştirir |
+| 15 | `09_profesyonel_urun_gorselleri.sql` | Ürünleri `wwwroot/urun-gorsel/*.webp` dosyalarına bağlar |
+| 16 | `10_hizli_urun.sql` | Kasa ekranındaki hızlı ürün tuşlarını tanımlar |
+| 17 | `11_turkce_karakter_duzeltmeleri.sql` | Örnek verideki Türkçe karakterleri düzeltir |
 
 ### 4. Demo verisi (isteğe bağlı)
 
 | # | Dosya | Ne yapar |
 |---|---|---|
-| 17 | `91_demo_veri.sql` | Son 30 günün satış geçmişi: vardiyalar, fişler, ödemeler, iadeler |
+| 18 | `91_demo_veri.sql` | Son 30 günün satış geçmişi: vardiyalar, fişler, ödemeler, iadeler |
 
 Raporlar, kâr marjı ve Z raporu ekranları geçmiş satış olmadan boş görünür.
 Bu betik onları dolduran gerçekçi bir geçmiş üretir. Ayrıntı için aşağıdaki
@@ -116,7 +117,7 @@ $sql = "MarketOtomasyon\Data\Sql"
 $sira = @(
   "01_ilk_sema", "02_askiya_alma", "03_kampanya", "04_iade", "05_vardiya",
   "06_urun_resim", "08_sayim_zayi", "03_maliyet", "12_yetkilendirme_log",
-  "13_mudur_onayi", "14_skt_lot",
+  "13_mudur_onayi", "14_skt_lot", "15_depo_transfer",
   "90_ornek_veri",
   "07_gercek_barkodlar", "09_profesyonel_urun_gorselleri", "10_hizli_urun",
   "11_turkce_karakter_duzeltmeleri",
@@ -203,6 +204,16 @@ Gıda ürünlerinde mal kabulde tarih zorunludur (`Urun.SonKullanmaZorunlu`).
 Boş bırakılan tarih partiyi sıranın sonuna atar; yani unutmak, ürünü "en
 son satılacak" partiye çevirir.
 
+**Transfer partileri de taşır.** Depolar arası transfer yalnızca iki stok
+hareketi yazmaz: kaynak depodaki partileri FEFO sırasıyla tüketir ve hedef
+depoda aynı maliyet, son kullanma tarihi ve lot ile yeni partiler açar.
+Aksi halde hedef depoda bakiye görünür ama parti bulunmaz ve satış
+"parti bakiyesi yetersiz" hatasıyla kırılır.
+
+Tüketilen her parti için hedefte **ayrı** giriş hareketi yazılır, çünkü
+`UX_StokParti_Hareket` benzersizdir: bir stok hareketine yalnızca bir parti
+bağlanabilir.
+
 **Fiyat fiş satırında saklanır.** `FisSatir.BirimFiyat`, ürün kartından
 okunmaz; satış anındaki fiyat oraya kopyalanır. Ürünün fiyatı sonra
 değişirse geçmiş fişler ve iade tutarları bozulmaz.
@@ -248,6 +259,7 @@ devam etmesi gerekir.
 | Kampanya | `/Kampanya` | İndirim kuralları |
 | Kâr Marjı | `/Maliyet` | Parti maliyeti (FEFO), ürün bazında kâr |
 | Raporlar | `/Rapor` | Günlük ciro, en çok satan, ödeme dağılımı, saat yoğunluğu, kritik stok |
+| Depo Transferi | `/Transfer` | Depolar arası stok taşıma (partileriyle birlikte) |
 | Personel | `/Personel` | Kullanıcı oluşturma, rol değiştirme, pasifleştirme, şifre sıfırlama |
 | İşlem Logları | `/IslemLog` | Hassas işlemlerin denetim kaydı |
 
