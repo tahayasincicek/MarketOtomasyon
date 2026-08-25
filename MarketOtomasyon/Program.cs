@@ -9,8 +9,18 @@ using Microsoft.Extensions.Options;
 using MarketOtomasyon.Data;
 using MarketOtomasyon.Data.Repositories;
 using MarketOtomasyon.Services;
+using MarketOtomasyon.Web;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Log kurallari appsettings.json'daki Serilog bolumunde; ayar kod icine
+// dagilmasin. Enrich.FromLogContext, istek basina eklenen Kullanici ve
+// IstekNo alanlarini okuyabilmek icin sart.
+builder.Host.UseSerilog((context, services, config) =>
+    config.ReadFrom.Configuration(context.Configuration)
+          .ReadFrom.Services(services)
+          .Enrich.FromLogContext());
 
 // Dogrulama tek yerden yonetilsin: MVC'nin non-nullable alanlar icin urettigi
 // otomatik "required" mesajlari kapali, kurallar FluentValidation'da.
@@ -38,6 +48,9 @@ builder.Services.AddAuthorization(options =>
         .Build();
 });
 
+builder.Services.AddExceptionHandler<GenelHataYakalayici>();
+builder.Services.AddProblemDetails();
+
 builder.Services.AddScoped<IPasswordHasher<Kullanici>, PasswordHasher<Kullanici>>();
 
 // Dapper baglanti fabrikasi - tum repository'ler bunu kullanir.
@@ -62,6 +75,7 @@ builder.Services.AddScoped<UrunResimRepository>();
 builder.Services.AddScoped<SayimRepository>();
 builder.Services.AddScoped<HizliUrunRepository>();
 builder.Services.AddScoped<MaliyetRepository>();
+builder.Services.AddScoped<TransferRepository>();
 builder.Services.AddScoped<IslemLogRepository>();
 
 // Servisler
@@ -79,6 +93,7 @@ builder.Services.AddScoped<RaporRepository>();
 builder.Services.AddScoped<SayimService>();
 builder.Services.AddScoped<PersonelService>();
 builder.Services.AddScoped<MudurOnayService>();
+builder.Services.AddScoped<TransferService>();
 builder.Services.AddScoped<MaliyetService>();
 builder.Services.AddScoped<KimlikDogrulamaService>();
 
@@ -100,9 +115,16 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 var app = builder.Build();
 
+// Sunucunun ne zaman yeniden basladigi, hata ararken ilk sorulan sey.
+app.Logger.LogInformation("Uygulama basladi. Ortam: {Ortam}", app.Environment.EnvironmentName);
+
+// Kosulsuz: hata gelistirmede de loglanmali. GenelHataYakalayici
+// yalnizca kayit tutar, kullaniciya gosterilecek yaniti bu ara katman
+// uretir.
+app.UseExceptionHandler("/Home/Error");
+
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
 
@@ -124,6 +146,27 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Kullanici ve istek kimligi, o istek boyunca yazilan TUM log satirlarina
+// otomatik eklenir; her cagriya elle parametre gecmeye gerek kalmaz.
+//
+// Iki sira kurali var:
+//   - UseAuthentication SONRASINA: oncesinde ctx.User dolmamis olur ve
+//     her satirda "anonim" yazar.
+//   - UseSerilogRequestLogging ONCESINE: istek ozeti satiri da bu
+//     alanlari tasisin, yoksa ozet kayitlari kimin yaptigi bilinmez.
+app.Use(async (ctx, next) =>
+{
+    using (Serilog.Context.LogContext.PushProperty("Kullanici", ctx.User.Identity?.Name ?? "anonim"))
+    using (Serilog.Context.LogContext.PushProperty("IstekNo", ctx.TraceIdentifier))
+    {
+        await next();
+    }
+});
+
+// Her istek icin tek satir ozet (yol, durum kodu, sure). ASP.NET Core'un
+// ayrintili istek loglarinin yerine gecer, cok daha sessizdir.
+app.UseSerilogRequestLogging();
 
 app.MapControllerRoute(
     name: "default",
