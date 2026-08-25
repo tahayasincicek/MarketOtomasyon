@@ -77,6 +77,8 @@ builder.Services.AddScoped<VardiyaService>();
 builder.Services.AddScoped<UrunResimService>();
 builder.Services.AddScoped<RaporRepository>();
 builder.Services.AddScoped<SayimService>();
+builder.Services.AddScoped<PersonelService>();
+builder.Services.AddScoped<MudurOnayService>();
 builder.Services.AddScoped<MaliyetService>();
 builder.Services.AddScoped<KimlikDogrulamaService>();
 
