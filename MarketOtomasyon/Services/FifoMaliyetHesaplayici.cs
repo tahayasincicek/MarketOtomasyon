@@ -32,7 +32,9 @@ public static class FifoMaliyetHesaplayici
             {
                 StokPartiId = parti.StokPartiId,
                 Miktar = miktar,
-                BirimMaliyet = parti.BirimMaliyet
+                BirimMaliyet = parti.BirimMaliyet,
+                SonKullanmaTarihi = parti.SonKullanmaTarihi,
+                LotNo = parti.LotNo
             });
 
             kalanIhtiyac -= miktar;

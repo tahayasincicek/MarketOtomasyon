@@ -164,7 +164,8 @@ CREATE TABLE Odeme (
 
 /* ---------- Stok hareketi ----------
    Tum stok degisimlerinin tek merkezi.
-   KaynakTip: 1 satis, 2 iade, 3 mal kabul, 4 sayim, 5 zayi, 6 acilis */
+   KaynakTip: 1 satis, 2 iade, 3 mal kabul, 4 sayim, 5 zayi, 6 acilis,
+              7 depo transferi (cikis ve giris ayni tiptedir, Yon ayirir) */
 CREATE TABLE StokHareket (
     Id        BIGINT IDENTITY(1,1) PRIMARY KEY,
     UrunId    INT           NOT NULL,

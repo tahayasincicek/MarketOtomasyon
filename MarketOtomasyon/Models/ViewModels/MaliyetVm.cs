@@ -17,6 +17,13 @@ public sealed class FifoTuketimVm
     public long StokPartiId { get; set; }
     public decimal Miktar { get; set; }
     public decimal BirimMaliyet { get; set; }
+
+    /* Depo transferi hedef depoda ayni partiyi yeniden acarken bu iki
+       alani kullanir. Tasinmazlarsa hedefteki parti tarihsiz kalir ve
+       FEFO sirasinin sonuna duser: Arka Depo'dan rafa tasinan sut en
+       son satilan urune donusur. Hata vermez, sessizce yanlis calisir. */
+    public DateTime? SonKullanmaTarihi { get; set; }
+    public string? LotNo { get; set; }
     public decimal ToplamMaliyet => decimal.Round(Miktar * BirimMaliyet, 4, MidpointRounding.AwayFromZero);
 }
 

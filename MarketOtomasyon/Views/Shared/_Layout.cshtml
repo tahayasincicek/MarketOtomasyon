@@ -7,7 +7,7 @@
     // digerleri kapali durur ki sol serit kalabaliklasmasin.
     var satisGrubu   = new[] { "Kasa", "Iade", "Vardiya" };
     var bilgiGrubu   = new[] { "Urun", "Stok" };
-    var yonetimGrubu = new[] { "Sayim", "Kampanya", "Maliyet", "Rapor", "Personel", "IslemLog" };
+    var yonetimGrubu = new[] { "Sayim", "Kampanya", "Maliyet", "Rapor", "Personel", "IslemLog", "Transfer" };
     bool GrupAcik(string[] grup) => grup.Contains(aktifKontrolcu);
 }
 <!DOCTYPE html>
@@ -81,6 +81,9 @@
                         </a>
                         <a class="menu-oge @Aktif("Rapor")" asp-controller="Rapor" asp-action="Index">
                             <i class="menu-ikon ph ph-chart-bar"></i> Raporlar
+                        </a>
+                        <a class="menu-oge @Aktif("Transfer")" asp-controller="Transfer" asp-action="Index">
+                            <i class="menu-ikon ph ph-arrows-left-right"></i> Depo Transferi
                         </a>
                         <a class="menu-oge @Aktif("Personel")" asp-controller="Personel" asp-action="Index">
                             <i class="menu-ikon ph ph-users-three"></i> Personel
