@@ -2,6 +2,13 @@
     // Aktif menu ogesini isaretlemek icin: hangi controller'dayiz?
     var aktifKontrolcu = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
     string Aktif(string kontrolcu) => aktifKontrolcu == kontrolcu ? "aktif" : "";
+
+    // Menu gruplari acilir-kapanir. Icinde bulundugun grup acik gelir;
+    // digerleri kapali durur ki sol serit kalabaliklasmasin.
+    var satisGrubu   = new[] { "Kasa", "Iade", "Vardiya" };
+    var bilgiGrubu   = new[] { "Urun", "Stok" };
+    var yonetimGrubu = new[] { "Sayim", "Kampanya", "Maliyet", "Rapor", "Personel", "IslemLog" };
+    bool GrupAcik(string[] grup) => grup.Contains(aktifKontrolcu);
 }
 <!DOCTYPE html>
 <html lang="tr">
@@ -21,54 +28,67 @@
     <div class="yerlesim">
         <aside class="yan-menu" id="yan-menu">
             <nav class="menu">
-                @* Ana ekran gunluk ciro ozeti gosteriyor: mudur bilgisi.
-                   HomeController.Index kasiyeri zaten Kasa'ya yonlendirdigi icin
-                   link ona gosterilmez, yoksa "tiklayinca hicbir sey olmuyor" gibi
-                   gorunur. Kasiyerin donus noktasi asagidaki Kasa maddesi. *@
+                @* Ana ekran her role acik ve grup disinda: her yerden tek
+                   tikla donulebilmeli. *@
+                <a class="menu-oge @Aktif("Home")" asp-controller="Home" asp-action="Index">
+                    <i class="menu-ikon ph ph-house"></i> Ana Sayfa
+                </a>
+
+                @* Gruplar <details> ile aciliyor: JavaScript gerekmez,
+                   klavyeyle gezilebilir ve tarayici durumu kendisi tutar.
+                   "open" yalnizca icinde bulunulan grupta acik gelir. *@
+                <details class="menu-grup" data-menu-grup="satis" open="@GrupAcik(satisGrubu)">
+                    <summary class="menu-baslik">
+                        <i class="menu-grup-ok ph ph-caret-right"></i> Satış
+                    </summary>
+                    <a class="menu-oge @Aktif("Kasa")" asp-controller="Kasa" asp-action="Index">
+                        <i class="menu-ikon ph ph-cash-register"></i> Kasa
+                    </a>
+                    <a class="menu-oge @Aktif("Iade")" asp-controller="Iade" asp-action="Index">
+                        <i class="menu-ikon ph ph-arrow-counter-clockwise"></i> İade
+                    </a>
+                    <a class="menu-oge @Aktif("Vardiya")" asp-controller="Vardiya" asp-action="Index">
+                        <i class="menu-ikon ph ph-vault"></i> Vardiya
+                    </a>
+                </details>
+
+                <details class="menu-grup" data-menu-grup="bilgi" open="@GrupAcik(bilgiGrubu)">
+                    <summary class="menu-baslik">
+                        <i class="menu-grup-ok ph ph-caret-right"></i> Bilgi
+                    </summary>
+                    <a class="menu-oge @Aktif("Urun")" asp-controller="Urun" asp-action="Index">
+                        <i class="menu-ikon ph ph-package"></i> Ürünler
+                    </a>
+                    <a class="menu-oge @Aktif("Stok")" asp-controller="Stok" asp-action="Index">
+                        <i class="menu-ikon ph ph-warehouse"></i> Stok
+                    </a>
+                </details>
+
                 @if (User.IsInRole("Mudur"))
                 {
-                    <a class="menu-oge @Aktif("Home")" asp-controller="Home" asp-action="Index">
-                        <i class="menu-ikon ph ph-house"></i> Ana Sayfa
-                    </a>
-                }
-
-                <div class="menu-baslik">Satış</div>
-                <a class="menu-oge @Aktif("Kasa")" asp-controller="Kasa" asp-action="Index">
-                    <i class="menu-ikon ph ph-cash-register"></i> Kasa
-                </a>
-                <a class="menu-oge @Aktif("Iade")" asp-controller="Iade" asp-action="Index">
-                    <i class="menu-ikon ph ph-arrow-counter-clockwise"></i> İade
-                </a>
-                <a class="menu-oge @Aktif("Vardiya")" asp-controller="Vardiya" asp-action="Index">
-                    <i class="menu-ikon ph ph-vault"></i> Vardiya
-                </a>
-
-                <div class="menu-baslik">Bilgi</div>
-                <a class="menu-oge @Aktif("Urun")" asp-controller="Urun" asp-action="Index">
-                    <i class="menu-ikon ph ph-package"></i> Ürünler
-                </a>
-                <a class="menu-oge @Aktif("Stok")" asp-controller="Stok" asp-action="Index">
-                    <i class="menu-ikon ph ph-warehouse"></i> Stok
-                </a>
-
-                @if (User.IsInRole("Mudur"))
-                {
-                    <div class="menu-baslik">Yönetim</div>
-                    <a class="menu-oge @Aktif("Sayim")" asp-controller="Sayim" asp-action="Index">
-                        <i class="menu-ikon ph ph-list-checks"></i> Sayım ve Zayi
-                    </a>
-                    <a class="menu-oge @Aktif("Kampanya")" asp-controller="Kampanya" asp-action="Index">
-                        <i class="menu-ikon ph ph-tag"></i> Kampanyalar
-                    </a>
-                    <a class="menu-oge @Aktif("Maliyet")" asp-controller="Maliyet" asp-action="Index">
-                        <i class="menu-ikon ph ph-chart-line-up"></i> Kâr Marjı
-                    </a>
-                    <a class="menu-oge @Aktif("Rapor")" asp-controller="Rapor" asp-action="Index">
-                        <i class="menu-ikon ph ph-chart-bar"></i> Raporlar
-                    </a>
-                    <a class="menu-oge @Aktif("IslemLog")" asp-controller="IslemLog" asp-action="Index">
-                        <i class="menu-ikon ph ph-list-magnifying-glass"></i> İşlem Logları
-                    </a>
+                    <details class="menu-grup" data-menu-grup="yonetim" open="@GrupAcik(yonetimGrubu)">
+                        <summary class="menu-baslik">
+                            <i class="menu-grup-ok ph ph-caret-right"></i> Yönetim
+                        </summary>
+                        <a class="menu-oge @Aktif("Sayim")" asp-controller="Sayim" asp-action="Index">
+                            <i class="menu-ikon ph ph-list-checks"></i> Sayım ve Zayi
+                        </a>
+                        <a class="menu-oge @Aktif("Kampanya")" asp-controller="Kampanya" asp-action="Index">
+                            <i class="menu-ikon ph ph-tag"></i> Kampanyalar
+                        </a>
+                        <a class="menu-oge @Aktif("Maliyet")" asp-controller="Maliyet" asp-action="Index">
+                            <i class="menu-ikon ph ph-chart-line-up"></i> Kâr Marjı
+                        </a>
+                        <a class="menu-oge @Aktif("Rapor")" asp-controller="Rapor" asp-action="Index">
+                            <i class="menu-ikon ph ph-chart-bar"></i> Raporlar
+                        </a>
+                        <a class="menu-oge @Aktif("Personel")" asp-controller="Personel" asp-action="Index">
+                            <i class="menu-ikon ph ph-users-three"></i> Personel
+                        </a>
+                        <a class="menu-oge @Aktif("IslemLog")" asp-controller="IslemLog" asp-action="Index">
+                            <i class="menu-ikon ph ph-list-magnifying-glass"></i> İşlem Logları
+                        </a>
+                    </details>
                 }
             </nav>
 
