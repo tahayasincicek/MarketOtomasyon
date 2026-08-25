@@ -21,6 +21,17 @@
     <div class="yerlesim">
         <aside class="yan-menu" id="yan-menu">
             <nav class="menu">
+                @* Ana ekran gunluk ciro ozeti gosteriyor: mudur bilgisi.
+                   HomeController.Index kasiyeri zaten Kasa'ya yonlendirdigi icin
+                   link ona gosterilmez, yoksa "tiklayinca hicbir sey olmuyor" gibi
+                   gorunur. Kasiyerin donus noktasi asagidaki Kasa maddesi. *@
+                @if (User.IsInRole("Mudur"))
+                {
+                    <a class="menu-oge @Aktif("Home")" asp-controller="Home" asp-action="Index">
+                        <i class="menu-ikon ph ph-house"></i> Ana Sayfa
+                    </a>
+                }
+
                 <div class="menu-baslik">Satış</div>
                 <a class="menu-oge @Aktif("Kasa")" asp-controller="Kasa" asp-action="Index">
                     <i class="menu-ikon ph ph-cash-register"></i> Kasa
