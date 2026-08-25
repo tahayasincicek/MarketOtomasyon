@@ -12,8 +12,8 @@ public class UrunResmiVm
     /// <summary>kucuk (izgara satiri), orta (liste), buyuk (detay/kasa paneli).</summary>
     public string Boyut { get; set; } = "kucuk";
 
-    /// <summary>Resim yoksa gosterilecek Bootstrap Icons sinifi.</summary>
-    public string YerTutucuIkonu { get; set; } = "bi-box-seam";
+    /// <summary>Resim yoksa gosterilecek Phosphor Icons sinifi.</summary>
+    public string YerTutucuIkonu { get; set; } = "ph-package";
 
     public bool VarMi => !string.IsNullOrWhiteSpace(Yol);
     public string BoyutSinifi => "urun-resim-" + Boyut;
@@ -24,12 +24,12 @@ public class UrunResmiVm
     /// <summary>Kategoriye gore yer tutucu ikonu. Bilinmeyen kategoride genel kutu ikonu.</summary>
     private static string IkonSec(string? kategori) => kategori switch
     {
-        "Gıda" or "Gida" => "bi-basket",
-        "İçecek" or "Icecek" => "bi-cup-straw",
-        "Kahvaltılık" or "Kahvaltilik" => "bi-egg-fried",
-        "Atıştırmalık" or "Atistirmalik" => "bi-cookie",
-        "Temizlik" => "bi-droplet",
-        "Kişisel Bakım" or "Kisisel Bakim" => "bi-heart-pulse",
-        _ => "bi-box-seam"
+        "Gıda" or "Gida" => "ph-basket",
+        "İçecek" or "Icecek" => "ph-beer-bottle",
+        "Kahvaltılık" or "Kahvaltilik" => "ph-egg",
+        "Atıştırmalık" or "Atistirmalik" => "ph-cookie",
+        "Temizlik" => "ph-drop",
+        "Kişisel Bakım" or "Kisisel Bakim" => "ph-heartbeat",
+        _ => "ph-package"
     };
 }
