@@ -2,6 +2,7 @@ using MarketOtomasyon.Services;
 using MarketOtomasyon.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace MarketOtomasyon.Controllers;
 
@@ -29,6 +30,20 @@ public class VardiyaController : Controller
     {
         returnUrl = YerelDonusAdresi(returnUrl);
         var kullaniciId = User.KullaniciId();
+
+        // Alan bos veya sayi disi gelirse decimal sessizce 0 olur. Ekrandaki
+        // required/min yalnizca tarayicida calisir; istek dogrudan gonderilirse
+        // vardiya 0 TL ile acilir ve kasa gun sonunda acilis tutari kadar fazla
+        // gorunur. Bu yuzden binding hatasi burada da denetlenir.
+        var bindingHatasi = TutarBindingHatasi(nameof(acilisTutari));
+        if (bindingHatasi is not null)
+        {
+            var hataliVm = await _vardiyaService.EkranAsync(kullaniciId, ct);
+            hataliVm.Hata = bindingHatasi;
+            hataliVm.ReturnUrl = returnUrl;
+            return View(nameof(Index), hataliVm);
+        }
+
         var hata = await _vardiyaService.AcAsync(kullaniciId, acilisTutari, ct);
         if (hata is not null)
         {
@@ -49,6 +64,18 @@ public class VardiyaController : Controller
     public async Task<IActionResult> Kapat(decimal sayilanTutar, CancellationToken ct)
     {
         var kullaniciId = User.KullaniciId();
+
+        // Kapanista bos alan acilistan daha kotu: sayilan tutar 0 sanilir,
+        // Z raporuna beklenen tutar kadar kasa acigi yazilir ve vardiya
+        // kapandigi icin geri alinamaz.
+        var bindingHatasi = TutarBindingHatasi(nameof(sayilanTutar));
+        if (bindingHatasi is not null)
+        {
+            var hataliVm = await _vardiyaService.EkranAsync(kullaniciId, ct);
+            hataliVm.Hata = bindingHatasi;
+            return View(nameof(Index), hataliVm);
+        }
+
         var (rapor, hata) = await _vardiyaService.KapatAsync(kullaniciId, sayilanTutar, ct);
         if (hata is not null)
         {
@@ -67,6 +94,16 @@ public class VardiyaController : Controller
         var rapor = await _vardiyaService.RaporAsync(id, ct);
         return rapor is null ? NotFound() : View(rapor);
     }
+
+    /// <summary>
+    /// Tutar alanindaki model binding hatasini okunur bir mesaja cevirir.
+    /// MVC'nin uretttigi varsayilan mesaj ("The value 'abc' is not valid for
+    /// acilisTutari.") hem Ingilizce hem de alan adini oldugu gibi gosterir.
+    /// </summary>
+    private string? TutarBindingHatasi(string alanAdi)
+        => ModelState.GetValidationState(alanAdi) == ModelValidationState.Invalid
+            ? "Tutarı rakamla girin. Kuruş için nokta kullanın (örnek: 1500.50)."
+            : null;
 
     private string? YerelDonusAdresi(string? returnUrl)
         => !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl)

@@ -12,6 +12,13 @@ public class VardiyaService
 {
     private const int SonKapananAdet = 10;
 
+    /// <summary>
+    /// Kasada makul olarak bulunabilecek tavan. Amaci tasmayi onlemek degil,
+    /// parmak hatasini yakalamak: 500 yerine 50000 yazilirsa gun sonunda
+    /// kasa aciği o kadar buyuk cikar ve hata ancak kapanista fark edilir.
+    /// </summary>
+    private const decimal TutarTavani = 100_000m;
+
     private readonly VardiyaRepository _vardiyaRepository;
 
     public VardiyaService(VardiyaRepository vardiyaRepository) => _vardiyaRepository = vardiyaRepository;
@@ -31,6 +38,9 @@ public class VardiyaService
         if (acilisTutari < 0)
             return "Açılış tutarı negatif olamaz.";
 
+        if (acilisTutari > TutarTavani)
+            return $"Açılış tutarı {TutarTavani:N0} TL'yi aşamaz. Girdiğiniz tutarı kontrol edin.";
+
         if (await _vardiyaRepository.AcikVardiyaGetirAsync(kullaniciId, ct) is not null)
             return "Zaten açık bir vardiyanız var. Önce onu kapatın.";
 
@@ -44,6 +54,9 @@ public class VardiyaService
     {
         if (sayilanTutar < 0)
             return (null, "Sayılan tutar negatif olamaz.");
+
+        if (sayilanTutar > TutarTavani)
+            return (null, $"Sayılan tutar {TutarTavani:N0} TL'yi aşamaz. Kasayı yeniden sayın.");
 
         var acik = await _vardiyaRepository.AcikVardiyaGetirAsync(kullaniciId, ct);
         if (acik is null)
