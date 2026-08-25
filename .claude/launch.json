@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "MarketOtomasyon",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "MarketOtomasyon", "--launch-profile", "http"],
+      "port": 5275,
+      "url": "http://localhost:5275"
+    }
+  ]
+}
