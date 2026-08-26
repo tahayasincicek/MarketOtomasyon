@@ -12,6 +12,10 @@
 USE MarketOtomasyon;
 GO
 
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+GO
+
 /* ---------- Depolar ---------- */
 INSERT INTO Depo (Kod, Ad)
 SELECT v.Kod, v.Ad

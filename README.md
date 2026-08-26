@@ -77,68 +77,62 @@ yerine kullanıcı adı/şifre kullanılmalı.
 
 ## SQL dosyalarının çalıştırma sırası
 
-**Dosya adlarındaki numaralar çalıştırma sırası değildir.** Numaralar
-dosyanın projeye eklendiği günü gösteriyor. Gerçek sıra aşağıdaki gibi:
-önce şema, sonra örnek veri, en son veriyi güncelleyen betikler.
+**Numara = çalıştırma sırası.** Dosyaları adlarına göre sıralayıp
+sırayla çalıştırmak yeterli; başka bir yere bakmana gerek yok.
 
-Hepsi `MarketOtomasyon/Data/Sql/` altında.
+Hepsi `MarketOtomasyon/Data/Sql/` altında. Numaralar üç bloğa ayrılmış:
 
-### 1. Şema (bu sırayla)
-
-| # | Dosya | Ne yapar |
+| Blok | Aralık | Ne yapar |
 |---|---|---|
-| 1 | `01_ilk_sema.sql` | Veritabanını oluşturur; ürün, barkod, fiyat, stok, vardiya, fiş, ödeme tabloları |
-| 2 | `02_askiya_alma.sql` | Fişe `Askida` kolonu — kasada bekleyen sepetler |
-| 3 | `03_kampanya.sql` | Kampanya başlığı, koşulları ve sonuçları |
-| 4 | `04_iade.sql` | `Iade` / `IadeSatir` tabloları, `FisSatir.IadeEdilenMiktar` |
-| 5 | `05_vardiya.sql` | İadenin vardiyaya bağlanması |
-| 6 | `06_urun_resim.sql` | Ürün görselinin dosya yolu ve kaynağı |
-| 7 | `08_sayim_zayi.sql` | Sayım ve zayi kayıtları |
-| 8 | `03_maliyet.sql` | Parti maliyeti: `StokParti`, `StokPartiTuketim` |
-| 9 | `12_yetkilendirme_log.sql` | `IslemLog` tablosu, geliştirme hesaplarının şifre hash'leri |
-| 10 | `13_mudur_onayi.sql` | `IslemLog`'a onaylayan müdür ve onay sebebi kolonları |
-| 11 | `14_skt_lot.sql` | `StokParti`ye son kullanma tarihi, lot ve tedarikçi; `Urun`a SKT zorunluluk bayrağı |
-| 12 | `15_depo_transfer.sql` | `StokTransfer` / `StokTransferSatir`, transfer numarası sequence'i |
-| 13 | `16_tedarikci_fatura.sql` | `Tedarikci`, `AlisFaturasi` / `AlisFaturasiSatir`; `StokParti`ye tedarikçi ve fatura satırı bağlantısı |
+| Şema | `01`–`13` | Tabloları, index'leri ve view'ları kurar |
+| Örnek veri | `20`–`23` | Ürün kataloğu ve onu zenginleştiren betikler |
+| Demo verisi | `30`–`31` | İsteğe bağlı; ekranları dolduran sahte geçmiş |
 
-> İki tane `03_` var: `03_kampanya.sql` ve `03_maliyet.sql`. Maliyet
-> dosyası aslında çok daha sonra (Gün 17) eklendi, numarası yanlış verildi.
-> Yukarıdaki sırayı takip et; birbirlerine bağımlı değiller ama ikisi de
-> `01_ilk_sema.sql`'den sonra çalışmalı.
+Bloklar arasındaki boşluk bilinçli: yeni bir şema betiği eklendiğinde
+`14` olur, sonraki dosyaları kaydırmak gerekmez.
+
+### 1. Şema
+
+| Dosya | Ne yapar |
+|---|---|
+| `01_ilk_sema.sql` | Veritabanını oluşturur; ürün, barkod, fiyat, stok, vardiya, fiş, ödeme tabloları |
+| `02_askiya_alma.sql` | Fişe `Askida` kolonu — kasada bekleyen sepetler |
+| `03_kampanya.sql` | Kampanya başlığı, koşulları ve sonuçları |
+| `04_iade.sql` | `Iade` / `IadeSatir` tabloları, `FisSatir.IadeEdilenMiktar` |
+| `05_vardiya.sql` | İadenin vardiyaya bağlanması |
+| `06_urun_resim.sql` | Ürün görselinin dosya yolu ve kaynağı |
+| `07_sayim_zayi.sql` | Sayım ve zayi kayıtları |
+| `08_maliyet.sql` | Parti maliyeti: `StokParti`, `StokPartiTuketim` |
+| `09_yetkilendirme_log.sql` | `IslemLog` tablosu, geliştirme hesaplarının şifre hash'leri |
+| `10_mudur_onayi.sql` | `IslemLog`'a onaylayan müdür ve onay sebebi kolonları |
+| `11_skt_lot.sql` | `StokParti`ye son kullanma tarihi, lot ve tedarikçi; `Urun`a SKT zorunluluk bayrağı |
+| `12_depo_transfer.sql` | `StokTransfer` / `StokTransferSatir`, transfer numarası sequence'i |
+| `13_tedarikci_fatura.sql` | `Tedarikci`, `AlisFaturasi` / `AlisFaturasiSatir`; `StokParti`ye tedarikçi ve fatura satırı bağlantısı |
 
 ### 2. Örnek veri
 
-| # | Dosya | Ne yapar |
-|---|---|---|
-| 14 | `90_ornek_veri.sql` | 2 depo, 2 kullanıcı, 6 kategori, 30 ürün, barkodlar, açılış fiyatları ve açılış stokları |
+`20_ornek_veri.sql` kataloğu kurar; `21`–`23` onu zenginleştirir ve
+**mutlaka ondan sonra** çalışmalıdır — önce çalıştırılırlarsa
+güncelleyecek satır bulamaz ve sessizce hiçbir şey yapmazlar.
 
-### 3. Veriyi güncelleyen betikler (örnek veriden **sonra**)
+| Dosya | Ne yapar |
+|---|---|
+| `20_ornek_veri.sql` | 2 depo, 2 kullanıcı, 6 kategori, 30 ürün, barkodlar, açılış fiyatları ve açılış stokları |
+| `21_gercek_barkodlar.sql` | Uydurma barkodları Open Food Facts'te karşılığı olan gerçek barkodlarla değiştirir |
+| `22_urun_gorselleri.sql` | Ürünleri `wwwroot/urun-gorsel/*.webp` dosyalarına bağlar |
+| `23_hizli_urun.sql` | Kasa ekranındaki hızlı ürün tuşlarını tanımlar |
 
-Bu dörtlü `90_ornek_veri.sql`'in eklediği kayıtları düzeltir/zenginleştirir.
-Önce çalıştırılırsa güncelleyecek satır bulamaz ve sessizce hiçbir şey yapmaz.
+### 3. Demo verisi (isteğe bağlı)
 
-| # | Dosya | Ne yapar |
-|---|---|---|
-| 15 | `07_gercek_barkodlar.sql` | Uydurma barkodları Open Food Facts'te karşılığı olan gerçek barkodlarla değiştirir |
-| 16 | `09_profesyonel_urun_gorselleri.sql` | Ürünleri `wwwroot/urun-gorsel/*.webp` dosyalarına bağlar |
-| 17 | `10_hizli_urun.sql` | Kasa ekranındaki hızlı ürün tuşlarını tanımlar |
-| 18 | `11_turkce_karakter_duzeltmeleri.sql` | Örnek verideki Türkçe karakterleri düzeltir |
+| Dosya | Ne yapar |
+|---|---|
+| `30_demo_satis_gecmisi.sql` | Son 30 günün satış geçmişi: vardiyalar, fişler, ödemeler, iadeler |
+| `31_demo_tedarikci_fatura.sql` | 5 tedarikçi ve alış faturaları; her fatura satırı için stok girişi ve maliyet/SKT/lot partisi |
 
-### 4. Demo verisi (isteğe bağlı)
-
-| # | Dosya | Ne yapar |
-|---|---|---|
-| 19 | `91_demo_veri.sql` | Son 30 günün satış geçmişi: vardiyalar, fişler, ödemeler, iadeler |
-| 20 | `93_modul_demo_verileri.sql` | 5 tedarikçi ve alış faturaları; her fatura satırı için stok girişi ve maliyet/SKT/lot partisi |
-
-Raporlar, kâr marjı ve Z raporu ekranları geçmiş satış olmadan boş görünür.
-Bu betik onları dolduran gerçekçi bir geçmiş üretir. Ayrıntı için aşağıdaki
+Bu ikisi olmadan uygulama çalışır ama birçok ekran boş görünür: raporlar
+ve kâr marjı geçmiş satış ister, alış faturası ekranı tedarikçi ister,
+Son Kullanma takibi ise tarihli parti ister. Ayrıntı için aşağıdaki
 "Demo verisi" bölümüne bak.
-
-`93_modul_demo_verileri.sql` de aynı sebeple var: tedarikçi tablosu boşken
-alış faturası ekranında seçilecek bir şey olmaz, faturasız da hiçbir
-partide son kullanma tarihi bulunmadığı için Son Kullanma ekranı boş
-kalır. Bu betik üçünü birden doldurur.
 
 ### Toplu kurulum
 
@@ -146,21 +140,32 @@ PowerShell (proje kökünden):
 
 ```powershell
 $sql = "MarketOtomasyon\Data\Sql"
-$sira = @(
-  "01_ilk_sema", "02_askiya_alma", "03_kampanya", "04_iade", "05_vardiya",
-  "06_urun_resim", "08_sayim_zayi", "03_maliyet", "12_yetkilendirme_log",
-  "13_mudur_onayi", "14_skt_lot", "15_depo_transfer", "16_tedarikci_fatura",
-  "90_ornek_veri",
-  "07_gercek_barkodlar", "09_profesyonel_urun_gorselleri", "10_hizli_urun",
-  "11_turkce_karakter_duzeltmeleri",
-  "91_demo_veri", "93_modul_demo_verileri"
-)
-foreach ($ad in $sira) { sqlcmd -S localhost -E -i "$sql\$ad.sql" }
+Get-ChildItem "$sql\*.sql" | Sort-Object Name | ForEach-Object {
+    Write-Host "-> $($_.Name)"
+    sqlcmd -S localhost -E -b -i $_.FullName
+    if ($LASTEXITCODE -ne 0) { Write-Error "Durdu: $($_.Name)"; break }
+}
+```
+
+Dosya adı sıralaması çalıştırma sırasıyla aynı olduğu için elle liste
+tutmaya gerek yok. `-b` sayesinde bir betik hata verirse döngü durur;
+sessizce yarım kurulmuş bir veritabanıyla devam etmezsin.
+
+Demo verisini istemiyorsan `30_` ve `31_` ile başlayan dosyaları atla:
+
+```powershell
+Get-ChildItem "$sql\*.sql" | Where-Object { $_.Name -notmatch '^3\d_' } | Sort-Object Name | ...
 ```
 
 Tüm betikler tekrar çalıştırılabilir (idempotent): var olan kayıtları
 atlar, sadece eksikleri ekler. `01_ilk_sema.sql` istisnadır — veritabanı
 zaten varsa `CREATE DATABASE` hata verir, bu beklenen davranıştır.
+
+Her betik kendi başına `SET QUOTED_IDENTIFIER ON` yapar. Bu şart:
+`sqlcmd` bu ayarı varsayılan olarak **kapalı** başlatır ve şemadaki
+filtrelenmiş index'ler yüzünden `INSERT` çalışmaz. Betiği SSMS'te
+açıp çalıştırırsan sorun görünmez, çünkü SSMS ayarı açık başlatır —
+yeni bir betik yazarken bu bloğu kopyalamayı unutma.
 
 ---
 
@@ -356,7 +361,7 @@ ve kamera (ZXing.js ile, `wwwroot/js/kamera.js`).
 
 ## Demo verisi
 
-`91_demo_veri.sql` son 30 güne yayılmış gerçekçi bir satış geçmişi üretir:
+`30_demo_satis_gecmisi.sql` son 30 güne yayılmış gerçekçi bir satış geçmişi üretir:
 
 - Her gün için bir vardiya (bugünkü açık, önceki 29'u kapalı ve sayılmış)
 - Günde 8–24 fiş, hafta sonu daha yoğun
@@ -382,7 +387,7 @@ markette ciro raporlarını bozar.
 
 ### Modül demo verileri
 
-`93_modul_demo_verileri.sql` satış geçmişini değil, tedarikçi ve fatura
+`31_demo_tedarikci_fatura.sql` satış geçmişini değil, tedarikçi ve fatura
 zincirini doldurur:
 
 - 5 tedarikçi kartı (`TED001`–`TED005`)
@@ -411,7 +416,7 @@ Bundan sonra o ürün kasada satılamaz — satış "son kullanma tarihi geçmi�
 stok var, zayi olarak düşülmeli" uyarısı verir; Son Kullanma ekranında
 kırmızı satır olarak çıkar ve tek tıkla zayi'ye alınabilir.
 
-`91_demo_veri.sql` gibi tekrar çalıştırılabilir ve **üretimde
+`30_demo_satis_gecmisi.sql` gibi tekrar çalıştırılabilir ve **üretimde
 çalıştırılmaz.**
 
 ---

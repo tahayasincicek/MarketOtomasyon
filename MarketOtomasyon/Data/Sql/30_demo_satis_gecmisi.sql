@@ -1,7 +1,7 @@
 /* =========================================================
    Demo verisi - son 30 gunun satis gecmisi
    ---------------------------------------------------------
-   90_ornek_veri.sql urun kartlarini ve acilis stogunu kurar,
+   20_ornek_veri.sql urun kartlarini ve acilis stogunu kurar,
    ama hic satis uretmez. Rapor, kar marji ve Z raporu
    ekranlari gecmis satis olmadan bos gorunur. Bu betik o
    gecmisi uretir.
@@ -100,13 +100,13 @@ DECLARE @DepoId    INT = (SELECT Id FROM Depo      WHERE Kod = 'MRK');
 
 IF @KasiyerId IS NULL OR @DepoId IS NULL
 BEGIN
-    RAISERROR('Once 90_ornek_veri.sql calistirilmali: kasiyer1 kullanicisi veya MRK deposu bulunamadi.', 16, 1);
+    RAISERROR('Once 20_ornek_veri.sql calistirilmali: kasiyer1 kullanicisi veya MRK deposu bulunamadi.', 16, 1);
     RETURN;
 END;
 
 IF NOT EXISTS (SELECT 1 FROM Urun u JOIN vw_GuncelFiyat gf ON gf.UrunId = u.Id WHERE u.Aktif = 1)
 BEGIN
-    RAISERROR('Fiyati tanimli aktif urun yok. Once 90_ornek_veri.sql calistirilmali.', 16, 1);
+    RAISERROR('Fiyati tanimli aktif urun yok. Once 20_ornek_veri.sql calistirilmali.', 16, 1);
     RETURN;
 END;
 

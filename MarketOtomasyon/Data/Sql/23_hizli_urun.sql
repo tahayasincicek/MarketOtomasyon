@@ -7,6 +7,10 @@
 USE MarketOtomasyon;
 GO
 
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+GO
+
 IF OBJECT_ID(N'dbo.HizliUrun', N'U') IS NULL
 BEGIN
     CREATE TABLE dbo.HizliUrun (

@@ -1,7 +1,7 @@
 /* =========================================================
    Gun 17 - Parti maliyeti
 
-   Sevk sirasi 14_skt_lot.sql ile FEFO ya gecti: raftan once son
+   Sevk sirasi 11_skt_lot.sql ile FEFO ya gecti: raftan once son
    kullanma tarihi en yakin parti cikar. Bu dosyadaki yapi degismedi,
    yalnizca MaliyetRepository icindeki ORDER BY degisti.
 

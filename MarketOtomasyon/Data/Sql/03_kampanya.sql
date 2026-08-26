@@ -9,13 +9,13 @@
    tablosuna yeni kolon eklemek yerine, kosul (ne zaman gecerli)
    ve sonuc (ne yapar) ayri satirlar olarak tutulur. Yeni bir
    kampanya tipi eklemek sema degisikligi gerektirmez.
-
-   Not: dosya adi yol haritasinda 02_kampanya.sql olarak geciyor,
-   ancak 02 numarasi askiya alma semasinda kullanildigi icin
-   burada 03 olarak numaralandirildi.
    ========================================================= */
 
 USE MarketOtomasyon;
+GO
+
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
 GO
 
 /* ---------- Kampanya basligi ---------- */

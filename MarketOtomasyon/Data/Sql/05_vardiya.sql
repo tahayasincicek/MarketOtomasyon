@@ -9,6 +9,10 @@
 USE MarketOtomasyon;
 GO
 
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+GO
+
 IF COL_LENGTH('Iade', 'VardiyaId') IS NULL
 BEGIN
     ALTER TABLE Iade ADD VardiyaId INT NULL;

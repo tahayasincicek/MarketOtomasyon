@@ -24,7 +24,7 @@ IF OBJECT_ID('dbo.Tedarikci', 'U') IS NULL
    OR OBJECT_ID('dbo.AlisFaturasiSatir', 'U') IS NULL
    OR OBJECT_ID('dbo.StokParti', 'U') IS NULL
 BEGIN
-    THROW 51000, N'Önce 16_tedarikci_fatura.sql dahil şema betiklerini çalıştırın.', 1;
+    THROW 51000, N'Önce 13_tedarikci_fatura.sql dahil şema betiklerini çalıştırın.', 1;
 END;
 GO
 
@@ -137,7 +137,7 @@ IF EXISTS
     LEFT JOIN dbo.Urun u ON u.Kod = p.UrunKod
     WHERE u.Id IS NULL
 )
-    THROW 51001, N'Fatura planındaki ürünlerden biri bulunamadı. Önce 90_ornek_veri.sql çalıştırılmalıdır.', 1;
+    THROW 51001, N'Fatura planındaki ürünlerden biri bulunamadı. Önce 20_ornek_veri.sql çalıştırılmalıdır.', 1;
 
 DECLARE @KullaniciId INT =
     COALESCE((SELECT TOP (1) Id FROM dbo.Kullanici WHERE KullaniciAdi = N'mudur' AND Aktif = 1),

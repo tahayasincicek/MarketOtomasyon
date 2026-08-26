@@ -11,6 +11,10 @@ GO
 USE MarketOtomasyon;
 GO
 
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+GO
+
 /* ---------- Kategori (agac yapisi) ---------- */
 CREATE TABLE Kategori (
     Id            INT IDENTITY(1,1) PRIMARY KEY,
@@ -211,4 +215,4 @@ GO
    WHERE b.Barkod = @barkod;
    ------------------------------------------------------- */
 
-/* Ornek/test verisi bu dosyada degil: Data/Sql/90_ornek_veri.sql */
+/* Ornek/test verisi bu dosyada degil: Data/Sql/20_ornek_veri.sql */

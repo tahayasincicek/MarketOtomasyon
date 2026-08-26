@@ -20,6 +20,10 @@
 USE MarketOtomasyon;
 GO
 
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+GO
+
 DECLARE @yeni TABLE (Kod NVARCHAR(30), Barkod NVARCHAR(30), Karsilik NVARCHAR(100));
 
 INSERT INTO @yeni (Kod, Barkod, Karsilik) VALUES

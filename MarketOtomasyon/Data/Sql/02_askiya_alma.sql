@@ -17,6 +17,10 @@
 USE MarketOtomasyon;
 GO
 
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+GO
+
 IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Fis') AND name = 'Askida')
 BEGIN
     ALTER TABLE Fis
