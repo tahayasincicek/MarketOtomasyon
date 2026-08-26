@@ -21,9 +21,6 @@ public sealed class TransferEkranVm
     public int HedefDepoId { get; set; }
     public string? Aciklama { get; set; }
 
-    /// <summary>Barkod okutularak ya da urun secilerek eklenir.</summary>
-    public string? Barkod { get; set; }
-
     public List<TransferSatirVm> Satirlar { get; set; } = [];
 
     public IReadOnlyList<Depo> Depolar { get; set; } = [];

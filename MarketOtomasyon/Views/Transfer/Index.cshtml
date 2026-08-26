@@ -17,173 +17,132 @@
         <div class="bildirim bildirim-olumsuz"><i class="ph ph-warning"></i> @Model.Hata</div>
     }
 
-    @* Depo secimi ve barkod tek seritte. Transfer satirlari sunucuda
-       saklanmadigi icin her formda hidden alanlarla tasiniyor: transfer
-       tek oturumda biten bir islem, sepet gibi kalici olmasi gerekmiyor. *@
-    <form method="post" asp-action="SatirEkle" class="arac-cubugu">
-        <span class="arac-etiket">Kaynak</span>
-        <select class="form-select" style="width:11rem" asp-for="KaynakDepoId" aria-label="Kaynak depo">
-            <option value="0">Seçiniz</option>
-            @foreach (var depo in Model.Depolar)
-            {
-                <option value="@depo.Id" selected="@(Model.KaynakDepoId == depo.Id)">@depo.Ad</option>
-            }
-        </select>
+    <div id="transfer-uyari" class="bildirim bildirim-olumsuz d-none" role="alert"></div>
 
-        <i class="ph ph-arrow-right text-muted"></i>
+    @* Tek form: satirlar istemci tarafinda eklenir ve hidden alanlarla
+       burada birikir. Onceden her barkod okumasi formu sunucuya
+       gonderiyordu; sayfa yenilendigi icin kamera kapanip yeniden
+       aciliyordu. Artik satir eklemek sayfayi yenilemiyor, kamera
+       kesintisiz calisiyor - zayi ve mal kabul ekranlarindaki gibi. *@
+    <form method="post" asp-action="Tamamla" id="transfer-form"
+          data-barkod-coz-url="@Url.Action("Coz", "Barkod")">
 
-        <span class="arac-etiket">Hedef</span>
-        <select class="form-select" style="width:11rem" asp-for="HedefDepoId" aria-label="Hedef depo">
-            <option value="0">Seçiniz</option>
-            @foreach (var depo in Model.Depolar)
-            {
-                <option value="@depo.Id" selected="@(Model.HedefDepoId == depo.Id)">@depo.Ad</option>
-            }
-        </select>
-
-        <span class="arac-ayrac"></span>
-
-        @* id="barkod" acikca veriliyor: kamera.js bu ID'yi ariyor
-           (asp-for "Barkod" uretirdi, buyuk harfle eslesmezdi). *@
-        <div class="arac-alan">
-            <i class="ph ph-barcode text-muted"></i>
-            <input id="barkod" class="form-control font-monospace" style="width:14rem"
-                   asp-for="Barkod" autocomplete="off" autofocus
-                   placeholder="Okutun, yazın veya kamerayı kullanın" aria-label="Barkod" />
-        </div>
-
-        <button type="button" id="btn-kamera" class="btn btn-outline-secondary">
-            <i class="ph ph-video-camera"></i> Kamera
-        </button>
-
-        <button type="submit" class="btn btn-primary">
-            <i class="ph ph-plus"></i> Ekle
-        </button>
-
-        @for (var i = 0; i < Model.Satirlar.Count; i++)
-        {
-            <input type="hidden" asp-for="Satirlar[i].UrunId" />
-            <input type="hidden" asp-for="Satirlar[i].UrunKod" />
-            <input type="hidden" asp-for="Satirlar[i].UrunAd" />
-            <input type="hidden" asp-for="Satirlar[i].Birim" />
-            <input type="hidden" asp-for="Satirlar[i].Miktar" />
-        }
-        <input type="hidden" asp-for="Aciklama" />
-
-        <span class="ipucu arac-sag">
-            Transfer, kaynak depodaki partileri son kullanma tarihine göre tüketir
-            ve hedef depoda aynı maliyet, tarih ve lot ile yeniden açar.
-        </span>
-    </form>
-
-    @* Kamera paneli. Element ID'leri kamera.js'in bekledigi sozlesme:
-       kamera-paneli / kamera-video / kamera-secim / kamera-durum /
-       kamera-son. Zayi ve mal kabul ekranlarindaki blogun aynisi. *@
-    <div id="kamera-paneli" class="arac-cubugu d-none" style="background:#f8fafc">
-        <video id="kamera-video" playsinline muted
-               style="width:22rem;max-width:100%;height:12rem;object-fit:cover;
-                      background:#111827;border-radius:.25rem">
-        </video>
-
-        <div class="d-flex flex-column gap-1" style="min-width:0">
-            <span class="arac-etiket">Kamera</span>
-
-            <select id="kamera-secim" class="form-select" style="width:15rem"
-                    aria-label="Kamera seç">
+        <div class="arac-cubugu">
+            <span class="arac-etiket">Kaynak</span>
+            <select class="form-select" style="width:11rem" asp-for="KaynakDepoId"
+                    id="kaynak-depo" aria-label="Kaynak depo">
+                <option value="0">Seçiniz</option>
+                @foreach (var depo in Model.Depolar)
+                {
+                    <option value="@depo.Id" selected="@(Model.KaynakDepoId == depo.Id)">@depo.Ad</option>
+                }
             </select>
 
-            <div id="kamera-durum" class="ipucu">Kamera kapalı.</div>
-            <div id="kamera-son" class="ipucu"></div>
+            <i class="ph ph-arrow-right text-muted"></i>
+
+            <span class="arac-etiket">Hedef</span>
+            <select class="form-select" style="width:11rem" asp-for="HedefDepoId"
+                    aria-label="Hedef depo">
+                <option value="0">Seçiniz</option>
+                @foreach (var depo in Model.Depolar)
+                {
+                    <option value="@depo.Id" selected="@(Model.HedefDepoId == depo.Id)">@depo.Ad</option>
+                }
+            </select>
+
+            <span class="arac-ayrac"></span>
+
+            @* id="barkod" acikca veriliyor: kamera.js bu ID'yi ariyor. *@
+            <div class="arac-alan">
+                <i class="ph ph-barcode text-muted"></i>
+                <input id="barkod" class="form-control font-monospace" style="width:14rem"
+                       autocomplete="off" autofocus
+                       placeholder="Okutun, yazın veya kamerayı kullanın" aria-label="Barkod" />
+            </div>
+
+            <button type="button" id="btn-kamera" class="btn btn-outline-secondary">
+                <i class="ph ph-video-camera"></i> Kamera
+            </button>
+
+            <button type="button" id="btn-satir-ekle" class="btn btn-primary">
+                <i class="ph ph-plus"></i> Ekle
+            </button>
+
+            <span class="ipucu arac-sag">
+                Transfer, kaynak depodaki partileri son kullanma tarihine göre tüketir
+                ve hedef depoda aynı maliyet, tarih ve lot ile yeniden açar.
+            </span>
         </div>
 
-        <span class="ipucu arac-sag" style="max-width:20rem">
-            Barkodu kameranın ortasına ve ekrana paralel tutun. Okunan ürün
-            listeye eklenir ve kamera açık kalır; arka arkaya okutabilirsiniz.
-        </span>
-    </div>
+        @* Kamera paneli. Element ID'leri kamera.js'in bekledigi sozlesme. *@
+        <div id="kamera-paneli" class="arac-cubugu d-none" style="background:#f8fafc">
+            <video id="kamera-video" playsinline muted
+                   style="width:22rem;max-width:100%;height:12rem;object-fit:cover;
+                          background:#111827;border-radius:.25rem">
+            </video>
 
-    <div class="izgara-sarmal">
-        <table class="izgara">
-            <thead>
-                <tr>
-                    <th style="width:8rem">Kod</th>
-                    <th>Ürün</th>
-                    <th style="width:5rem">Birim</th>
-                    <th class="sayi" style="width:9rem">Kaynak bakiye</th>
-                    <th class="sayi" style="width:7rem">Miktar</th>
-                    <th class="islem" style="width:5rem"></th>
-                </tr>
-            </thead>
-            <tbody>
-                @for (var i = 0; i < Model.Satirlar.Count; i++)
-                {
-                    var satir = Model.Satirlar[i];
-                    var yetersiz = Model.KaynakDepoId > 0 && satir.Miktar > satir.KaynakBakiye;
+            <div class="d-flex flex-column gap-1" style="min-width:0">
+                <span class="arac-etiket">Kamera</span>
 
+                <select id="kamera-secim" class="form-select" style="width:15rem"
+                        aria-label="Kamera seç">
+                </select>
+
+                <div id="kamera-durum" class="ipucu">Kamera kapalı.</div>
+                <div id="kamera-son" class="ipucu"></div>
+            </div>
+
+            <span class="ipucu arac-sag" style="max-width:20rem">
+                Barkodu kameranın ortasına ve ekrana paralel tutun. Okunan ürün
+                listeye eklenir, kamera açık kalır.
+            </span>
+        </div>
+
+        <div class="izgara-sarmal">
+            <table class="izgara" id="transfer-izgara">
+                <thead>
                     <tr>
-                        <td class="kod">@satir.UrunKod</td>
-                        <td><span class="urun-hucre-metin">@satir.UrunAd</span></td>
-                        <td>@satir.Birim</td>
-                        <td class="sayi">
-                            @if (Model.KaynakDepoId > 0)
-                            {
-                                @Sayi(satir.KaynakBakiye)
-                                @if (yetersiz)
-                                {
-                                    <span class="rozet rozet-olumsuz ms-1">yetersiz</span>
-                                }
-                            }
-                            else
-                            {
-                                <span class="text-muted">—</span>
-                            }
-                        </td>
-                        <td class="sayi">@Sayi(satir.Miktar)</td>
-                        <td class="islem">
-                            <form method="post" asp-action="SatirSil" class="form-seffaf">
-                                <input type="hidden" name="urunId" value="@satir.UrunId" />
-                                <input type="hidden" asp-for="KaynakDepoId" />
-                                <input type="hidden" asp-for="HedefDepoId" />
-                                <input type="hidden" asp-for="Aciklama" />
-                                @for (var j = 0; j < Model.Satirlar.Count; j++)
-                                {
-                                    <input type="hidden" asp-for="Satirlar[j].UrunId" />
-                                    <input type="hidden" asp-for="Satirlar[j].UrunKod" />
-                                    <input type="hidden" asp-for="Satirlar[j].UrunAd" />
-                                    <input type="hidden" asp-for="Satirlar[j].Birim" />
-                                    <input type="hidden" asp-for="Satirlar[j].Miktar" />
-                                }
-                                <button type="submit" class="btn btn-danger" title="Satırı çıkar">
+                        <th style="width:8rem">Kod</th>
+                        <th>Ürün</th>
+                        <th style="width:5rem">Birim</th>
+                        <th class="sayi" style="width:9rem">Kaynak bakiye</th>
+                        <th class="sayi" style="width:7rem">Miktar</th>
+                        <th class="islem" style="width:5rem"></th>
+                    </tr>
+                </thead>
+                <tbody id="transfer-satirlar">
+                    @for (var i = 0; i < Model.Satirlar.Count; i++)
+                    {
+                        var satir = Model.Satirlar[i];
+                        <tr data-urun-id="@satir.UrunId">
+                            <td class="kod">@satir.UrunKod</td>
+                            <td><span class="urun-hucre-metin">@satir.UrunAd</span></td>
+                            <td>@satir.Birim</td>
+                            <td class="sayi bakiye">@Sayi(satir.KaynakBakiye)</td>
+                            <td class="sayi miktar">@Sayi(satir.Miktar)</td>
+                            <td class="islem">
+                                <button type="button" class="btn btn-danger btn-satir-sil"
+                                        title="Satırı çıkar">
                                     <i class="ph ph-trash"></i>
                                 </button>
-                            </form>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+                            </td>
+                            <input type="hidden" name="Satirlar[@i].UrunId" value="@satir.UrunId" />
+                            <input type="hidden" name="Satirlar[@i].UrunKod" value="@satir.UrunKod" />
+                            <input type="hidden" name="Satirlar[@i].UrunAd" value="@satir.UrunAd" />
+                            <input type="hidden" name="Satirlar[@i].Birim" value="@satir.Birim" />
+                            <input type="hidden" name="Satirlar[@i].Miktar" value="@satir.Miktar" />
+                        </tr>
+                    }
+                </tbody>
+            </table>
 
-        @if (Model.Satirlar.Count == 0)
-        {
-            <p class="veri-yok">Barkod okutarak taşınacak ürünleri ekleyin.</p>
-        }
-    </div>
+            <p class="veri-yok @(Model.Satirlar.Count > 0 ? "d-none" : "")" id="bos-mesaji">
+                Barkod okutarak taşınacak ürünleri ekleyin.
+            </p>
+        </div>
 
-    @if (Model.Satirlar.Count > 0)
-    {
-        <form method="post" asp-action="Tamamla" class="arac-cubugu"
-              style="border-top:1px solid var(--izgara-cizgi)">
-            <input type="hidden" asp-for="KaynakDepoId" />
-            <input type="hidden" asp-for="HedefDepoId" />
-            @for (var i = 0; i < Model.Satirlar.Count; i++)
-            {
-                <input type="hidden" asp-for="Satirlar[i].UrunId" />
-                <input type="hidden" asp-for="Satirlar[i].UrunKod" />
-                <input type="hidden" asp-for="Satirlar[i].UrunAd" />
-                <input type="hidden" asp-for="Satirlar[i].Birim" />
-                <input type="hidden" asp-for="Satirlar[i].Miktar" />
-            }
-
+        <div class="arac-cubugu @(Model.Satirlar.Count > 0 ? "" : "d-none")" id="tamamla-serit"
+             style="border-top:1px solid var(--izgara-cizgi)">
             <span class="arac-etiket">Açıklama</span>
             <input class="form-control" style="width:22rem" asp-for="Aciklama"
                    autocomplete="off" placeholder="İrsaliye no, sebep vb." />
@@ -192,12 +151,9 @@
                 <i class="ph ph-arrows-left-right"></i> Transferi Tamamla
             </button>
 
-            <span class="ipucu arac-sag">
-                <strong>@Model.Satirlar.Count</strong> ürün ·
-                toplam @Sayi(Model.Satirlar.Sum(s => s.Miktar))
-            </span>
-        </form>
-    }
+            <span class="ipucu arac-sag" id="ozet-metni"></span>
+        </div>
+    </form>
 
     <div class="panel" style="margin-top:.7rem">
         <div class="panel-baslik">
@@ -248,6 +204,6 @@
 
 @section Scripts {
     <script src="~/lib/zxing/index.min.js" asp-append-version="true"></script>
-    <script src="~/js/transfer-kamera.js" asp-append-version="true"></script>
+    <script src="~/js/transfer.js" asp-append-version="true"></script>
     <script src="~/js/kamera.js" asp-append-version="true"></script>
 }

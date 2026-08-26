@@ -10,73 +10,25 @@ namespace MarketOtomasyon.Controllers;
 /// Depolar arasi transfer. Mudure ozel: depolar arasi stok tasimak yetki
 /// isteyen bir istir ve kasiyerin gunluk isi degildir.
 ///
-/// Transfer satirlari sunucuda saklanmaz; form her gonderimde satirlarin
-/// tamamini tasir. Sepet gibi kalici bir tasarim gerekmiyor cunku transfer
-/// tek oturumda tamamlanan bir islem.
+/// Satir ekleme/cikarma istemci tarafinda yapilir (wwwroot/js/transfer.js)
+/// ve barkod cozumu icin ortak /Barkod/Coz ucu kullanilir. Sunucuya
+/// yalnizca tamamlanmis transfer gelir.
+///
+/// Bunun sebebi kamera: her barkod okumasinda form gonderilseydi sayfa
+/// yenilenir, kamera kapanip yeniden acilirdi. Zayi ve mal kabul
+/// ekranlari da ayni nedenle barkodu AJAX ile cozuyor.
 /// </summary>
 [Authorize(Roles = Roller.Mudur)]
 public class TransferController : Controller
 {
     private readonly TransferService _transferService;
-    private readonly BarkodService _barkodService;
 
-    public TransferController(TransferService transferService, BarkodService barkodService)
-    {
-        _transferService = transferService;
-        _barkodService = barkodService;
-    }
+    public TransferController(TransferService transferService)
+        => _transferService = transferService;
 
     [HttpGet]
     public async Task<IActionResult> Index(CancellationToken ct)
         => View(await EkranHazirlaAsync(new TransferEkranVm(), ct));
-
-    /// <summary>Barkod okutarak ya da urun secerek listeye satir ekler.</summary>
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SatirEkle(TransferEkranVm form, CancellationToken ct)
-    {
-        if (!string.IsNullOrWhiteSpace(form.Barkod))
-        {
-            var sonuc = await _barkodService.CozAsync(form.Barkod, ct);
-            if (!sonuc.Basarili)
-            {
-                form.Hata = sonuc.Hata;
-                return View(nameof(Index), await EkranHazirlaAsync(form, ct));
-            }
-
-            // Ayni urun ikinci kez okutulursa yeni satir acilmaz, miktar
-            // artar: UQ_TransferSatir ayni urunu iki satirda kabul etmiyor
-            // ve kasa ekrani da barkod tekrarinda ayni sekilde davraniyor.
-            var mevcut = form.Satirlar.FirstOrDefault(s => s.UrunId == sonuc.UrunId);
-            if (mevcut is not null)
-            {
-                mevcut.Miktar += sonuc.Miktar;
-            }
-            else
-            {
-                form.Satirlar.Add(new TransferSatirVm
-                {
-                    UrunId = sonuc.UrunId,
-                    UrunKod = sonuc.Kod,
-                    UrunAd = sonuc.Ad,
-                    Birim = sonuc.Birim,
-                    Miktar = sonuc.Miktar
-                });
-            }
-        }
-
-        form.Barkod = null;
-        return View(nameof(Index), await EkranHazirlaAsync(form, ct));
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SatirSil(TransferEkranVm form, int urunId, CancellationToken ct)
-    {
-        form.Satirlar.RemoveAll(s => s.UrunId == urunId);
-        form.Barkod = null;
-        return View(nameof(Index), await EkranHazirlaAsync(form, ct));
-    }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -102,8 +54,8 @@ public class TransferController : Controller
 
     /// <summary>
     /// Depolari, gecmisi ve satirlarin kaynak depo bakiyelerini doldurur.
-    /// Bakiye ekranda gosteriliyor ki mudur olmayan stogu tasimaya calisip
-    /// hata almasin.
+    /// Bakiye yalnizca hata sonrasi ekran yeniden cizilirken anlamli;
+    /// normal akista satirlar istemcide birikiyor.
     /// </summary>
     private async Task<TransferEkranVm> EkranHazirlaAsync(TransferEkranVm form, CancellationToken ct)
     {

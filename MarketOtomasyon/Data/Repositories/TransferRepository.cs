@@ -19,14 +19,22 @@ public sealed class TransferRepository
     /// Numara sequence'ten alinir. MAX(TransferNo)+1 es zamanli iki
     /// transferde ayni numarayi uretirdi; IadeRepository de ayni bicimi
     /// kullaniyor.
+    ///
+    /// Yerel degisken bilerek @yeniTransferNo, @transferNo DEGIL: Dapper
+    /// gecirilen StokTransfer nesnesinin TUM public property'lerini
+    /// parametre olarak ekler (SQL metninde kullanilmasa bile), yani
+    /// entity'deki TransferNo alani yuzunden @TransferNo da parametre
+    /// listesine giriyordu. SQL Server parametre adlarinda buyuk/kucuk
+    /// harf duyarsiz oldugu icin @TransferNo ile DECLARE @transferNo AYNI
+    /// isim sayilip "already been declared" hatasi veriyordu.
     /// </summary>
     private const string SqlEkle = @"
 DECLARE @no INT = NEXT VALUE FOR TransferNoSeq;
-DECLARE @transferNo NVARCHAR(20) = FORMAT(SYSUTCDATETIME(), 'yyyyMMdd') + '-T-' + FORMAT(@no, '00000');
+DECLARE @yeniTransferNo NVARCHAR(20) = FORMAT(SYSUTCDATETIME(), 'yyyyMMdd') + '-T-' + FORMAT(@no, '00000');
 
 INSERT INTO StokTransfer (TransferNo, KaynakDepoId, HedefDepoId, KullaniciId, Aciklama)
 OUTPUT INSERTED.Id, INSERTED.TransferNo
-VALUES (@transferNo, @KaynakDepoId, @HedefDepoId, @KullaniciId, @Aciklama);";
+VALUES (@yeniTransferNo, @KaynakDepoId, @HedefDepoId, @KullaniciId, @Aciklama);";
 
     private const string SqlSatirEkle = @"
 INSERT INTO StokTransferSatir (TransferId, UrunId, Miktar)
