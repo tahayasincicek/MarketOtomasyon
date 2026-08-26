@@ -19,6 +19,15 @@
 
     <div id="fatura-uyari" class="bildirim bildirim-olumsuz d-none" role="alert"></div>
 
+    @if (Model.Tedarikciler.Count == 0)
+    {
+        <div class="bildirim bildirim-bilgi">
+            <i class="ph ph-info"></i>
+            Kayıtlı tedarikçi yok. Fatura tedarikçisiz kaydedilemez;
+            önce <a asp-controller="Tedarikci" asp-action="Ekle">tedarikçi kartı ekleyin</a>.
+        </div>
+    }
+
     @* Satirlar istemci tarafinda birikir; sunucuya yalnizca tamamlanmis
        fatura gider. Barkod okundugunda urun tabloya eklenir, birim fiyat
        ve KDV alanlari orada duzenlenir - transfer ekranindaki desenin
@@ -28,13 +37,24 @@
 
         <div class="arac-cubugu">
             <span class="arac-etiket">Tedarikçi</span>
-            <select class="form-select" style="width:14rem" asp-for="TedarikciId" aria-label="Tedarikçi">
+            @* Liste bos oldugunda sadece "Seciniz" gorunur ve ekran bozuk
+               sanilir. Fatura tedarikcisiz kaydedilemedigi icin durumu
+               soylemek ve karti eklemeye goturmek gerekiyor. *@
+            <select class="form-select" style="width:14rem" asp-for="TedarikciId" aria-label="Tedarikçi"
+                    disabled="@(Model.Tedarikciler.Count == 0)">
                 <option value="0">Seçiniz</option>
                 @foreach (var t in Model.Tedarikciler)
                 {
                     <option value="@t.Id" selected="@(Model.TedarikciId == t.Id)">@t.Unvan</option>
                 }
             </select>
+
+            @if (Model.Tedarikciler.Count == 0)
+            {
+                <a class="btn btn-sm btn-primary" asp-controller="Tedarikci" asp-action="Ekle">
+                    <i class="ph ph-plus"></i> Tedarikçi ekle
+                </a>
+            }
 
             <span class="arac-etiket">Depo</span>
             <select class="form-select" style="width:10rem" asp-for="DepoId" aria-label="Depo">
