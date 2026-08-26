@@ -495,3 +495,6 @@ format.ps1
 
 # Uygulama log dosyalari
 Loglar/
+
+# Yerel gelistirme ortami ayarlari (editor araci uretir, projeye ait degil)
+.claude/
