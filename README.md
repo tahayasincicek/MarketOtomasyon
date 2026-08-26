@@ -21,7 +21,13 @@ git clone https://github.com/tahayasincicek/MarketOtomasyon.git
 cd MarketOtomasyon
 ```
 
-Bağlantı dizesi `MarketOtomasyon/appsettings.json` içinde:
+Yerel ayar dosyanı şablondan oluştur:
+
+```powershell
+copy MarketOtomasyon\appsettings.Development.json.ornek MarketOtomasyon\appsettings.Development.json
+```
+
+İçindeki bağlantı dizesini kendi kurulumuna göre düzenle:
 
 ```json
 "ConnectionStrings": {
@@ -32,6 +38,18 @@ Bağlantı dizesi `MarketOtomasyon/appsettings.json` içinde:
 Farklı bir sunucu kullanıyorsan `Server=` kısmını değiştir. SQL Server
 kimlik doğrulaması gerekiyorsa `Trusted_Connection=True` yerine
 `User Id=...;Password=...` yaz.
+
+Kopya `.gitignore`'dadır — herkesin sunucu adı ve kimlik doğrulama biçimi
+farklı olabilir, bu ayar kişiye özeldir.
+
+**Neden `appsettings.json` değil:** o dosya her ortamda yüklenir ve
+repoda durur. Üretim kullanıcı adı ve şifresi oraya yazılsaydı kaynak
+koda girer, bir kez commit'lendikten sonra geçmişten temizlenmesi
+zorlaşırdı. Üretimde bağlantı dizesi ortam değişkeninden okunur —
+"Üretime çıkarken" bölümüne bak.
+
+Bağlantı dizesi hiçbir yerde bulunamazsa uygulama **açılışta** anlamlı
+bir hatayla durur; ilk isteği bekleyip giriş ekranında patlamaz.
 
 Veritabanını kur (aşağıdaki bölümdeki sırayla), sonra:
 
@@ -47,6 +65,46 @@ Geliştirme hesapları:
 |---|---|---|
 | `mudur` | `Mudur123!` | Müdür — tüm ekranlar |
 | `kasiyer1` | `Kasiyer123!` | Kasiyer — kasa, iade, vardiya |
+
+### Üretime çıkarken
+
+Üretimde iki şey `appsettings` dosyalarından gelmez, ortamdan gelir.
+
+**1. Bağlantı dizesi.** `ConnectionStrings__MarketDb` ortam değişkenine
+yazılır. Çift alt çizgi, iç içe ayar anahtarının (`ConnectionStrings:MarketDb`)
+ortam değişkeni karşılığıdır:
+
+```powershell
+setx ConnectionStrings__MarketDb "Server=sunucu;Database=MarketOtomasyon;User Id=market;Password=...;TrustServerCertificate=True"
+```
+
+`appsettings.Production.json` içinde bu anahtar bilerek yok; dosya yalnızca
+log seviyesi ve izin verilen alan adlarını taşır. Oraya bağlantı dizesi
+yazılırsa bir birim testi (`AyarDosyalariTests`) düşer — sırların kaynak
+koda sızmasını derleme aşamasında yakalamak için.
+
+**2. Ortam adı.** `ASPNETCORE_ENVIRONMENT=Production` olmalı. Bu ayar üç
+şeyi birden değiştirir:
+
+| Ayar | Development | Production |
+|---|---|---|
+| Oturum çerezi | HTTP'de de gönderilir | **Yalnızca HTTPS** (`Secure`) |
+| HSTS | kapalı | açık |
+| Log seviyesi | `Debug` | `Information` |
+
+Çerez politikası ayrımı önemli: geliştirmede `http://localhost` ile
+çalışıldığı için çerez `Secure` işaretlenemez, yoksa giriş yapılamaz.
+Üretimde ise işaretlenmezse, HTTP'ye düşen tek bir istekte oturum çerezi
+şifresiz gider ve ağı dinleyen biri müdür oturumunu devralabilir.
+
+`AllowedHosts` değerini de kendi alan adınla değiştir; `*` bırakmak Host
+başlığı sahteciliğine açık bırakır.
+
+> Bu iki madde deploy için gerekli minimumdur, yeterli değil. Varsayılan
+> `mudur` / `kasiyer1` hesaplarının şifreleri README'de ve kurulum
+> betiğinde yazılıdır — üretime çıkmadan mutlaka değiştirilmeli. Giriş
+> ekranında deneme sınırı da yok; şifre deneyen biri engellenmiyor,
+> yalnızca loglanıyor.
 
 ### Docker ile çalıştırma
 

@@ -24,4 +24,14 @@
     <ProjectReference Include="..\MarketOtomasyon\MarketOtomasyon.csproj" />
   </ItemGroup>
 
+  <!-- Ayar dosyalari test ciktisina kopyalanir; AyarDosyalariTests onlari
+       okuyup gecerli JSON olduklarini ve uretim dosyasina baglanti dizesi
+       sizmadigini dogrular. Klasorden yukari tirmanip proje kokunu aramak
+       kirilgan: cikti yolu degistiginde test yanlis yerde arar. -->
+  <ItemGroup>
+    <None Include="..\MarketOtomasyon\appsettings*.json;..\MarketOtomasyon\appsettings*.ornek"
+          Link="ayarlar\%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

@@ -1,0 +1,24 @@
+// Bu bir SABLONDUR. Projeyi ilk kez kurarken kopyala:
+//
+//   copy appsettings.Development.json.ornek appsettings.Development.json
+//
+// Kopya .gitignore'dadir: herkesin sunucu adi, ornegi ve kimlik dogrulama
+// bicimi farkli olabilir. Kendi makinene gore duzenle.
+//
+// Uretimde bu dosya kullanilmaz; baglanti dizesi
+// ConnectionStrings__MarketDb ortam degiskeninden okunur.
+{
+  "ConnectionStrings": {
+    "MarketDb": "Server=localhost;Database=MarketOtomasyon;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=False"
+  },
+  "Serilog": {
+    "MinimumLevel": {
+      "Default": "Debug",
+      "Override": {
+        "Microsoft.AspNetCore": "Warning",
+        "Microsoft.Hosting.Lifetime": "Information",
+        "System": "Warning"
+      }
+    }
+  }
+}

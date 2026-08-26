@@ -14,6 +14,22 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+/* Baglanti dizesi acilista dogrulanir.
+   appsettings.json'da bilerek yok: uretim sifresi kaynak koda girmesin.
+   Gelistirmede appsettings.Development.json'dan, uretimde
+   ConnectionStrings__MarketDb ortam degiskeninden gelir.
+
+   Kontrol burada yapiliyor cunku aksi halde uygulama sorunsuz acilir,
+   hata ancak ilk veritabani istegi geldiginde ortaya cikardi: kasiyer
+   giris ekranini gorur, sifresini girer ve orada patlardi. */
+if (string.IsNullOrWhiteSpace(builder.Configuration.GetConnectionString("MarketDb")))
+{
+    throw new InvalidOperationException(
+        "Veritabanı bağlantı dizesi tanımlı değil. " +
+        "Üretimde ConnectionStrings__MarketDb ortam değişkenini ayarlayın, " +
+        "geliştirmede appsettings.Development.json dosyasına ekleyin.");
+}
+
 // Log kurallari appsettings.json'daki Serilog bolumunde; ayar kod icine
 // dagilmasin. Enrich.FromLogContext, istek basina eklenen Kullanici ve
 // IstekNo alanlarini okuyabilmek icin sart.
@@ -34,7 +50,16 @@ builder.Services
         options.Cookie.Name = "MarketOtomasyon.Oturum";
         options.Cookie.HttpOnly = true;
         options.Cookie.SameSite = SameSiteMode.Lax;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+
+        /* Uretimde cerez YALNIZCA HTTPS uzerinden gonderilir.
+           SameAsRequest birakilsaydi, HTTP'ye dusen tek bir istekte
+           oturum cerezi sifresiz gider ve ag trafigini dinleyen biri
+           onu kopyalayip mudur oturumunu devralabilirdi.
+           Gelistirmede Always kullanilamaz: http://localhost ile
+           calisirken cerez hic yazilmaz ve giris yapilamaz. */
+        options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+            ? CookieSecurePolicy.SameAsRequest
+            : CookieSecurePolicy.Always;
         options.LoginPath = "/Hesap/Giris";
         options.AccessDeniedPath = "/Hesap/Yetkisiz";
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
