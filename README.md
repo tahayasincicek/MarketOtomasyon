@@ -205,6 +205,41 @@ Gıda ürünlerinde mal kabulde tarih zorunludur (`Urun.SonKullanmaZorunlu`).
 Boş bırakılan tarih partiyi sıranın sonuna atar; yani unutmak, ürünü "en
 son satılacak" partiye çevirir.
 
+**Süresi geçmiş parti satılamaz.** Satış, partileri tüketirken bugünü
+geçerlilik günü olarak verir; süresi dolmuş partiler sıralamaya hiç
+girmez. Sınır `>=` olduğu için **son kullanma günü bugün olan ürün hâlâ
+satılabilir**, ertesi gün satılamaz.
+
+Bu filtre sorguya gömülü değil, parametrelidir
+(`MaliyetRepository.SqlAcikPartiler` içindeki `@gecerlilikGunu`). Zayi,
+transfer ve sayım düzeltmesi `NULL` geçer, çünkü onların süresi geçmiş
+partiye erişebilmesi gerekir. Filtre sabit olsaydı o stok ne satılabilir
+ne düşülebilir olurdu; temizlemek istediğiniz şeyi temizleyemezdiniz.
+
+Satış bu yüzden reddedildiğinde kasiyer "stok yok" değil, gerçek sebebi
+görür: *"satılabilir stok yok, 20 birim son kullanma tarihi geçmiş stok
+var, zayi olarak düşülmeli."* Aksi halde kasiyer ekranda 20 adet görüp
+satamaz ve nedenini anlayamazdı.
+
+Kasada uyarı daha erken çıkar: sepete giren bir üründe süresi geçmiş
+stok varsa satırda kırmızı **SKT** rozeti belirir. Bu rozet satışı
+**engellemez** — sepetteki mal taze partiden çıkıyor olabilir; amaç
+kasiyerin rafa bakması. Kararı veren yer hâlâ `SatisService`. Rozeti
+besleyen sorgu sepetteki tüm ürünler için tek seferde çalışır
+(`SuresiGecmisBakiyeleriAsync`); kasa sıcak yol olduğu için satır başına
+sorgu atılmaz.
+
+**Son kullanma ekranı bir iş listesidir**, rapor değil. `/SonKullanma`
+süresi geçmiş partileri kırmızı, yaklaşanları sarı gösterir; süresi
+geçmiş her satırın yanındaki "zayi'ye al" o partinin kalanını tek adımda
+düşer ve satır listeden kaybolur. Kasadaki satış reddi son savunma
+hattıdır; bu liste sorunun kasaya hiç ulaşmaması içindir.
+
+Zayi burada **parti bazlıdır** (`SayimService.PartiZayiKaydetAsync`).
+Genel zayi ürün + depo alıp FEFO ile ilerler; kullanıcının ekranda
+işaretlediği lot ile sistemin düşürdüğü lot ayrı olabilirdi. Burada
+raftan çekilen parti neyse kayıt da onu düşer.
+
 **Transfer partileri de taşır.** Depolar arası transfer yalnızca iki stok
 hareketi yazmaz: kaynak depodaki partileri FEFO sırasıyla tüketir ve hedef
 depoda aynı maliyet, son kullanma tarihi ve lot ile yeni partiler açar.
@@ -276,6 +311,7 @@ devam etmesi gerekir.
 | Kampanya | `/Kampanya` | İndirim kuralları |
 | Kâr Marjı | `/Maliyet` | Parti maliyeti (FEFO), ürün bazında kâr |
 | Raporlar | `/Rapor` | Günlük ciro, en çok satan, ödeme dağılımı, saat yoğunluğu, kritik stok |
+| Son Kullanma | `/SonKullanma` | Süresi geçmiş ve yaklaşan partiler; parti bazlı zayi |
 | Depo Transferi | `/Transfer` | Depolar arası stok taşıma (partileriyle birlikte) |
 | Tedarikçiler | `/Tedarikci` | Tedarikçi kartları |
 | Alış Faturaları | `/AlisFaturasi` | Fatura girişi ve otomatik mal kabul |

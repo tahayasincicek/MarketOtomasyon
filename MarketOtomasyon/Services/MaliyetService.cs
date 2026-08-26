@@ -53,6 +53,11 @@ public sealed class MaliyetService
         }, ct);
     }
 
+    /// <param name="gecerlilikGunu">
+    /// Doluysa suresi bu gunden once dolan partiler hic goruntulenmez;
+    /// satis bunu gecer. Zayi, transfer ve sayim duzeltmesi NULL birakir
+    /// cunku onlarin suresi gecmis partiye erisebilmesi gerekir.
+    /// </param>
     public async Task<FifoTuketimSonucu> FifoTuketAsync(
         IDbConnection conn,
         IDbTransaction tx,
@@ -61,10 +66,11 @@ public sealed class MaliyetService
         long stokHareketId,
         int? fisSatirId,
         decimal miktar,
+        DateTime? gecerlilikGunu = null,
         CancellationToken ct = default)
     {
         var partiler = await _maliyetRepository.AcikPartileriGetirAsync(
-            conn, tx, urunId, depoId, ct);
+            conn, tx, urunId, depoId, gecerlilikGunu, ct: ct);
         var sonuc = FifoMaliyetHesaplayici.Tuket(partiler, miktar);
         if (!sonuc.Basarili) return sonuc;
 
@@ -74,6 +80,53 @@ public sealed class MaliyetService
 
         return sonuc;
     }
+
+    /// <summary>
+    /// Suresi gecmis ve dusulmemis bakiye. Satis reddedildiginde
+    /// kasiyere "stok yok" yerine gercek sebebi soyleyebilmek icin.
+    /// </summary>
+    public async Task<decimal> SuresiGecmisBakiyeAsync(
+        IDbConnection conn, IDbTransaction tx, int urunId, int depoId, DateTime bugun,
+        CancellationToken ct = default)
+        => await _maliyetRepository.SuresiGecmisBakiyeAsync(conn, tx, urunId, depoId, bugun, ct);
+
+    /// <summary>
+    /// Coklu urun icin ayni bilgi; kasa sepetindeki uyari rozetini
+    /// besler. Tek sorgu, transaction disi.
+    /// </summary>
+    public async Task<Dictionary<int, decimal>> SuresiGecmisBakiyeleriAsync(
+        int depoId, IReadOnlyCollection<int> urunIdler, DateTime bugun,
+        CancellationToken ct = default)
+        => await _maliyetRepository.SuresiGecmisBakiyeleriAsync(depoId, urunIdler, bugun, ct);
+
+    /// <summary>
+    /// BELIRLI bir partiyi tuketir; FEFO sirasina bakmaz.
+    ///
+    /// Son kullanma ekranindaki "zayi'ye al" bunu kullanir. FifoTuketAsync
+    /// kullanilamaz: o, urun+depo icin sirali ilk partiyi secer. Kullanici
+    /// ekranda 15 Mart lotunu isaretlemisken sistemin 20 Mart lotunu
+    /// dusurmesi, sayilan mal ile kayit arasinda sessiz bir fark birakirdi.
+    ///
+    /// Miktar kontrolu SQL tarafinda: TuketimYaz, KalanMiktar yetmezse
+    /// THROW eder, yani es zamanli iki dusum yarisinda ikincisi kesilir.
+    /// </summary>
+    public async Task PartiTuketAsync(
+        IDbConnection conn,
+        IDbTransaction tx,
+        long stokPartiId,
+        decimal miktar,
+        decimal birimMaliyet,
+        long stokHareketId,
+        CancellationToken ct = default)
+        => await _maliyetRepository.TuketimYazAsync(
+            conn, tx, stokHareketId, fisSatirId: null,
+            new FifoTuketimVm
+            {
+                StokPartiId = stokPartiId,
+                Miktar = miktar,
+                BirimMaliyet = birimMaliyet
+            },
+            ct);
 
     public async Task<long> DuzeltmePartisiAcAsync(
         IDbConnection conn,

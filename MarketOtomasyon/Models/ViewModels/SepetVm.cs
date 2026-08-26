@@ -22,6 +22,16 @@ public class SepetSatirVm
     /// <summary>Indirim bir kampanyadan geldiyse dolu; elle indirimde bos.</summary>
     public int? KampanyaId { get; set; }
 
+    /// <summary>
+    /// Bu urunde suresi gecmis ve henuz dusulmemis stok miktari.
+    ///
+    /// Sepete engel DEGIL, bilgilendirmedir: satilan mal taze partiden
+    /// cikiyor, ama raftaki ayni urunun bir kismi bozulmus demektir.
+    /// Kasiyer rozeti gorup rafa bakabilir. Satisi durduran kontrol
+    /// SatisService'te, odeme aninda.
+    /// </summary>
+    public decimal SuresiGecmisStok { get; set; }
+
     /// <summary>Kasada satirin altinda gosterilecek kampanya adi.</summary>
     public string? KampanyaAdi { get; set; }
     public decimal KdvOrani { get; set; }

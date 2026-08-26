@@ -127,7 +127,7 @@ public sealed class TransferService
             //    okunur, on kontrol ile buraya kadar gecen surede baska
             //    bir islem stogu tuketmis olabilir.
             var tuketim = await _maliyetService.FifoTuketAsync(
-                conn, tx, satir.UrunId, kaynakDepoId, cikisId, fisSatirId: null, satir.Miktar, ct);
+                conn, tx, satir.UrunId, kaynakDepoId, cikisId, fisSatirId: null, satir.Miktar, ct: ct);
 
             if (!tuketim.Basarili)
             {

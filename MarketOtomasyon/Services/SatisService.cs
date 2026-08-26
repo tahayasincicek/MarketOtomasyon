@@ -138,6 +138,9 @@ public class SatisService
                 Aciklama = $"Satış {fis.FisNo}"
             }, ct);
 
+            // Satis, suresi gecmis partileri GORMEZ: gecerlilikGunu dolu
+            // geciliyor. Zayi ve transfer NULL birakir cunku onlarin o
+            // partiye erisebilmesi gerekir.
             var maliyetSonucu = await _maliyetService.FifoTuketAsync(
                 conn,
                 tx,
@@ -146,11 +149,23 @@ public class SatisService
                 hareketId,
                 satir.SatirId,
                 satir.Miktar,
-                ct);
+                gecerlilikGunu: DateTime.Today,
+                ct: ct);
 
             if (!maliyetSonucu.Basarili)
             {
-                var maliyetHatasi = $"{satir.Ad}: {maliyetSonucu.Hata}";
+                // Sebebi ayirt et: gercekten stok mu yok, yoksa var olan
+                // stogun suresi mi gecmis? Ikisi ayni mesaji verirse
+                // kasiyer ekranda 20 adet gorup satamaz ve neden oldugunu
+                // anlamaz - filtre, cozdugunden buyuk bir sorun yaratir.
+                var suresiGecmis = await _maliyetService.SuresiGecmisBakiyeAsync(
+                    conn, tx, satir.UrunId, depoId.Value, DateTime.Today, ct);
+
+                var maliyetHatasi = suresiGecmis > 0
+                    ? $"{satir.Ad}: satılabilir stok yok. {suresiGecmis:0.###} birim " +
+                      "son kullanma tarihi geçmiş stok var, zayi olarak düşülmeli."
+                    : $"{satir.Ad}: {maliyetSonucu.Hata}";
+
                 if (!_ayarlar.NegatifStogaIzinVer)
                     return SatisSonucVm.Basarisiz(maliyetHatasi);
 

@@ -3,6 +3,7 @@ using MarketOtomasyon.Data.Repositories;
 using MarketOtomasyon.Models.Entities;
 using MarketOtomasyon.Models.ViewModels;
 using System.Globalization;
+using Microsoft.Extensions.Options;
 
 namespace MarketOtomasyon.Services;
 
@@ -19,6 +20,9 @@ public class SepetService
     private readonly KampanyaService _kampanyaService;
     private readonly IslemLogRepository _islemLogRepository;
     private readonly MudurOnayService _mudurOnayService;
+    private readonly MaliyetService _maliyetService;
+    private readonly DepoRepository _depoRepository;
+    private readonly SatisAyarlari _ayarlar;
 
     public SepetService(
         IDbConnectionFactory factory,
@@ -26,7 +30,10 @@ public class SepetService
         BarkodService barkodService,
         KampanyaService kampanyaService,
         IslemLogRepository islemLogRepository,
-        MudurOnayService mudurOnayService)
+        MudurOnayService mudurOnayService,
+        MaliyetService maliyetService,
+        DepoRepository depoRepository,
+        IOptions<SatisAyarlari> ayarlar)
     {
         _factory = factory;
         _fisRepository = fisRepository;
@@ -34,6 +41,9 @@ public class SepetService
         _kampanyaService = kampanyaService;
         _islemLogRepository = islemLogRepository;
         _mudurOnayService = mudurOnayService;
+        _maliyetService = maliyetService;
+        _depoRepository = depoRepository;
+        _ayarlar = ayarlar.Value;
     }
 
     /// <summary>Vardiyadaki acik sepeti getirir; yoksa bos sepet doner.</summary>
@@ -47,7 +57,52 @@ public class SepetService
         var sepet = SepetHesaplayici.Topla(satirlar);
         sepet.FisId = fis.Id;
         sepet.FisNo = fis.FisNo;
+
+        await SktUyarilariniDoldurAsync(sepet, ct);
         return sepet;
+    }
+
+    /// <summary>
+    /// Sepetteki urunlerin suresi gecmis stogunu isaretler.
+    ///
+    /// Neden kasada: hata anini beklemek gec. Odeme aninda satis
+    /// reddedilirse musteri kasada bekliyordur; rozet kasiyere daha
+    /// sepet dolarken haber verir.
+    ///
+    /// Neden ENGEL DEGIL: sepetteki mal taze partiden cikabilir. Ayni
+    /// urunun bir kismi bozuk diye satisi durdurmak, satilabilir mali
+    /// da satilamaz yapardi. Karari veren yer SatisService.
+    ///
+    /// Sorun cikarsa sessizce gecilir: bu bilgi rozeti yuzunden kasa
+    /// ekraninin acilmamasi, saglamaya calistigi faydadan buyuk zarar.
+    /// </summary>
+    private async Task SktUyarilariniDoldurAsync(SepetVm sepet, CancellationToken ct)
+    {
+        if (sepet.Satirlar.Count == 0) return;
+
+        try
+        {
+            var depoId = await _depoRepository.IdGetirAsync(_ayarlar.DepoKodu, ct);
+            if (depoId is null) return;
+
+            var urunIdler = sepet.Satirlar.Select(s => s.UrunId).Distinct().ToList();
+            var bakiyeler = await _maliyetService.SuresiGecmisBakiyeleriAsync(
+                depoId.Value, urunIdler, DateTime.Today, ct);
+
+            if (bakiyeler.Count == 0) return;
+
+            foreach (var satir in sepet.Satirlar)
+                if (bakiyeler.TryGetValue(satir.UrunId, out var miktar))
+                    satir.SuresiGecmisStok = miktar;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch
+        {
+            // Rozet yoksa sepet yine dogru calisir.
+        }
     }
 
     /// <summary>

@@ -77,6 +77,7 @@ builder.Services.AddScoped<HizliUrunRepository>();
 builder.Services.AddScoped<MaliyetRepository>();
 builder.Services.AddScoped<TransferRepository>();
 builder.Services.AddScoped<TedarikciRepository>();
+builder.Services.AddScoped<SonKullanmaRepository>();
 builder.Services.AddScoped<AlisFaturasiRepository>();
 builder.Services.AddScoped<IslemLogRepository>();
 
@@ -96,6 +97,7 @@ builder.Services.AddScoped<SayimService>();
 builder.Services.AddScoped<PersonelService>();
 builder.Services.AddScoped<MudurOnayService>();
 builder.Services.AddScoped<TransferService>();
+builder.Services.AddScoped<SonKullanmaService>();
 builder.Services.AddScoped<TedarikciService>();
 builder.Services.AddScoped<AlisFaturasiService>();
 builder.Services.AddScoped<MaliyetService>();

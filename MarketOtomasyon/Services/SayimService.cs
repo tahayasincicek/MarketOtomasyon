@@ -16,17 +16,20 @@ public class SayimService
     private readonly SayimRepository _sayimRepository;
     private readonly StokRepository _stokRepository;
     private readonly MaliyetService _maliyetService;
+    private readonly SonKullanmaRepository _sonKullanmaRepository;
 
     public SayimService(
         IDbConnectionFactory factory,
         SayimRepository sayimRepository,
         StokRepository stokRepository,
-        MaliyetService maliyetService)
+        MaliyetService maliyetService,
+        SonKullanmaRepository sonKullanmaRepository)
     {
         _factory = factory;
         _sayimRepository = sayimRepository;
         _stokRepository = stokRepository;
         _maliyetService = maliyetService;
+        _sonKullanmaRepository = sonKullanmaRepository;
     }
 
     /// <summary>
@@ -105,7 +108,7 @@ public class SayimService
             if (duzeltme.Yon == YonCikis)
             {
                 var maliyetSonucu = await _maliyetService.FifoTuketAsync(
-                    conn, tx, satir.UrunId, form.DepoId, hareketId, null, duzeltme.Miktar, ct);
+                    conn, tx, satir.UrunId, form.DepoId, hareketId, null, duzeltme.Miktar, ct: ct);
                 if (!maliyetSonucu.Basarili)
                 {
                     tx.Rollback();
@@ -189,7 +192,7 @@ public class SayimService
         }, ct);
 
         var maliyetSonucu = await _maliyetService.FifoTuketAsync(
-            conn, tx, urunId, depoId, hareketId, null, miktar, ct);
+            conn, tx, urunId, depoId, hareketId, null, miktar, ct: ct);
         if (!maliyetSonucu.Basarili)
         {
             tx.Rollback();
@@ -202,6 +205,81 @@ public class SayimService
             Basarili = true,
             ZayiId = zayi.Id,
             YeniBakiye = bakiye - miktar
+        };
+    }
+
+    /// <summary>
+    /// Tek bir partinin kalanini zayi'ye alir. Son kullanma ekranindaki
+    /// "zayi'ye al" butonu bunu cagirir.
+    ///
+    /// ZayiKaydetAsync'ten farki, dusulecek partinin SECILI olmasi.
+    /// Genel zayi urun+depo alir ve FEFO ile ilerler; kullanicinin
+    /// ekranda isaretledigi parti ile sistemin dusurdugu parti ayni
+    /// olmayabilir. Burada kullanici hangi lotu raftan cektiyse kayit da
+    /// onu duser.
+    ///
+    /// Miktar disaridan alinmaz: kalanin TAMAMI dusulur. Suresi gecmis
+    /// maldan "birazini" tutmanin bir anlami yok.
+    /// </summary>
+    public async Task<ZayiKayitSonucu> PartiZayiKaydetAsync(
+        long stokPartiId,
+        string? sebep,
+        int kullaniciId,
+        CancellationToken ct = default)
+    {
+        if (stokPartiId <= 0) return ZayiKayitSonucu.Basarisiz("Geçersiz parti.");
+
+        var temizSebep = Temizle(sebep) ?? "Son kullanma tarihi geçti";
+        if (temizSebep.Length > 200)
+            return ZayiKayitSonucu.Basarisiz("Sebep en fazla 200 karakter olabilir.");
+
+        using var conn = await _factory.CreateOpenConnectionAsync(ct);
+        using var tx = conn.BeginTransaction(IsolationLevel.Serializable);
+
+        // Parti UPDLOCK ile transaction icinde okunur: ekrandaki miktar
+        // sayfa acildigi andaki degerdir, arada satis olmus olabilir.
+        var parti = await _sonKullanmaRepository.PartiGetirAsync(conn, tx, stokPartiId, ct);
+        if (parti is null)
+            return ZayiKayitSonucu.Basarisiz("Parti bulunamadı.");
+
+        if (parti.KalanMiktar <= 0)
+            return ZayiKayitSonucu.Basarisiz(
+                "Bu partide kalan stok yok; muhtemelen başka bir kullanıcı zaten düştü.");
+
+        var miktar = parti.KalanMiktar;
+
+        var zayi = new Zayi
+        {
+            UrunId = parti.UrunId,
+            DepoId = parti.DepoId,
+            KullaniciId = kullaniciId,
+            Miktar = miktar,
+            Sebep = temizSebep
+        };
+        zayi.Id = await _sayimRepository.ZayiEkleAsync(conn, tx, zayi, ct);
+
+        var hareketId = await _stokRepository.HareketEkleAsync(conn, tx, new StokHareket
+        {
+            UrunId = parti.UrunId,
+            DepoId = parti.DepoId,
+            Yon = YonCikis,
+            Miktar = miktar,
+            KaynakTip = KaynakZayi,
+            KaynakId = zayi.Id,
+            Aciklama = $"Zayi #{zayi.Id} (parti {stokPartiId}): {temizSebep}"
+        }, ct);
+
+        // FEFO'ya birakilmaz; ekranda secilen parti dusulur.
+        await _maliyetService.PartiTuketAsync(
+            conn, tx, stokPartiId, miktar, parti.BirimMaliyet, hareketId, ct);
+
+        tx.Commit();
+
+        return new ZayiKayitSonucu
+        {
+            Basarili = true,
+            ZayiId = zayi.Id,
+            YeniBakiye = await _stokRepository.BakiyeAsync(parti.UrunId, parti.DepoId, ct)
         };
     }
 

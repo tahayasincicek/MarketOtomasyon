@@ -41,10 +41,50 @@ FROM StokParti WITH (UPDLOCK, ROWLOCK, HOLDLOCK)
 WHERE UrunId = @urunId
   AND DepoId = @depoId
   AND KalanMiktar > 0
+  /* @gecerlilikGunu NULL ise eleme yapilmaz. Bu SART: ayni sorguyu zayi
+     ve transfer de kullaniyor, onlarin suresi gecmis partiye erisebilmesi
+     gerekir. Filtre sorguya gomulseydi o stok ne satilabilir ne
+     dusulebilir olurdu - temizlemek istedigin seyi temizleyemezdin.
+     SonKullanmaTarihi NULL olanlar (kirtasiye) her zaman satilir. */
+  AND (@gecerlilikGunu IS NULL
+       OR SonKullanmaTarihi IS NULL
+       OR SonKullanmaTarihi >= @gecerlilikGunu)
 ORDER BY CASE WHEN SonKullanmaTarihi IS NULL THEN 1 ELSE 0 END,
          SonKullanmaTarihi,
          GirisTarihi,
          Id;";
+
+    /// <summary>
+    /// Suresi gecmis ve henuz dusulmemis bakiye. Yalnizca satis
+    /// reddedildiginde cagrilir: kasiyere "stok yok" yerine "su kadari
+    /// suresi gecmis" diyebilmek icin. Sicak yola maliyeti yok.
+    /// </summary>
+    private const string SqlSuresiGecmisBakiye = @"
+SELECT ISNULL(SUM(KalanMiktar), 0)
+FROM StokParti
+WHERE UrunId = @urunId
+  AND DepoId = @depoId
+  AND KalanMiktar > 0
+  AND SonKullanmaTarihi IS NOT NULL
+  AND SonKullanmaTarihi < @bugun;";
+
+    /// <summary>
+    /// Ayni sorgunun COKLU urun hali; kasa sepeti bunu kullanir.
+    ///
+    /// Satir basina tek tek sorulsaydi 20 kalemlik sepette 20 gidis
+    /// donus olurdu - kasa sicak yol, orada N+1 dogrudan yavaslik
+    /// demek. UPDLOCK yok: bu yalnizca bilgilendirme rozetini besliyor,
+    /// kimseyi kilitlemesine gerek yok.
+    /// </summary>
+    private const string SqlSuresiGecmisBakiyeler = @"
+SELECT UrunId, ISNULL(SUM(KalanMiktar), 0) AS Miktar
+FROM StokParti
+WHERE DepoId = @depoId
+  AND UrunId IN @urunIdler
+  AND KalanMiktar > 0
+  AND SonKullanmaTarihi IS NOT NULL
+  AND SonKullanmaTarihi < @bugun
+GROUP BY UrunId;";
 
     private const string SqlTuketimYaz = @"
 UPDATE StokParti
@@ -110,12 +150,50 @@ ORDER BY u.Ad;";
         => await conn.ExecuteScalarAsync<long>(
             new CommandDefinition(SqlPartiEkle, parti, tx, cancellationToken: ct));
 
+    /// <param name="gecerlilikGunu">
+    /// Doluysa suresi bu gunden once dolan partiler elenir (satis).
+    /// NULL ise hicbir eleme yapilmaz (zayi, transfer, sayim duzeltmesi).
+    /// </param>
     public async Task<IReadOnlyList<StokPartiKalanVm>> AcikPartileriGetirAsync(
-        IDbConnection conn, IDbTransaction tx, int urunId, int depoId, CancellationToken ct = default)
+        IDbConnection conn, IDbTransaction tx, int urunId, int depoId,
+        DateTime? gecerlilikGunu = null, CancellationToken ct = default)
     {
-        var partiler = await conn.QueryAsync<StokPartiKalanVm>(
-            new CommandDefinition(SqlAcikPartiler, new { urunId, depoId }, tx, cancellationToken: ct));
+        var partiler = await conn.QueryAsync<StokPartiKalanVm>(new CommandDefinition(
+            SqlAcikPartiler,
+            new { urunId, depoId, gecerlilikGunu = gecerlilikGunu?.Date },
+            tx,
+            cancellationToken: ct));
         return partiler.AsList();
+    }
+
+    public async Task<decimal> SuresiGecmisBakiyeAsync(
+        IDbConnection conn, IDbTransaction tx, int urunId, int depoId, DateTime bugun,
+        CancellationToken ct = default)
+        => await conn.ExecuteScalarAsync<decimal>(new CommandDefinition(
+            SqlSuresiGecmisBakiye,
+            new { urunId, depoId, bugun = bugun.Date },
+            tx,
+            cancellationToken: ct));
+
+    /// <summary>
+    /// Verilen urunler icin suresi gecmis bakiyeler. Kendi baglantisini
+    /// acar: kasa sepeti cizilirken transaction yok.
+    /// Yalnizca bakiyesi olan urunler sozlukte yer alir.
+    /// </summary>
+    public async Task<Dictionary<int, decimal>> SuresiGecmisBakiyeleriAsync(
+        int depoId, IReadOnlyCollection<int> urunIdler, DateTime bugun,
+        CancellationToken ct = default)
+    {
+        // Bos liste ile "IN ()" gecersiz SQL uretir; sorguya hic gitme.
+        if (urunIdler.Count == 0) return [];
+
+        using var conn = await _factory.CreateOpenConnectionAsync(ct);
+        var satirlar = await conn.QueryAsync<(int UrunId, decimal Miktar)>(new CommandDefinition(
+            SqlSuresiGecmisBakiyeler,
+            new { depoId, urunIdler, bugun = bugun.Date },
+            cancellationToken: ct));
+
+        return satirlar.ToDictionary(s => s.UrunId, s => s.Miktar);
     }
 
     public async Task TuketimYazAsync(

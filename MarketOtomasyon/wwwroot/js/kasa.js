@@ -90,6 +90,14 @@
               + paraBicimi.format(satir.indirimTutari) + "</span>"
             : "";
 
+        // Bu urunde suresi gecmis stok var demek; satisi ENGELLEMEZ,
+        // cunku sepetteki mal taze partiden cikiyor olabilir. Amac
+        // kasiyerin rafa bakmasi. Satisi durduran kontrol sunucuda.
+        const sktRozeti = satir.suresiGecmisStok > 0
+            ? ' <span class="badge bg-danger" title="Bu üründe '
+              + satir.suresiGecmisStok + ' birim süresi geçmiş stok var">SKT</span>'
+            : "";
+
         const kampanyaEtiketi = satir.kampanyaAdi
             ? '<span class="d-block text-primary small">' + metniKacir(satir.kampanyaAdi) + "</span>"
             : "";
@@ -99,7 +107,8 @@
             '<td><span class="urun-hucre">' + resimEtiketi(satir.resimYolu, satir.ad, "kucuk") +
                 '<span class="urun-hucre-metin">' + metniKacir(satir.ad) +
                 '<span class="d-block text-muted font-monospace small">' + metniKacir(satir.kod) +
-                (kg ? ' <span class="badge bg-warning text-dark">kg</span>' : "") + indirimRozeti + "</span>" +
+                (kg ? ' <span class="badge bg-warning text-dark">kg</span>' : "") +
+                indirimRozeti + sktRozeti + "</span>" +
                 kampanyaEtiketi + "</span></span></td>" +
             '<td class="text-end"></td>' +
             '<td class="text-end">' + paraBicimi.format(satir.birimFiyat) + "</td>" +
