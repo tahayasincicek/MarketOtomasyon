@@ -28,5 +28,12 @@ public class StokParti
     /// </summary>
     public string? LotNo { get; set; }
 
-    public string? TedarikciAdi { get; set; }
+    /// <summary>Tedarikci karti; serbest metin degil. Alis faturasi olmadan
+    /// (numune, devir, duzeltme) girilen mal kabullerde null kalabilir.</summary>
+    public int? TedarikciId { get; set; }
+
+    /// <summary>Bu partiyi olusturan fatura satiri. Zinciri tamamlar:
+    /// Tedarikci -> Fatura -> FaturaSatir -> StokParti -> StokPartiTuketim
+    /// -> FisSatir -> Fis. Faturasiz mal kabulde null.</summary>
+    public int? AlisFaturasiSatirId { get; set; }
 }

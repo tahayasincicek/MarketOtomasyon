@@ -75,8 +75,11 @@ public class MalKabulVm
        (Urun.SonKullanmaZorunlu). */
     public DateTime? SonKullanmaTarihi { get; set; }
     public string? LotNo { get; set; }
-    public string? TedarikciAdi { get; set; }
+
+    /// <summary>Isteğe bağlı: her mal kabul faturayla gelmez (numune, devir, düzeltme).</summary>
+    public int? TedarikciId { get; set; }
 
     public IReadOnlyList<Depo> Depolar { get; set; } = [];
+    public IReadOnlyList<Models.Entities.Tedarikci> Tedarikciler { get; set; } = [];
     public IReadOnlyList<StokHareketSatirVm> SonHareketler { get; set; } = [];
 }

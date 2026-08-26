@@ -1,0 +1,94 @@
+@model MarketOtomasyon.Models.ViewModels.AlisFaturasiDetayVm
+@using System.Globalization
+@{
+    ViewData["Title"] = $"Fatura {Model.FaturaNo}";
+    var tr = new CultureInfo("tr-TR");
+    string Sayi(decimal d) => d.ToString("0.##", tr);
+}
+
+<div class="ekran">
+    <div class="arac-cubugu">
+        <a class="btn btn-outline-secondary" asp-action="Index">
+            <i class="ph ph-arrow-left"></i> Faturalara Dön
+        </a>
+    </div>
+
+    <div class="panel">
+        <div class="panel-baslik">
+            <span><i class="ph ph-receipt"></i> @Model.FaturaNo</span>
+        </div>
+        <div class="panel-govde">
+            <div class="kunye">
+                <div class="kunye-oge">
+                    <div class="kunye-etiket">Tedarikçi</div>
+                    <div class="kunye-deger">@Model.TedarikciUnvan</div>
+                </div>
+                <div class="kunye-oge">
+                    <div class="kunye-etiket">Fatura tarihi</div>
+                    <div class="kunye-deger">@Model.FaturaTarihi.ToString("dd.MM.yyyy")</div>
+                </div>
+                <div class="kunye-oge">
+                    <div class="kunye-etiket">Depo</div>
+                    <div class="kunye-deger">@Model.Depo</div>
+                </div>
+                <div class="kunye-oge">
+                    <div class="kunye-etiket">Giren</div>
+                    <div class="kunye-deger">@Model.KullaniciAdSoyad</div>
+                </div>
+                <div class="kunye-oge">
+                    <div class="kunye-etiket">Ara toplam</div>
+                    <div class="kunye-deger">@Sayi(Model.AraToplam)</div>
+                </div>
+                <div class="kunye-oge">
+                    <div class="kunye-etiket">KDV</div>
+                    <div class="kunye-deger">@Sayi(Model.ToplamKdv)</div>
+                </div>
+                <div class="kunye-oge">
+                    <div class="kunye-etiket">Genel toplam</div>
+                    <div class="kunye-deger">@Sayi(Model.GenelToplam)</div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.Aciklama))
+            {
+                <p class="ipucu mt-2">@Model.Aciklama</p>
+            }
+        </div>
+    </div>
+
+    <div class="izgara-sarmal">
+        <table class="izgara">
+            <thead>
+                <tr>
+                    <th style="width:8rem">Kod</th>
+                    <th>Ürün</th>
+                    <th class="sayi" style="width:6rem">Miktar</th>
+                    <th style="width:5rem">Birim</th>
+                    <th class="sayi" style="width:7rem">Birim fiyat</th>
+                    <th class="sayi" style="width:5rem">KDV %</th>
+                    <th class="sayi" style="width:7rem">Matrah</th>
+                    <th class="sayi" style="width:7rem">KDV tutarı</th>
+                    <th style="width:9rem">Son kullanma</th>
+                    <th style="width:7rem">Lot</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var satir in Model.Satirlar)
+                {
+                    <tr>
+                        <td class="kod">@satir.UrunKod</td>
+                        <td><span class="urun-hucre-metin">@satir.UrunAd</span></td>
+                        <td class="sayi">@Sayi(satir.Miktar)</td>
+                        <td>@satir.Birim</td>
+                        <td class="sayi">@Sayi(satir.BirimFiyat)</td>
+                        <td class="sayi">@Sayi(satir.KdvOrani)</td>
+                        <td class="sayi">@Sayi(satir.SatirMatrah)</td>
+                        <td class="sayi">@Sayi(satir.SatirKdv)</td>
+                        <td>@(satir.SonKullanmaTarihi?.ToString("dd.MM.yyyy") ?? "—")</td>
+                        <td>@(satir.LotNo ?? "—")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

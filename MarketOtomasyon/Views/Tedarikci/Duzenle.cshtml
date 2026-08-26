@@ -1,0 +1,85 @@
+@model MarketOtomasyon.Models.ViewModels.TedarikciFormVm
+@{
+    ViewData["Title"] = "Tedarikçi Düzenle";
+}
+
+<div class="ekran">
+    <form method="post" asp-action="Duzenle" class="form-ekran">
+        <input type="hidden" asp-for="Id" />
+
+        <div class="bolum">
+            <div class="bolum-baslik">Tedarikçi bilgileri</div>
+
+            <div asp-validation-summary="All" class="hata mb-2"></div>
+
+            <div class="alan">
+                <label asp-for="Kod">Kod</label>
+                <div class="deger">
+                    <input class="form-control dar" asp-for="Kod" autocomplete="off" />
+                </div>
+            </div>
+
+            <div class="alan">
+                <label asp-for="Unvan">Unvan</label>
+                <div class="deger">
+                    <input class="form-control" asp-for="Unvan" autocomplete="off" />
+                </div>
+            </div>
+
+            <div class="alan">
+                <label asp-for="VergiNo">Vergi no</label>
+                <div class="deger">
+                    <input class="form-control dar" asp-for="VergiNo" autocomplete="off"
+                           placeholder="VKN (10) veya TCKN (11)" />
+                </div>
+            </div>
+
+            <div class="alan">
+                <label asp-for="VergiDairesi">Vergi dairesi</label>
+                <div class="deger">
+                    <input class="form-control" asp-for="VergiDairesi" autocomplete="off" />
+                </div>
+            </div>
+
+            <div class="alan">
+                <label asp-for="Telefon">Telefon</label>
+                <div class="deger">
+                    <input class="form-control dar" asp-for="Telefon" autocomplete="off" />
+                </div>
+            </div>
+
+            <div class="alan">
+                <label asp-for="Eposta">E-posta</label>
+                <div class="deger">
+                    <input class="form-control" asp-for="Eposta" autocomplete="off" />
+                </div>
+            </div>
+
+            <div class="alan">
+                <label asp-for="Adres">Adres</label>
+                <div class="deger">
+                    <textarea class="form-control" asp-for="Adres" rows="2"></textarea>
+                </div>
+            </div>
+
+            <div class="alan">
+                <label asp-for="Aktif">Aktif</label>
+                <div class="deger">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" asp-for="Aktif" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="alan">
+                <label></label>
+                <div class="deger">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ph ph-check"></i> Kaydet
+                    </button>
+                    <a class="btn btn-outline-secondary" asp-action="Index">Vazgeç</a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

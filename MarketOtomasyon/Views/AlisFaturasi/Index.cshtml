@@ -1,0 +1,183 @@
+@model MarketOtomasyon.Models.ViewModels.AlisFaturasiEkranVm
+@using System.Globalization
+@{
+    ViewData["Title"] = "Alış Faturaları";
+    var tr = new CultureInfo("tr-TR");
+    string Sayi(decimal d) => d.ToString("0.##", tr);
+}
+
+<div class="ekran">
+    @if (TempData["Mesaj"] is string mesaj)
+    {
+        <div class="bildirim bildirim-olumlu"><i class="ph ph-check-circle"></i> @mesaj</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.Hata))
+    {
+        <div class="bildirim bildirim-olumsuz"><i class="ph ph-warning"></i> @Model.Hata</div>
+    }
+
+    <div id="fatura-uyari" class="bildirim bildirim-olumsuz d-none" role="alert"></div>
+
+    @* Satirlar istemci tarafinda birikir; sunucuya yalnizca tamamlanmis
+       fatura gider. Barkod okundugunda urun tabloya eklenir, birim fiyat
+       ve KDV alanlari orada duzenlenir - transfer ekranindaki desenin
+       ayni: her okuma formu gondermez, kamera kesintisiz calisir. *@
+    <form method="post" asp-action="Kaydet" id="fatura-form"
+          data-barkod-coz-url="@Url.Action("Coz", "Barkod")">
+
+        <div class="arac-cubugu">
+            <span class="arac-etiket">Tedarikçi</span>
+            <select class="form-select" style="width:14rem" asp-for="TedarikciId" aria-label="Tedarikçi">
+                <option value="0">Seçiniz</option>
+                @foreach (var t in Model.Tedarikciler)
+                {
+                    <option value="@t.Id" selected="@(Model.TedarikciId == t.Id)">@t.Unvan</option>
+                }
+            </select>
+
+            <span class="arac-etiket">Depo</span>
+            <select class="form-select" style="width:10rem" asp-for="DepoId" aria-label="Depo">
+                <option value="0">Seçiniz</option>
+                @foreach (var depo in Model.Depolar)
+                {
+                    <option value="@depo.Id" selected="@(Model.DepoId == depo.Id)">@depo.Ad</option>
+                }
+            </select>
+
+            <span class="arac-etiket">Fatura no</span>
+            <input class="form-control font-monospace" style="width:9rem" asp-for="FaturaNo" autocomplete="off" />
+
+            <span class="arac-etiket">Tarih</span>
+            <input class="form-control" style="width:9rem" type="date" asp-for="FaturaTarihi" />
+        </div>
+
+        <div class="arac-cubugu" style="border-top:1px solid var(--izgara-cizgi)">
+            <div class="arac-alan">
+                <i class="ph ph-barcode text-muted"></i>
+                <input id="barkod" class="form-control font-monospace" style="width:14rem"
+                       autocomplete="off" autofocus
+                       placeholder="Okutun, yazın veya kamerayı kullanın" aria-label="Barkod" />
+            </div>
+
+            <button type="button" id="btn-kamera" class="btn btn-outline-secondary">
+                <i class="ph ph-video-camera"></i> Kamera
+            </button>
+
+            <button type="button" id="btn-satir-ekle" class="btn btn-primary">
+                <i class="ph ph-plus"></i> Ekle
+            </button>
+
+            <span class="ipucu arac-sag">
+                Girilen birim fiyat KDV hariçtir. Kaydedilince her satır için mal kabul otomatik yapılır.
+            </span>
+        </div>
+
+        @* Kamera paneli. Element ID'leri kamera.js'in bekledigi sozlesme. *@
+        <div id="kamera-paneli" class="arac-cubugu d-none" style="background:#f8fafc">
+            <video id="kamera-video" playsinline muted
+                   style="width:22rem;max-width:100%;height:12rem;object-fit:cover;
+                          background:#111827;border-radius:.25rem">
+            </video>
+
+            <div class="d-flex flex-column gap-1" style="min-width:0">
+                <span class="arac-etiket">Kamera</span>
+
+                <select id="kamera-secim" class="form-select" style="width:15rem"
+                        aria-label="Kamera seç">
+                </select>
+
+                <div id="kamera-durum" class="ipucu">Kamera kapalı.</div>
+                <div id="kamera-son" class="ipucu"></div>
+            </div>
+
+            <span class="ipucu arac-sag" style="max-width:20rem">
+                Barkodu kameranın ortasına ve ekrana paralel tutun. Okunan ürün
+                listeye eklenir, kamera açık kalır.
+            </span>
+        </div>
+
+        <div class="izgara-sarmal">
+            <table class="izgara" id="fatura-izgara">
+                <thead>
+                    <tr>
+                        <th style="width:7rem">Kod</th>
+                        <th>Ürün</th>
+                        <th class="sayi" style="width:6rem">Miktar</th>
+                        <th class="sayi" style="width:7rem">Birim fiyat</th>
+                        <th class="sayi" style="width:5rem">KDV %</th>
+                        <th class="sayi" style="width:7rem">Matrah</th>
+                        <th style="width:9rem">Son kullanma</th>
+                        <th style="width:7rem">Lot</th>
+                        <th class="islem" style="width:5rem"></th>
+                    </tr>
+                </thead>
+                <tbody id="fatura-satirlar"></tbody>
+            </table>
+
+            <p class="veri-yok" id="bos-mesaji">Barkod okutarak fatura kalemlerini ekleyin.</p>
+        </div>
+
+        <div class="arac-cubugu d-none" id="tamamla-serit"
+             style="border-top:1px solid var(--izgara-cizgi)">
+            <span class="arac-etiket">Açıklama</span>
+            <input class="form-control" style="width:20rem" asp-for="Aciklama"
+                   autocomplete="off" placeholder="İrsaliye no vb." />
+
+            <button type="submit" class="btn btn-success">
+                <i class="ph ph-receipt"></i> Faturayı Kaydet
+            </button>
+
+            <span class="ipucu arac-sag" id="ozet-metni"></span>
+        </div>
+    </form>
+
+    <div class="panel" style="margin-top:.7rem">
+        <div class="panel-baslik">
+            <span><i class="ph ph-clock-counter-clockwise"></i> Son faturalar</span>
+        </div>
+        <div class="izgara-sarmal">
+            <table class="izgara">
+                <thead>
+                    <tr>
+                        <th style="width:10rem">Fatura no</th>
+                        <th style="width:9rem">Tarih</th>
+                        <th>Tedarikçi</th>
+                        <th style="width:9rem">Depo</th>
+                        <th class="sayi" style="width:5rem">Kalem</th>
+                        <th class="sayi" style="width:8rem">Toplam</th>
+                        <th class="islem" style="width:4rem"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var f in Model.SonFaturalar)
+                    {
+                        <tr>
+                            <td class="kod">@f.FaturaNo</td>
+                            <td class="text-nowrap">@f.FaturaTarihi.ToString("dd.MM.yyyy")</td>
+                            <td>@f.TedarikciUnvan</td>
+                            <td>@f.Depo</td>
+                            <td class="sayi">@f.SatirSayisi</td>
+                            <td class="sayi">@Sayi(f.GenelToplam)</td>
+                            <td class="islem">
+                                <a class="btn btn-outline-primary" asp-action="Detay" asp-route-id="@f.Id"
+                                   title="Detay"><i class="ph ph-list-bullets"></i></a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (Model.SonFaturalar.Count == 0)
+            {
+                <p class="veri-yok">Henüz fatura girilmemiş.</p>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/zxing/index.min.js" asp-append-version="true"></script>
+    <script src="~/js/alis-faturasi.js" asp-append-version="true"></script>
+    <script src="~/js/kamera.js" asp-append-version="true"></script>
+}

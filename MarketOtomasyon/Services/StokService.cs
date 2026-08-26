@@ -1,3 +1,4 @@
+using System.Data;
 using MarketOtomasyon.Data;
 using MarketOtomasyon.Data.Repositories;
 using MarketOtomasyon.Models.Entities;
@@ -40,7 +41,44 @@ public class StokService
         string? aciklama,
         DateTime? sonKullanmaTarihi = null,
         string? lotNo = null,
-        string? tedarikciAdi = null,
+        int? tedarikciId = null,
+        CancellationToken ct = default)
+    {
+        using var conn = await _factory.CreateOpenConnectionAsync(ct);
+        using var tx = conn.BeginTransaction();
+
+        await MalKabulYazAsync(
+            conn, tx, urunId, depoId, miktar, birimMaliyet, aciklama,
+            sonKullanmaTarihi, lotNo, tedarikciId, alisFaturasiSatirId: null, ct: ct);
+
+        tx.Commit();
+
+        return await _stokRepository.BakiyeAsync(urunId, depoId, ct);
+    }
+
+    /// <summary>
+    /// Mal kabulun cekirdegi. Acik bir transaction icinde calisir; cagiran
+    /// commit/rollback sorumlulugunu ustlenir.
+    ///
+    /// Alis faturasi bunu satir basina cagirir ve tumu TEK transaction'da
+    /// yurur. MalKabulAsync (yukarida) kendi transaction'ini acip bunu
+    /// tek satir icin cagiran bir sarmalayicidir - eger fatura da bu
+    /// sarmalayiciyi cagirsaydi 10 satirlik fatura 10 ayri transaction
+    /// olurdu ve yedinci satirda hata cikarsa ilk alti satir stoga
+    /// girmis, fatura kaydedilmemis olurdu.
+    /// </summary>
+    public async Task<long> MalKabulYazAsync(
+        IDbConnection conn,
+        IDbTransaction tx,
+        int urunId,
+        int depoId,
+        decimal miktar,
+        decimal birimMaliyet,
+        string? aciklama,
+        DateTime? sonKullanmaTarihi = null,
+        string? lotNo = null,
+        int? tedarikciId = null,
+        int? alisFaturasiSatirId = null,
         CancellationToken ct = default)
     {
         if (miktar <= 0)
@@ -48,8 +86,9 @@ public class StokService
         if (birimMaliyet <= 0)
             throw new ArgumentOutOfRangeException(nameof(birimMaliyet), "Birim maliyet sıfırdan büyük olmalıdır.");
 
-        // Kural kontrolu transaction acilmadan once: gecersiz girdi icin
-        // bosuna baglanti acip kilit tutmanin anlami yok.
+        // Kural kontrolu transaction acilmadan once konulamiyor cunku bu
+        // metot zaten acik bir transaction icinde cagriliyor; ama urun
+        // sorgusu ayni transaction disinda (salt okunur, kilit gerekmez).
         var urun = await _urunRepository.GetirAsync(urunId, ct)
             ?? throw new ArgumentException("Ürün bulunamadı.", nameof(urunId));
 
@@ -59,9 +98,6 @@ public class StokService
 
         var (lotGecerli, lotHatasi) = PartiKurallari.LotGecerliMi(lotNo);
         if (!lotGecerli) throw new ArgumentException(lotHatasi, nameof(lotNo));
-
-        using var conn = await _factory.CreateOpenConnectionAsync(ct);
-        using var tx = conn.BeginTransaction();
 
         var hareketId = await _stokRepository.HareketEkleAsync(conn, tx, new StokHareket
         {
@@ -84,11 +120,10 @@ public class StokService
             aciklama,
             sonKullanmaTarihi,
             lotNo,
-            tedarikciAdi,
-            ct);
+            tedarikciId,
+            alisFaturasiSatirId,
+            ct: ct);
 
-        tx.Commit();
-
-        return await _stokRepository.BakiyeAsync(urunId, depoId, ct);
+        return hareketId;
     }
 }

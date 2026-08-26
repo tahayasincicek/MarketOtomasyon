@@ -163,11 +163,19 @@
                         </div>
                     </div>
 
+                    @* Isteğe bağlı: her mal kabul faturayla gelmez (numune,
+                       devir, düzeltme). Faturalı alım için Alış Faturaları
+                       ekranını kullanın; oradan girilen mal kabul otomatiktir. *@
                     <div class="alan">
-                        <label asp-for="TedarikciAdi">Tedarikçi</label>
+                        <label asp-for="TedarikciId">Tedarikçi</label>
                         <div class="deger">
-                            <input class="form-control" asp-for="TedarikciAdi" autocomplete="off"
-                                   placeholder="Firma adı" />
+                            <select class="form-select" asp-for="TedarikciId">
+                                <option value="">Seçilmedi</option>
+                                @foreach (var tedarikci in Model.Tedarikciler)
+                                {
+                                    <option value="@tedarikci.Id">@tedarikci.Unvan</option>
+                                }
+                            </select>
                         </div>
                     </div>
 

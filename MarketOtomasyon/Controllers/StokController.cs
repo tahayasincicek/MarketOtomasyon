@@ -17,17 +17,20 @@ public class StokController : Controller
     private readonly DepoRepository _depoRepository;
     private readonly StokService _stokService;
     private readonly BarkodService _barkodService;
+    private readonly TedarikciRepository _tedarikciRepository;
 
     public StokController(
         StokRepository stokRepository,
         DepoRepository depoRepository,
         StokService stokService,
-        BarkodService barkodService)
+        BarkodService barkodService,
+        TedarikciRepository tedarikciRepository)
     {
         _stokRepository = stokRepository;
         _depoRepository = depoRepository;
         _stokService = stokService;
         _barkodService = barkodService;
+        _tedarikciRepository = tedarikciRepository;
     }
 
     public async Task<IActionResult> Index(string? arama, bool sadeceKritik = false, int sayfa = 1, CancellationToken ct = default)
@@ -93,7 +96,7 @@ public class StokController : Controller
                 form.Aciklama,
                 form.SonKullanmaTarihi,
                 form.LotNo,
-                form.TedarikciAdi,
+                form.TedarikciId,
                 ct);
         }
         catch (ArgumentException ex)
@@ -121,6 +124,7 @@ public class StokController : Controller
     private async Task<MalKabulVm> FormHazirlaAsync(MalKabulVm form, CancellationToken ct)
     {
         form.Depolar = await _depoRepository.AktifleriGetirAsync(ct);
+        form.Tedarikciler = await _tedarikciRepository.AktifleriGetirAsync(ct);
         form.SonHareketler = await _stokRepository.SonHareketlerAsync(SonHareketAdedi, ct);
         return form;
     }

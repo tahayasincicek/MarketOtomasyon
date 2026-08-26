@@ -15,11 +15,11 @@ public sealed class MaliyetRepository
     private const string SqlPartiEkle = @"
 INSERT INTO StokParti
     (UrunId, DepoId, StokHareketId, GirisMiktari, KalanMiktar, BirimMaliyet, Aciklama,
-     SonKullanmaTarihi, LotNo, TedarikciAdi)
+     SonKullanmaTarihi, LotNo, TedarikciId, AlisFaturasiSatirId)
 OUTPUT INSERTED.Id
 VALUES
     (@UrunId, @DepoId, @StokHareketId, @GirisMiktari, @KalanMiktar, @BirimMaliyet, @Aciklama,
-     @SonKullanmaTarihi, @LotNo, @TedarikciAdi);";
+     @SonKullanmaTarihi, @LotNo, @TedarikciId, @AlisFaturasiSatirId);";
 
     /// <summary>
     /// FEFO: raftan once son kullanma tarihi en yakin parti cikar.

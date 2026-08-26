@@ -24,7 +24,8 @@ public sealed class MaliyetService
         string? aciklama,
         DateTime? sonKullanmaTarihi = null,
         string? lotNo = null,
-        string? tedarikciAdi = null,
+        int? tedarikciId = null,
+        int? alisFaturasiSatirId = null,
         CancellationToken ct = default)
     {
         if (miktar <= 0)
@@ -47,7 +48,8 @@ public sealed class MaliyetService
                yazmayi gerektirir. */
             SonKullanmaTarihi = sonKullanmaTarihi?.Date,
             LotNo = string.IsNullOrWhiteSpace(lotNo) ? null : lotNo.Trim(),
-            TedarikciAdi = string.IsNullOrWhiteSpace(tedarikciAdi) ? null : tedarikciAdi.Trim()
+            TedarikciId = tedarikciId,
+            AlisFaturasiSatirId = alisFaturasiSatirId
         }, ct);
     }
 
