@@ -9,9 +9,6 @@
            acilis fiyatlari ve acilis stok hareketleri.
    ========================================================= */
 
-USE MarketOtomasyon;
-GO
-
 SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
 GO

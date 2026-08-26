@@ -30,6 +30,20 @@ if (string.IsNullOrWhiteSpace(builder.Configuration.GetConnectionString("MarketD
         "geliştirmede appsettings.Development.json dosyasına ekleyin.");
 }
 
+/* Veritabani kurulumu ayri bir komut olarak da calistirilabilir:
+
+     dotnet run -- migrate              semayi guncelle
+     dotnet run -- migrate --demo       demo verisini de ekle
+     dotnet run -- migrate --liste      neyin bekledigini goster, uygulama
+
+   Uretimde tercih edilen yol budur: deploy sirasinda kontrollu
+   calistirilir, uygulama ayaga kalkmadan once sema hazir olur.
+   Web sunucusu baslatilmaz; komut biter ve surec kapanir. */
+if (args.Length > 0 && args[0].Equals("migrate", StringComparison.OrdinalIgnoreCase))
+{
+    return MigrateKomutu.Calistir(builder.Configuration, args);
+}
+
 // Log kurallari appsettings.json'daki Serilog bolumunde; ayar kod icine
 // dagilmasin. Enrich.FromLogContext, istek basina eklenen Kullanici ve
 // IstekNo alanlarini okuyabilmek icin sart.
@@ -149,6 +163,48 @@ var app = builder.Build();
 // Sunucunun ne zaman yeniden basladigi, hata ararken ilk sorulan sey.
 app.Logger.LogInformation("Uygulama basladi. Ortam: {Ortam}", app.Environment.EnvironmentName);
 
+/* Gelistirmede bekleyen betikler acilista uygulanir: depoyu klonlayip
+   "dotnet run" demek yeterli olsun, once ayri bir kurulum adimi
+   hatirlamak gerekmesin.
+
+   Uretimde BILEREK yapilmiyor. Uygulama ayaga kalkarken sema
+   degistirmek, birden fazla ornegin ayni anda migration calistirmasina
+   ve yavas bir betigin acilisi kilitlemesine yol acar. Orada
+   "dotnet MarketOtomasyon.dll migrate" ayri bir deploy adimidir. */
+if (app.Environment.IsDevelopment())
+{
+    var baglanti = builder.Configuration.GetConnectionString("MarketDb")!;
+
+    /* Elle kurulmus bir veritabanina betikleri bastan uygulamak
+       "tablo zaten var" hatasiyla patlar: 01_ilk_sema korumasiz
+       CREATE TABLE iceriyor. Kullaniciyi o hataya dusurmek yerine ne
+       yapmasi gerektigini soyle ve dokunma. */
+    if (VeritabaniKurucu.BaselineGerekiyorMu(baglanti))
+    {
+        throw new InvalidOperationException(
+            "Veritabanı elle kurulmuş: tablolar var ama sürüm takibi yok. " +
+            "Şemanın güncel olduğundan eminseniz önce şunu çalıştırın: " +
+            "dotnet run --project MarketOtomasyon -- migrate --baseline");
+    }
+
+    var kurulum = VeritabaniKurucu.Calistir(
+        baglanti,
+        demoVerisiDahil: false,
+        new SerilogUpgradeLog(app.Logger));
+
+    if (!kurulum.Basarili)
+    {
+        app.Logger.LogError("Veritabani kurulumu basarisiz: {Hata}", kurulum.Hata);
+        throw new InvalidOperationException(
+            $"Veritabanı kurulum betikleri uygulanamadı: {kurulum.Hata}");
+    }
+
+    if (kurulum.Uygulananlar.Count > 0)
+        app.Logger.LogInformation(
+            "Veritabani guncellendi. Uygulanan betik sayisi: {Adet}",
+            kurulum.Uygulananlar.Count);
+}
+
 // Kosulsuz: hata gelistirmede de loglanmali. GenelHataYakalayici
 // yalnizca kayit tutar, kullaniciya gosterilecek yaniti bu ara katman
 // uretir.
@@ -204,3 +260,7 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
+
+// migrate komutu erken donebildigi icin giris noktasi int dondurur:
+// normal calismada sunucu kapandiginda basarili cikis kodu verilir.
+return 0;

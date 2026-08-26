@@ -9,9 +9,6 @@
    fotograflari CC-BY-SA lisansli, atif yukumlulugu var.
    ========================================================= */
 
-USE MarketOtomasyon;
-GO
-
 SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
 GO

@@ -22,9 +22,6 @@
    Tekrar calistirilabilir.
    ========================================================= */
 
-USE MarketOtomasyon;
-GO
-
 SET QUOTED_IDENTIFIER ON;
 SET ANSI_NULLS ON;
 GO

@@ -51,13 +51,23 @@ zorlaşırdı. Üretimde bağlantı dizesi ortam değişkeninden okunur —
 Bağlantı dizesi hiçbir yerde bulunamazsa uygulama **açılışta** anlamlı
 bir hatayla durur; ilk isteği bekleyip giriş ekranında patlamaz.
 
-Veritabanını kur (aşağıdaki bölümdeki sırayla), sonra:
+Sonra çalıştır:
 
 ```bash
 dotnet run --project MarketOtomasyon
 ```
 
+Veritabanı yoksa oluşturulur ve kurulum betikleri kendiliğinden uygulanır;
+ayrı bir kurulum adımı yok. Demo verisi istiyorsan bir kez şunu çalıştır:
+
+```bash
+dotnet run --project MarketOtomasyon -- migrate --demo
+```
+
 Uygulama `https://localhost:7037` adresinde açılır.
+
+> Bu sürümden **önce** kurduğun bir veritabanın varsa bir kerelik bir
+> adım gerekiyor: "Elle kurulmuş bir veritabanın varsa" bölümüne bak.
 
 Geliştirme hesapları:
 
@@ -135,8 +145,9 @@ yerine kullanıcı adı/şifre kullanılmalı.
 
 ## SQL dosyalarının çalıştırma sırası
 
-**Numara = çalıştırma sırası.** Dosyaları adlarına göre sıralayıp
-sırayla çalıştırmak yeterli; başka bir yere bakmana gerek yok.
+**Numara = çalıştırma sırası.** Betikleri elle çalıştırman gerekmiyor —
+`migrate` komutu bunu yapıyor (aşağıda) — ama sırayı bilmek dosyaları
+okurken ve yenisini eklerken işe yarar.
 
 Hepsi `MarketOtomasyon/Data/Sql/` altında. Numaralar üç bloğa ayrılmış:
 
@@ -153,7 +164,7 @@ Bloklar arasındaki boşluk bilinçli: yeni bir şema betiği eklendiğinde
 
 | Dosya | Ne yapar |
 |---|---|
-| `01_ilk_sema.sql` | Veritabanını oluşturur; ürün, barkod, fiyat, stok, vardiya, fiş, ödeme tabloları |
+| `01_ilk_sema.sql` | Çekirdek şema: ürün, barkod, fiyat, stok, vardiya, fiş, ödeme tabloları |
 | `02_askiya_alma.sql` | Fişe `Askida` kolonu — kasada bekleyen sepetler |
 | `03_kampanya.sql` | Kampanya başlığı, koşulları ve sonuçları |
 | `04_iade.sql` | `Iade` / `IadeSatir` tabloları, `FisSatir.IadeEdilenMiktar` |
@@ -192,40 +203,94 @@ ve kâr marjı geçmiş satış ister, alış faturası ekranı tedarikçi ister
 Son Kullanma takibi ise tarihli parti ister. Ayrıntı için aşağıdaki
 "Demo verisi" bölümüne bak.
 
-### Toplu kurulum
+### Kurulum komutu
 
-PowerShell (proje kökünden):
+Betikleri elle çalıştırmana gerek yok. Uygulama onları kendi içinde
+taşır ve sırayla uygular:
+
+```bash
+dotnet run --project MarketOtomasyon -- migrate
+```
+
+Demo verisini de istiyorsan:
+
+```bash
+dotnet run --project MarketOtomasyon -- migrate --demo
+```
+
+Neyin beklediğini görmek için (hiçbir şey çalıştırmaz):
+
+```bash
+dotnet run --project MarketOtomasyon -- migrate --liste
+```
+
+**Geliştirmede bu komutu çalıştırmayı unutsan da olur:** `dotnet run`
+ile uygulama açılırken bekleyen betikler kendiliğinden uygulanır. Depoyu
+klonlayıp doğrudan çalıştırabilmen için böyle.
+
+Üretimde ise **otomatik değildir** — orada `migrate` ayrı bir deploy
+adımıdır. Uygulama ayağa kalkarken şema değiştirmek, birden fazla
+örneğin aynı anda migration çalıştırmasına ve yavaş bir betiğin açılışı
+kilitlemesine yol açar.
+
+### Hangi betiğin uygulandığı nasıl bilinir
+
+Uygulanan her betik `SemaSurumu` tablosuna adı ve tarihiyle yazılır.
+Bunun üç sonucu var:
+
+- **Komut tekrar çalıştırılabilir.** İkinci kez çalıştırınca "veritabanı
+  güncel" der ve hiçbir şey yapmaz.
+- **Yarıda kalırsa kaldığı yerden devam eder.** Bir betik patlarsa komut
+  orada durur ve hata verir; ondan öncekiler kaydedilmiş olur. Sorunu
+  düzeltip komutu yeniden çalıştırdığında yalnızca kalanlar uygulanır.
+- **Patlayan betik yarım kalmaz.** Her betik kendi transaction'ında
+  çalışır; hata alırsa o betiğin yaptığı her şey geri alınır.
+
+Yeni bir şema değişikliği eklemek için `Data/Sql/` altına sıradaki
+numarayla bir dosya koyman yeterli — `14_...sql` gibi. Kayıt tutma ve
+sıralama kendiliğinden çalışır.
+
+> Betik içerikleri değişmedi: hâlâ ham SQL, hâlâ okunabilir. Değişen tek
+> şey nasıl çalıştırıldıkları. Bunu yapan kütüphane **DbUp**; EF Core
+> gibi kod üretmez, yalnızca `.sql` dosyalarını çalıştırıp kaydeder.
+
+### Elle kurulmuş bir veritabanın varsa
+
+Bu sürümden önce kurduğun bir veritabanında tablolar var ama `SemaSurumu`
+tablosu yok. `migrate` bu durumu fark eder ve dokunmadan durur, çünkü
+betikleri baştan uygulamak "tablo zaten var" hatası verirdi.
+
+Şemanın güncel olduğundan eminsen bir kez şunu çalıştır:
+
+```bash
+dotnet run --project MarketOtomasyon -- migrate --baseline --demo
+```
+
+Bu komut **hiçbir betik çalıştırmaz**; mevcut şemayı "uygulanmış" olarak
+işaretler. Sonrasında normal `migrate` akışı devreye girer. (`--demo`
+yalnızca demo verisi zaten yüklüyse eklenir.)
+
+### Betikleri elle çalıştırmak
+
+Gerekirse hâlâ mümkün — dosyalar `MarketOtomasyon/Data/Sql/` altında
+duruyor ve dosya adı sırası çalıştırma sırasıdır:
 
 ```powershell
 $sql = "MarketOtomasyon\Data\Sql"
-Get-ChildItem "$sql\*.sql" | Sort-Object Name | ForEach-Object {
-    Write-Host "-> $($_.Name)"
-    sqlcmd -S localhost -E -b -i $_.FullName
+Get-ChildItem "$sql\*.sql" | Where-Object { $_.Name -notmatch '^(3\d|92)_' } |
+  Sort-Object Name | ForEach-Object {
+    sqlcmd -S localhost -d MarketOtomasyon -b -i $_.FullName
     if ($LASTEXITCODE -ne 0) { Write-Error "Durdu: $($_.Name)"; break }
 }
 ```
 
-Dosya adı sıralaması çalıştırma sırasıyla aynı olduğu için elle liste
-tutmaya gerek yok. `-b` sayesinde bir betik hata verirse döngü durur;
-sessizce yarım kurulmuş bir veritabanıyla devam etmezsin.
+Bu yolda sürüm takibi olmaz; `migrate` sonradan çalıştırılırsa yukarıdaki
+`--baseline` adımı gerekir. Betikler artık `CREATE DATABASE` ve `USE`
+içermediği için veritabanını önceden oluşturup `-d` ile hedeflemelisin.
 
-Demo verisini istemiyorsan `30_` ve `31_` ile başlayan dosyaları atla:
-
-```powershell
-Get-ChildItem "$sql\*.sql" | Where-Object { $_.Name -notmatch '^3\d_' } | Sort-Object Name | ...
-```
-
-Tüm betikler tekrar çalıştırılabilir (idempotent): var olan kayıtları
-atlar, sadece eksikleri ekler. `01_ilk_sema.sql` istisnadır — veritabanı
-zaten varsa `CREATE DATABASE` hata verir, bu beklenen davranıştır.
-
-Her betik kendi başına `SET QUOTED_IDENTIFIER ON` yapar. Bu şart:
-`sqlcmd` bu ayarı varsayılan olarak **kapalı** başlatır ve şemadaki
-filtrelenmiş index'ler yüzünden `INSERT` çalışmaz. Betiği SSMS'te
-açıp çalıştırırsan sorun görünmez, çünkü SSMS ayarı açık başlatır —
-yeni bir betik yazarken bu bloğu kopyalamayı unutma.
-
----
+Şema betikleri tekrar çalıştırılabilir değildir (`01_ilk_sema.sql`
+korumasız `CREATE TABLE` içerir); dolu bir veritabanında ikinci kez
+çalıştırma.
 
 ## Mimari
 

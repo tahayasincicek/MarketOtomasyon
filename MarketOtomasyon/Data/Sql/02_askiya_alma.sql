@@ -14,9 +14,6 @@
    etkilemez; degisen tek sey kasada acik olup olmadigidir.
    ========================================================= */
 
-USE MarketOtomasyon;
-GO
-
 SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
 GO

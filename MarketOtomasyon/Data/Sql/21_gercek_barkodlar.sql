@@ -17,9 +17,6 @@
    kuruyemis) barkodsuz satildigi icin listede yoktur.
    ========================================================= */
 
-USE MarketOtomasyon;
-GO
-
 SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
 GO

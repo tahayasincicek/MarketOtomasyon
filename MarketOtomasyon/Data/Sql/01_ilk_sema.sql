@@ -6,11 +6,6 @@
         toplamindan hesaplanir.
    ========================================================= */
 
-CREATE DATABASE MarketOtomasyon;
-GO
-USE MarketOtomasyon;
-GO
-
 SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
 GO

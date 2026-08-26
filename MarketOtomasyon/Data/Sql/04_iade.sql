@@ -9,9 +9,6 @@
    Stok girisi StokHareket'te KaynakTip 2 ile yazilir.
    ========================================================= */
 
-USE MarketOtomasyon;
-GO
-
 SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
 GO

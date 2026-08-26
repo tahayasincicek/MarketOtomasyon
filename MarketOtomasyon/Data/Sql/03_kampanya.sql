@@ -11,9 +11,6 @@
    kampanya tipi eklemek sema degisikligi gerektirmez.
    ========================================================= */
 
-USE MarketOtomasyon;
-GO
-
 SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
 GO

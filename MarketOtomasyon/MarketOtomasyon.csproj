@@ -8,9 +8,21 @@
 
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.1.79" />
+    <PackageReference Include="dbup-sqlserver" Version="7.2.0" />
     <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.2" />
     <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+  </ItemGroup>
+
+  <!-- Kurulum betikleri derlemeye gomulur; VeritabaniKurucu onlari
+       oradan okur. Dosya olarak dagitilsalardi yayin klasorunde
+       eksik ya da elle degistirilmis olabilirlerdi ve uygulanan
+       surum ile diskteki icerik birbirini tutmazdi.
+
+       92_ ile baslayan dosya bilerek disarida: yarim kalmis bir
+       taslak, kurulumun parcasi degil. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Data\Sql\*.sql" Exclude="Data\Sql\92_*.sql" />
   </ItemGroup>
 
 </Project>

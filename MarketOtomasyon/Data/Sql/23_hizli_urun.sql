@@ -4,9 +4,6 @@
    Script tekrar calistirilabilir, mevcut secimleri silmez.
    ========================================================= */
 
-USE MarketOtomasyon;
-GO
-
 SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
 GO

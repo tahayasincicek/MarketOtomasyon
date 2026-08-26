@@ -23,9 +23,6 @@
    icin asagidaki @Temizle degiskenini 1 yap.
    ========================================================= */
 
-USE MarketOtomasyon;
-GO
-
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
