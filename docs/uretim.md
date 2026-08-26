@@ -110,6 +110,56 @@ kullanılmalıdır.
 
 ---
 
+## Ters proxy ve HTTPS
+
+Uygulama Nginx, Cloudflare veya bir yük dengeleyici arkasındaysa TLS
+genellikle proxy üzerinde sonlanır. Proxy uygulamaya HTTP ile bağlandığı
+için `X-Forwarded-Proto` işlenmezse uygulama isteği tekrar HTTPS'e
+yönlendirir ve yönlendirme döngüsü oluşabilir.
+
+Özellik varsayılan olarak kapalıdır. Aynı makinedeki Nginx için örnek:
+
+```bash
+TersProxy__Etkin=true
+TersProxy__GuvenilenProxyler__0=127.0.0.1
+TersProxy__GuvenilenProxyler__1=::1
+```
+
+Docker ağı gibi adresi değişebilen ortamlarda tek IP yerine gerçek ağ
+aralığı verilir:
+
+```bash
+TersProxy__Etkin=true
+TersProxy__GuvenilenAglar__0=172.18.0.0/16
+```
+
+Buradaki CIDR örnektir; Docker/hosting ağının gerçek aralığı
+kullanılmalıdır. Yanlış adres veya boş güven listesi uygulamayı açılışta
+durdurur. Böylece istemcinin kendi gönderdiği sahte
+`X-Forwarded-Proto: https` başlığına yanlışlıkla güvenilmez.
+
+Yalnızca uygulama portuna internetten doğrudan erişim güvenlik duvarıyla
+kesin olarak engelliyse bütün proxy kaynakları açıkça kabul edilebilir:
+
+```bash
+TersProxy__Etkin=true
+TersProxy__TumProxylereGuven=true
+```
+
+Nginx'in en az şu başlıkları iletmesi gerekir:
+
+```nginx
+proxy_set_header Host $host;
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+proxy_set_header X-Forwarded-Proto $scheme;
+```
+
+Middleware `UseHsts` ve `UseHttpsRedirection` çağrılarından önce çalışır.
+Varsayılan topoloji tek proxy kabul eder; proxy zinciri kullanılıyorsa
+`ForwardLimit` kodda bilinçli biçimde artırılmalıdır.
+
+---
+
 ## Bilinen eksikler
 
 Yukarıdaki ayarlar deploy için gerekli minimumdur, yeterli değildir.

@@ -1,6 +1,7 @@
 using System.Globalization;
 using FluentValidation;
 using MarketOtomasyon.Models.Entities;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -146,6 +147,7 @@ builder.Services.AddScoped<KimlikDogrulamaService>();
 builder.Services.Configure<SatisAyarlari>(builder.Configuration.GetSection("Satis"));
 builder.Services.Configure<IadeAyarlari>(builder.Configuration.GetSection("Iade"));
 builder.Services.Configure<UrunResimAyarlari>(builder.Configuration.GetSection("UrunResim"));
+builder.Services.Configure<TersProxyAyarlari>(builder.Configuration.GetSection(TersProxyAyarlari.Bolum));
 
 // Open Food Facts kimliksiz istekleri bot sayip engelliyor; User-Agent zorunlu.
 builder.Services.AddHttpClient("acikUrunVeritabani", (sp, istemci) =>
@@ -203,6 +205,70 @@ if (app.Environment.IsDevelopment())
         app.Logger.LogInformation(
             "Veritabani guncellendi. Uygulanan betik sayisi: {Adet}",
             kurulum.Uygulananlar.Count);
+}
+
+/* Vekil basliklari HER SEYDEN once islenmeli.
+   Sonraki ara katmanlar (HSTS, HTTPS yonlendirmesi, kimlik dogrulama,
+   loglama) istegin sema ve istemci adresi bilgisine bakiyor; duzeltme
+   sonra yapilirsa onlar duz HTTP goruyor ve yanlis karar veriyor. */
+var proxyAyarlari = app.Services.GetRequiredService<IOptions<TersProxyAyarlari>>().Value;
+
+if (proxyAyarlari.Etkin)
+{
+    var yapilandirmaHatalari = proxyAyarlari.DogrulamaHatalari();
+    if (yapilandirmaHatalari.Count > 0)
+    {
+        throw new InvalidOperationException(
+            "Ters proxy yapılandırması geçersiz: " +
+            string.Join(" ", yapilandirmaHatalari));
+    }
+
+    var secenekler = new ForwardedHeadersOptions
+    {
+        // Proto: HTTPS yonlendirme dongusunu engelleyen asil baslik.
+        // For: denetim kayitlarinda vekilin degil istemcinin adresi.
+        ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedFor,
+
+        // Varsayilan tek vekilli topoloji. Birden fazla vekil varsa bu
+        // deger bilincli olarak artirilmali; sinirsiz birakilmaz.
+        ForwardLimit = 1
+    };
+
+    var (proxyler, _) = proxyAyarlari.ProxyleriCoz();
+    var (aglar, _) = proxyAyarlari.AglariCoz();
+
+    /* Varsayilan listeler HER DURUMDA temizlenir.
+       ASP.NET Core acilista loopback'i guvenilir sayar. Uzerine ekleme
+       yapilsaydi "yalnizca 10.0.0.0/8'e guven" denmesine ragmen ayni
+       makineden gelen sahte bir X-Forwarded-Proto: https basligi kabul
+       edilirdi. Guvenilen kaynak listesi, adindan beklendigi gibi,
+       tam liste olmali. */
+    secenekler.KnownProxies.Clear();
+    secenekler.KnownNetworks.Clear();
+
+    if (proxyAyarlari.TumProxylereGuven)
+    {
+        /* Bos KnownProxies/KnownNetworks listesi tum kaynaklara guvenmek
+           demektir. Buraya yalnizca acik TumProxylereGuven tercihiyle
+           girilebilir; yanlis veya eksik ayar bunu dolayli acamaz. */
+        app.Logger.LogWarning(
+            "Tum proxy basliklari guvenilir kabul ediliyor. Uygulama portuna " +
+            "dogrudan erisim ag seviyesinde engellenmis olmalidir.");
+    }
+    else
+    {
+        foreach (var adres in proxyler)
+            secenekler.KnownProxies.Add(adres);
+
+        foreach (var (adres, uzunluk) in aglar)
+            secenekler.KnownNetworks.Add(new IPNetwork(adres, uzunluk));
+    }
+
+    app.UseForwardedHeaders(secenekler);
+
+    app.Logger.LogInformation(
+        "Ters vekil basliklari etkin. Guvenilen proxy: {Proxy}, ag: {Ag}, tumu: {Tumu}",
+        proxyler.Count, aglar.Count, proxyAyarlari.TumProxylereGuven);
 }
 
 // Kosulsuz: hata gelistirmede de loglanmali. GenelHataYakalayici
