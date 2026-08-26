@@ -71,6 +71,24 @@ public sealed class TransferService
         var (satirGecerli, satirHatasi) = TransferKurallari.SatirlarGecerliMi(satirlar);
         if (!satirGecerli) return (null, satirHatasi);
 
+        // Transaction acilmadan once TUM satirlarin bakiyesi kontrol edilir.
+        // Onceden ilk yetersiz urunde islem hemen durduruluyordu; kullanici
+        // onu duzeltip tekrar denedigin de ikinci eksik urunle karsilasiyor,
+        // hepsini tek tek kesfetmek zorunda kaliyordu. Bu sadece bir on
+        // kontrol - kesin karar yine FEFO tuketiminde verilir (UPDLOCK ile
+        // kilitli okunur), cunku bakiye okuma ile tuketim arasinda baska
+        // bir islem araya girebilir.
+        var eksikler = new List<string>();
+        foreach (var satir in satirlar)
+        {
+            var bakiye = await _stokRepository.BakiyeAsync(satir.UrunId, kaynakDepoId, ct);
+            if (satir.Miktar > bakiye)
+                eksikler.Add($"{satir.UrunAd} (mevcut {bakiye:0.###}, istenen {satir.Miktar:0.###})");
+        }
+
+        if (eksikler.Count > 0)
+            return (null, "Kaynak depoda yeterli stok yok: " + string.Join("; ", eksikler));
+
         using var conn = await _factory.CreateOpenConnectionAsync(ct);
         using var tx = conn.BeginTransaction();
 
@@ -104,8 +122,10 @@ public sealed class TransferService
             }, ct);
 
             // 2) Kaynak partileri FEFO ile tuket. fisSatirId null: bu bir
-            //    satis degil. Partiler UPDLOCK ile okundugu icin ayri bir
-            //    bakiye kontrolune gerek yok; yetersizse burasi hata doner.
+            //    satis degil. Bakiye yukarida on kontrolden gecti ama
+            //    burasi kesin karari verir: partiler UPDLOCK ile kilitli
+            //    okunur, on kontrol ile buraya kadar gecen surede baska
+            //    bir islem stogu tuketmis olabilir.
             var tuketim = await _maliyetService.FifoTuketAsync(
                 conn, tx, satir.UrunId, kaynakDepoId, cikisId, fisSatirId: null, satir.Miktar, ct);
 
@@ -145,7 +165,7 @@ public sealed class TransferService
                     $"Transfer {transferNo}",
                     parca.SonKullanmaTarihi,
                     parca.LotNo,
-                    tedarikciAdi: null,
+                    tedarikciId: null,
                     ct: ct);
             }
         }
