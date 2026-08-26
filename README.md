@@ -48,6 +48,31 @@ Geliştirme hesapları:
 | `mudur` | `Mudur123!` | Müdür — tüm ekranlar |
 | `kasiyer1` | `Kasiyer123!` | Kasiyer — kasa, iade, vardiya |
 
+### Docker ile çalıştırma
+
+Kök dizindeki `Dockerfile` uygulamayı iki aşamada paketler: SDK imajında
+derleyip yayınlar, sonra yalnızca ASP.NET çalışma zamanı imajına kopyalar.
+Böylece son imajda derleyici ve kaynak kod bulunmaz.
+
+```bash
+docker build -t marketotomasyon .
+docker run -p 8080:8080 marketotomasyon
+```
+
+**Veritabanı imajın içinde değildir.** Konteynerdeki uygulama `localhost`
+dediğinde kendi içini kastedeceği için, bağlantı dizesini dışarıdan
+vermen gerekir:
+
+```bash
+docker run -p 8080:8080 \
+  -e "ConnectionStrings__MarketDb=Server=host.docker.internal;Database=MarketOtomasyon;User Id=sa;Password=...;TrustServerCertificate=True" \
+  marketotomasyon
+```
+
+`host.docker.internal` konteynerden ana makineye işaret eder. Windows
+kimlik doğrulaması konteynerde çalışmadığı için `Trusted_Connection`
+yerine kullanıcı adı/şifre kullanılmalı.
+
 ---
 
 ## SQL dosyalarının çalıştırma sırası
@@ -104,10 +129,16 @@ Bu dörtlü `90_ornek_veri.sql`'in eklediği kayıtları düzeltir/zenginleştir
 | # | Dosya | Ne yapar |
 |---|---|---|
 | 19 | `91_demo_veri.sql` | Son 30 günün satış geçmişi: vardiyalar, fişler, ödemeler, iadeler |
+| 20 | `93_modul_demo_verileri.sql` | 5 tedarikçi ve alış faturaları; her fatura satırı için stok girişi ve maliyet/SKT/lot partisi |
 
 Raporlar, kâr marjı ve Z raporu ekranları geçmiş satış olmadan boş görünür.
 Bu betik onları dolduran gerçekçi bir geçmiş üretir. Ayrıntı için aşağıdaki
 "Demo verisi" bölümüne bak.
+
+`93_modul_demo_verileri.sql` de aynı sebeple var: tedarikçi tablosu boşken
+alış faturası ekranında seçilecek bir şey olmaz, faturasız da hiçbir
+partide son kullanma tarihi bulunmadığı için Son Kullanma ekranı boş
+kalır. Bu betik üçünü birden doldurur.
 
 ### Toplu kurulum
 
@@ -122,7 +153,7 @@ $sira = @(
   "90_ornek_veri",
   "07_gercek_barkodlar", "09_profesyonel_urun_gorselleri", "10_hizli_urun",
   "11_turkce_karakter_duzeltmeleri",
-  "91_demo_veri"
+  "91_demo_veri", "93_modul_demo_verileri"
 )
 foreach ($ad in $sira) { sqlcmd -S localhost -E -i "$sql\$ad.sql" }
 ```
@@ -349,6 +380,40 @@ alınır, yarım satış geçmişi kalmaz.
 **Üretimde çalıştırılmaz.** Bu betik sahte satış kaydı üretir; gerçek bir
 markette ciro raporlarını bozar.
 
+### Modül demo verileri
+
+`93_modul_demo_verileri.sql` satış geçmişini değil, tedarikçi ve fatura
+zincirini doldurur:
+
+- 5 tedarikçi kartı (`TED001`–`TED005`)
+- Her tedarikçiden alış faturaları (`DEMO-AF-xxx`)
+- Her fatura satırı için stok giriş hareketi ve maliyet partisi
+- Partilere son kullanma tarihi ve lot numarası
+
+Bu betik olmadan üç ekran boş görünür: **Tedarikçiler** hiç kart
+göstermez, **Alış Faturası** ekranında seçilecek tedarikçi bulunmaz ve
+partilerde tarih olmadığı için **Son Kullanma** takibi boş kalır.
+
+Tarihler bugüne göre üretilir ve tamamı **gelecektedir**; bir kısmı 30
+gün içinde dolar. Yani Son Kullanma ekranı bu veriyle sarı (yaklaşan)
+satırlar gösterir, kırmızı (süresi geçmiş) göstermez.
+
+Süresi geçmiş akışını ve "zayi'ye al" butonunu denemek için bir partinin
+tarihini elle geriye alman gerekir:
+
+```sql
+UPDATE TOP (1) StokParti
+SET SonKullanmaTarihi = DATEADD(DAY, -3, CAST(SYSUTCDATETIME() AS DATE))
+WHERE KalanMiktar > 0 AND SonKullanmaTarihi IS NOT NULL;
+```
+
+Bundan sonra o ürün kasada satılamaz — satış "son kullanma tarihi geçmiş
+stok var, zayi olarak düşülmeli" uyarısı verir; Son Kullanma ekranında
+kırmızı satır olarak çıkar ve tek tıkla zayi'ye alınabilir.
+
+`91_demo_veri.sql` gibi tekrar çalıştırılabilir ve **üretimde
+çalıştırılmaz.**
+
 ---
 
 ## Testler
@@ -357,10 +422,23 @@ markette ciro raporlarını bozar.
 dotnet test
 ```
 
-Testler `MarketOtomasyon.Tests/` altında ve veritabanı gerektirmez —
-hepsi saf hesaplayıcı sınıfları hedefler. Kapsanan alanlar: sepet
-toplamları ve KDV, kampanya seçimi, iade kuralları, sayım düzeltmesi,
-para üstü, FIFO maliyet, terazi barkodu çözümleme.
+238 test, `MarketOtomasyon.Tests/` altında. Hiçbiri veritabanı
+gerektirmez — hepsi saf kural ve hesaplayıcı sınıflarını hedefler.
+
+Kapsanan alanlar: sepet toplamları ve KDV, kampanya seçimi, iade
+kuralları, sayım düzeltmesi, para üstü, FIFO maliyet, terazi barkodu
+çözümleme, fatura hesaplama, tedarikçi ve transfer kuralları, müdür
+onayı, yetkilendirme, son kullanma sınıflandırması.
+
+Kural sınıflarının veritabanı bilmemesi bilinçli: `IadeKurallari`,
+`TransferKurallari`, `FaturaHesaplayici` gibi sınıflar sadece girdi alıp
+karar döndürür, bu yüzden doğrudan test edilebilirler.
+
+Bazı kurallar SQL'de yaşar ve birim testiyle doğrulanamaz — FEFO
+sıralaması ve süresi geçmiş parti filtresi gibi. Bunlar geliştirme
+sırasında gerçek veritabanında `ROLLBACK` ile biten betiklerle sınandı:
+betik test partileri ekler, sorguyu çalıştırır, sonucu yazdırır ve hiçbir
+iz bırakmadan geri alır.
 
 ---
 
@@ -386,6 +464,7 @@ MarketOtomasyon/
     └── urun-gorsel/      Ürün fotoğrafları
 
 MarketOtomasyon.Tests/    Birim testleri
+Dockerfile                Konteyner imajı (iki aşamalı derleme)
 ```
 
 ---
