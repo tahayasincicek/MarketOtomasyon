@@ -14,6 +14,16 @@
 </head>
 <body class="giris-sayfasi">
     <main class="giris-icerik">
+        <section class="giris-slogan" aria-label="Market Otomasyon sloganı">
+            <p class="giris-slogan-baslik">
+                <span class="giris-yazilan" data-metin="Marketinizi tek" aria-hidden="true"></span>
+                <span class="giris-yazilan" data-metin="ekrandan yönetin." aria-hidden="true"></span>
+            </p>
+            <p class="giris-slogan-metin">
+                <span class="giris-yazilan" data-metin="Satıştan stoğa, her işlem kontrolünüz altında." aria-hidden="true"></span>
+            </p>
+        </section>
+
         <section class="giris-karti" aria-labelledby="giris-basligi">
             <div class="giris-marka">
                 <span class="giris-marka-ikonu" aria-hidden="true">
@@ -69,6 +79,46 @@
     </main>
     <script>
         (() => {
+            const yazilar = Array.from(document.querySelectorAll(".giris-yazilan"));
+            const hareketAzalt = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            const bekle = sure => new Promise(resolve => window.setTimeout(resolve, sure));
+
+            async function sloganiYaz() {
+                if (!yazilar.length) return;
+
+                if (hareketAzalt) {
+                    yazilar.forEach(yazi => yazi.textContent = yazi.dataset.metin ?? "");
+                    return;
+                }
+
+                while (true) {
+                    yazilar.forEach(yazi => {
+                        yazi.textContent = "";
+                        yazi.classList.remove("aktif");
+                    });
+
+                    for (const yazi of yazilar) {
+                        const metin = yazi.dataset.metin ?? "";
+                        yazi.classList.add("aktif");
+
+                        for (const karakter of metin) {
+                            yazi.textContent += karakter;
+                            await bekle(52);
+                        }
+
+                        yazi.classList.remove("aktif");
+                        await bekle(260);
+                    }
+
+                    await bekle(3600);
+                    document.querySelector(".giris-slogan")?.classList.add("yenileniyor");
+                    await bekle(450);
+                    document.querySelector(".giris-slogan")?.classList.remove("yenileniyor");
+                }
+            }
+
+            void sloganiYaz();
+
             const form = document.getElementById("giris-formu");
             if (!form || !window.fetch) return;
 
