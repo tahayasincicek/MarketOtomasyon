@@ -159,15 +159,21 @@
 
         <div class="panel" style="flex:1 1 18rem">
             <div class="panel-baslik">Dikkat edilecekler</div>
-            <div class="panel-govde">
-                <div class="alan">
-                    <label>Kritik stok</label>
-                    <div class="deger">
+            <div class="panel-govde dikkat-listesi">
+                <div class="dikkat-oge">
+                    <span class="dikkat-simge dikkat-simge-stok" aria-hidden="true">
+                        <i class="ph ph-warning"></i>
+                    </span>
+                    <div class="dikkat-bilgi">
+                        <span class="dikkat-baslik">Kritik stok</span>
+                        <span class="dikkat-aciklama">Minimum seviyenin altındaki ürünler</span>
+                    </div>
+                    <div class="dikkat-sonuc">
                         @if (ozet.KritikUrun > 0)
                         {
                             <span class="rozet rozet-uyari">@ozet.KritikUrun ürün</span>
-                            <a class="ms-2" asp-controller="Stok" asp-action="Index" asp-route-sadeceKritik="true">
-                                listeyi aç
+                            <a class="dikkat-baglanti" asp-controller="Stok" asp-action="Index" asp-route-sadeceKritik="true">
+                                Listeyi aç <i class="ph ph-arrow-right"></i>
                             </a>
                         }
                         else
@@ -176,9 +182,15 @@
                         }
                     </div>
                 </div>
-                <div class="alan">
-                    <label>Vardiya</label>
-                    <div class="deger">
+                <div class="dikkat-oge">
+                    <span class="dikkat-simge dikkat-simge-vardiya" aria-hidden="true">
+                        <i class="ph ph-vault"></i>
+                    </span>
+                    <div class="dikkat-bilgi">
+                        <span class="dikkat-baslik">Vardiya</span>
+                        <span class="dikkat-aciklama">Kasadaki aktif çalışma durumu</span>
+                    </div>
+                    <div class="dikkat-sonuc">
                         @if (Model.VardiyaAcik)
                         {
                             <span class="rozet rozet-olumlu">#@Model.AcikVardiyaId açık</span>

@@ -1623,6 +1623,82 @@ table.izgara tbody tr.table-active:hover {
 .panel-govde { padding: .7rem; flex: 1; }
 .panel-govde.sifir { padding: 0; }
 
+/* Ana ekran dikkat ozeti: genel .alan form duzeni burada kullanilmaz.
+   Ikon, aciklama ve sonuc her satirda ayni kolonda durur. */
+.dikkat-listesi {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+}
+
+.dikkat-oge {
+    display: grid;
+    grid-template-columns: 2.15rem minmax(8rem, 1fr) auto;
+    align-items: center;
+    gap: .65rem;
+    min-height: 4.25rem;
+    padding: .65rem .75rem;
+    border-bottom: 1px solid #eeeef1;
+}
+
+.dikkat-oge:last-child { border-bottom: 0; }
+
+.dikkat-simge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.15rem;
+    height: 2.15rem;
+    border-radius: .35rem;
+    font-size: 1.05rem;
+}
+
+.dikkat-simge-stok { color: #b45309; background: #fffbeb; }
+.dikkat-simge-vardiya { color: #2563eb; background: #eff6ff; }
+
+.dikkat-bilgi {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.25;
+}
+
+.dikkat-baslik { font-size: .86rem; font-weight: 600; color: #1f2937; }
+.dikkat-aciklama { margin-top: .15rem; font-size: .73rem; color: #6b7280; }
+
+.dikkat-sonuc {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: .35rem .55rem;
+    text-align: right;
+}
+
+.dikkat-baglanti {
+    display: inline-flex;
+    align-items: center;
+    gap: .2rem;
+    font-size: .76rem;
+    font-weight: 500;
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.dikkat-baglanti:hover { text-decoration: underline; }
+
+@media (max-width: 575.98px) {
+    .dikkat-oge {
+        grid-template-columns: 2.15rem minmax(0, 1fr);
+    }
+
+    .dikkat-sonuc {
+        grid-column: 2;
+        justify-content: flex-start;
+        text-align: left;
+    }
+}
+
 /* ---------- Kasa hizli urun tuslari ----------
    Tek satir ve yatay kaydirma, sepetin dikey alanini korur. Tuslar mevcut
    barkod akisini tetikler; fiyat yalnizca kasiyere bilgi vermek icindir. */
