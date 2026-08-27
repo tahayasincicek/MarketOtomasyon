@@ -133,28 +133,10 @@
                                     <i class="ph ph-user"></i> Hesabım
                                 </a>
                             </li>
-                            <li>
-                                <a class="dropdown-item" asp-controller="Profil" asp-action="Index"
-                                   asp-fragment="sifre">
-                                    <i class="ph ph-key"></i> Şifre değiştir
-                                </a>
-                            </li>
-
-                            @if (User.IsInRole("Mudur"))
-                            {
-                                <li><hr class="dropdown-divider" /></li>
-                                <li>
-                                    <a class="dropdown-item" asp-controller="Personel" asp-action="Index">
-                                        <i class="ph ph-users-three"></i> Personel yönetimi
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" asp-controller="IslemLog" asp-action="Index">
-                                        <i class="ph ph-list-checks"></i> İşlem logları
-                                    </a>
-                                </li>
-                            }
-
+                            @* Menu iki ogeyle sinirli. Sifre degistirme
+                               Hesabim sayfasinin icinde; Personel yonetimi ve
+                               Islem loglari zaten sol seritte duruyor. Ayni
+                               baglantiyi iki yerde tutmak menuyu uzatiyordu. *@
                             <li><hr class="dropdown-divider" /></li>
                             <li>
                                 @* Cikis POST olmali: GET ile yapilsaydi baska bir
