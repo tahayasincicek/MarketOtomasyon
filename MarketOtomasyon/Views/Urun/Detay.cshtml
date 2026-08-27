@@ -165,9 +165,6 @@
                     <span class="hata" asp-validation-for="YeniBarkod.Barkod"></span>
                     <span class="hata" asp-validation-for="YeniBarkod.Carpan"></span>
 
-                    <span class="ipucu arac-sag">
-                        Koli barkodunda çarpan, bir okutmada sepete eklenecek adettir (12'li koli → 12).
-                    </span>
                 </form>
             }
         </div>
@@ -217,6 +214,5 @@
     <div class="durum-cubugu">
         <span><strong>@Model.Barkodlar.Count</strong> barkod</span>
         <span><strong>@Model.FiyatGecmisi.Count</strong> fiyat kaydı</span>
-        <span class="arac-sag">Fiyat düzenleme ekranından değişir; eski kayıt silinmez, bitiş tarihi dolar.</span>
     </div>
 </div>

@@ -88,9 +88,10 @@
                 <i class="ph ph-plus"></i> Ekle
             </button>
 
-            <span class="ipucu arac-sag">
-                Girilen birim fiyat KDV hariçtir. Kaydedilince her satır için mal kabul otomatik yapılır.
-            </span>
+            @* Bu not kaliyor: alis fiyati KDV haric, satis fiyati KDV
+               dahil saklaniyor. Yanlis girilen bir birim fiyat dogrudan
+               maliyeti ve kar marjini bozar. *@
+            <span class="ipucu arac-sag">Birim fiyat KDV hariç.</span>
         </div>
 
         @* Kamera paneli. Element ID'leri kamera.js'in bekledigi sozlesme. *@
@@ -111,10 +112,6 @@
                 <div id="kamera-son" class="ipucu"></div>
             </div>
 
-            <span class="ipucu arac-sag" style="max-width:20rem">
-                Barkodu kameranın ortasına ve ekrana paralel tutun. Okunan ürün
-                listeye eklenir, kamera açık kalır.
-            </span>
         </div>
 
         <div class="izgara-sarmal">
