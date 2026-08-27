@@ -1,7 +1,14 @@
 @model MarketOtomasyon.Models.ViewModels.GirisVm
 @inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment Ortam
+@inject Microsoft.Extensions.Options.IOptions<MarketOtomasyon.Web.DemoGirisAyarlari> DemoGiris
 @{
     Layout = null;
+
+    /* Gelistirmede her zaman gorunur; yayinda ayara bagli.
+       Tanitim amacli yayinlarda ziyaretcinin giris bilgisini baska
+       yerde aramasi gerekmesin diye acilir, gercek bir isletmeye
+       kurulunca kapali kalir. */
+    var demoHesaplariGoster = Ortam.IsDevelopment() || DemoGiris.Value.Goster;
 }
 <!DOCTYPE html>
 <html lang="tr">
@@ -72,14 +79,9 @@
                 </button>
             </form>
 
-            @* Deneme hesaplari YALNIZCA gelistirme ortaminda gorunur.
-               Depoyu klonlayip calistiran biri hangi bilgilerle
-               girecegini aramak zorunda kalmasin diye burada; uretimde
-               ekranda sifre yazmasi ise dogrudan guvenlik acigi olurdu.
-
-               Tiklayinca alanlari dolduruyor: elle yazarken harf hatasi
-               yapip "sifre yanlis" sanan kullaniciyi engelliyor. *@
-            @if (Ortam.IsDevelopment())
+            @* Tiklayinca alanlari dolduruyor: elle yazarken harf hatasi
+               yapip "sifre yanlis" sanan ziyaretciyi engelliyor. *@
+            @if (demoHesaplariGoster)
             {
                 <div class="giris-deneme">
                     <span class="giris-deneme-baslik">Deneme hesapları</span>
@@ -146,7 +148,8 @@
 
             void sloganiYaz();
 
-            // Deneme hesabi butonlari yalnizca gelistirme ortaminda basiliyor.
+            // Deneme hesabi butonlari yalnizca gosterildiklerinde basiliyor;
+            // yoksa bu secici hicbir sey bulmaz.
             document.querySelectorAll(".giris-deneme-hesap").forEach(dugme => {
                 dugme.addEventListener("click", () => {
                     const kullanici = document.querySelector('[name="KullaniciAdi"]');

@@ -255,6 +255,7 @@ builder.Services.Configure<SatisAyarlari>(builder.Configuration.GetSection("Sati
 builder.Services.Configure<IadeAyarlari>(builder.Configuration.GetSection("Iade"));
 builder.Services.Configure<UrunResimAyarlari>(builder.Configuration.GetSection("UrunResim"));
 builder.Services.Configure<TersProxyAyarlari>(builder.Configuration.GetSection(TersProxyAyarlari.Bolum));
+builder.Services.Configure<DemoGirisAyarlari>(builder.Configuration.GetSection(DemoGirisAyarlari.Bolum));
 builder.Services.Configure<GirisGuvenligiAyarlari>(builder.Configuration.GetSection(GirisGuvenligiAyarlari.Bolum));
 
 // Open Food Facts kimliksiz istekleri bot sayip engelliyor; User-Agent zorunlu.
