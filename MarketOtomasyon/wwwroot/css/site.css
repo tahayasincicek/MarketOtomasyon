@@ -325,6 +325,56 @@ body {
     box-shadow: 0 0 0 .22rem rgb(148 153 163 / 18%);
 }
 
+/* ---------- Deneme hesaplari (yalnizca gelistirme) ----------
+   Giris kartinin icinde, formun altinda. Uretimde bu blok hic
+   basilmiyor; stiller kalsa da bir sey gostermez. */
+
+.giris-deneme {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+    margin-top: 1.1rem;
+    padding-top: .9rem;
+    border-top: 1px dashed rgb(52 56 63 / 30%);
+}
+
+.giris-deneme-baslik {
+    color: #4b5058;
+    font-size: .82rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.giris-deneme-hesap {
+    display: flex;
+    align-items: baseline;
+    gap: .45rem;
+    width: 100%;
+    padding: .45rem .65rem;
+    background: rgb(255 255 255 / 55%);
+    border: 1px solid rgb(52 56 63 / 18%);
+    border-radius: var(--yaricap-sm, .3rem);
+    color: #2b2f35;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: .84rem;
+    text-align: left;
+    cursor: pointer;
+}
+
+.giris-deneme-hesap:hover {
+    background: rgb(255 255 255 / 85%);
+    border-color: var(--vurgu, #4f46e5);
+}
+
+/* Rol aciklamasi: tikla-doldur davranisini bozmadan saga yaslanir. */
+.giris-deneme-hesap span {
+    margin-left: auto;
+    color: #5c616a;
+    font-family: inherit;
+    font-size: .76rem;
+}
+
 .giris-alt-bilgi {
     display: flex;
     align-items: center;

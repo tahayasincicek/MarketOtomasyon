@@ -1,4 +1,5 @@
 @model MarketOtomasyon.Models.ViewModels.GirisVm
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment Ortam
 @{
     Layout = null;
 }
@@ -71,6 +72,32 @@
                 </button>
             </form>
 
+            @* Deneme hesaplari YALNIZCA gelistirme ortaminda gorunur.
+               Depoyu klonlayip calistiran biri hangi bilgilerle
+               girecegini aramak zorunda kalmasin diye burada; uretimde
+               ekranda sifre yazmasi ise dogrudan guvenlik acigi olurdu.
+
+               Tiklayinca alanlari dolduruyor: elle yazarken harf hatasi
+               yapip "sifre yanlis" sanan kullaniciyi engelliyor. *@
+            @if (Ortam.IsDevelopment())
+            {
+                <div class="giris-deneme">
+                    <span class="giris-deneme-baslik">Deneme hesapları</span>
+
+                    <button type="button" class="giris-deneme-hesap"
+                            data-kullanici="mudur" data-sifre="Mudur123!">
+                        <strong>mudur</strong> · Mudur123!
+                        <span>tüm ekranlar</span>
+                    </button>
+
+                    <button type="button" class="giris-deneme-hesap"
+                            data-kullanici="kasiyer1" data-sifre="Kasiyer123!">
+                        <strong>kasiyer1</strong> · Kasiyer123!
+                        <span>kasa, iade, vardiya</span>
+                    </button>
+                </div>
+            }
+
             <div class="giris-alt-bilgi">
                 <i class="ph ph-shield-check" aria-hidden="true"></i>
                 İşlemler kullanıcı hesabınızla güvenli biçimde kaydedilir.
@@ -118,6 +145,19 @@
             }
 
             void sloganiYaz();
+
+            // Deneme hesabi butonlari yalnizca gelistirme ortaminda basiliyor.
+            document.querySelectorAll(".giris-deneme-hesap").forEach(dugme => {
+                dugme.addEventListener("click", () => {
+                    const kullanici = document.querySelector('[name="KullaniciAdi"]');
+                    const sifre = document.querySelector('[name="Sifre"]');
+                    if (!kullanici || !sifre) return;
+
+                    kullanici.value = dugme.dataset.kullanici ?? "";
+                    sifre.value = dugme.dataset.sifre ?? "";
+                    sifre.focus();
+                });
+            });
 
             const form = document.getElementById("giris-formu");
             if (!form || !window.fetch) return;
