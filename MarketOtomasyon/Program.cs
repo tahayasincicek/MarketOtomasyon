@@ -16,6 +16,11 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Docker HEALTHCHECK, web sunucusundan bagimsiz kisa omurlu bir surec
+// calistirir. Veritabani ayarlarini dogrulamadan yerel canlilik ucunu yoklar.
+if (args.Length > 0 && args[0].Equals("healthcheck", StringComparison.OrdinalIgnoreCase))
+    return await ContainerSaglikKomutu.CalistirAsync();
+
 /* Baglanti dizesi acilista dogrulanir.
    appsettings.json'da bilerek yok: uretim sifresi kaynak koda girmesin.
    Gelistirmede appsettings.Development.json'dan, uretimde
@@ -117,6 +122,8 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddExceptionHandler<GenelHataYakalayici>();
 builder.Services.AddProblemDetails();
+builder.Services.AddHealthChecks()
+    .AddCheck<VeritabaniSaglikKontrolu>("veritabani", tags: ["hazirlik"]);
 
 builder.Services.AddScoped<IPasswordHasher<Kullanici>, PasswordHasher<Kullanici>>();
 
@@ -319,7 +326,11 @@ app.UseRequestLocalization(new RequestLocalizationOptions
     SupportedUICultures = invariant
 });
 
-app.UseHttpsRedirection();
+// Container ve yuk dengeleyici saglik yoklamalari ayni agda HTTP ile gelir.
+// Bu iki teknik uc disindaki tum istekler HTTPS'e yonlendirilmeye devam eder.
+app.UseWhen(
+    ctx => !ctx.Request.Path.StartsWithSegments("/saglik"),
+    dal => dal.UseHttpsRedirection());
 app.UseStaticFiles();
 
 app.UseRouting();
@@ -347,6 +358,17 @@ app.Use(async (ctx, next) =>
 // Her istek icin tek satir ozet (yol, durum kodu, sure). ASP.NET Core'un
 // ayrintili istek loglarinin yerine gecer, cok daha sessizdir.
 app.UseSerilogRequestLogging();
+
+// Canlilik yalnizca web surecinin cevap verdigini, hazirlik ise SQL Server'a
+// erisilebildigini bildirir. Ikisi de kimlik dogrulama gerektirmez.
+app.MapHealthChecks("/saglik/canli", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = _ => false
+}).AllowAnonymous();
+app.MapHealthChecks("/saglik/hazir", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = kayit => kayit.Tags.Contains("hazirlik")
+}).AllowAnonymous();
 
 app.MapControllerRoute(
     name: "default",

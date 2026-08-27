@@ -32,6 +32,9 @@
     <None Include="..\MarketOtomasyon\appsettings*.json;..\MarketOtomasyon\appsettings*.ornek"
           Link="ayarlar\%(Filename)%(Extension)"
           CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\Dockerfile;..\.dockerignore"
+          Link="docker\%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

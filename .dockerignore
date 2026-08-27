@@ -1,0 +1,55 @@
+# Source-control and editor metadata
+.git/
+.github/
+.gitignore
+.vs/
+.vscode/
+.idea/
+.claude/
+
+# Local secrets and environment-specific configuration
+.env
+.env.*
+**/.env
+**/.env.*
+**/appsettings.Development.json
+**/appsettings.Local.json
+**/appsettings.*.local.json
+**/*.user
+**/*.suo
+**/*.pfx
+**/*.publishsettings
+**/*.pubxml
+
+# Build, test and package outputs
+**/bin/
+**/obj/
+artifacts/
+**/TestResults/
+**/coverage/
+**/coverage.*
+**/*.nupkg
+**/*.snupkg
+
+# Runtime data and logs
+**/Loglar/
+**/Logs/
+**/*.log
+**/*.mdf
+**/*.ldf
+**/*.ndf
+
+# Files that are not required to publish the web application
+MarketOtomasyon.Tests/
+docs/
+*.md
+*-Rehberi.md
+Gun-*-Rehber.md
+Gun-*-Staj-Defteri.md
+staj-defteri*.md
+*.html
+format.ps1
+
+# Docker metadata is used by the builder but need not be copied into a layer
+Dockerfile*
+.dockerignore

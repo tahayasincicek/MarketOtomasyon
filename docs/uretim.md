@@ -86,11 +86,14 @@ kayıtlıdır. Ayrıntı için [veritabanı belgesi](veritabani.md).
 
 Kök dizindeki `Dockerfile` uygulamayı iki aşamada paketler: SDK imajında
 derleyip yayınlar, ardından yalnızca ASP.NET çalışma zamanı imajına
-kopyalar. Son imajda derleyici ve kaynak kod bulunmaz.
+kopyalar. Son imajda derleyici ve kaynak kod bulunmaz. Çalışma zamanı
+root yerine sınırlı yetkili `app` kullanıcısıyla başlatılır. `.dockerignore`
+dosyası da `.git`, yerel ayarlar, ortam dosyaları, loglar, testler ve
+derleme çıktılarını Docker build context'inin dışında bırakır.
 
 ```bash
 docker build -t marketotomasyon .
-docker run -p 8080:8080 marketotomasyon
+docker volume create marketotomasyon-keys
 ```
 
 Veritabanı imajın içinde değildir. Konteyner içinde `localhost` kendi ağ
@@ -98,6 +101,11 @@ alanına işaret ettiğinden bağlantı dizesi dışarıdan verilir:
 
 ```bash
 docker run -p 8080:8080 \
+  --name marketotomasyon \
+  --restart unless-stopped \
+  --init \
+  --cap-drop ALL \
+  --security-opt no-new-privileges:true \
   -e "ConnectionStrings__MarketDb=Server=host.docker.internal;Database=MarketOtomasyon;User Id=sa;Password=...;TrustServerCertificate=True" \
   -v marketotomasyon-keys:/var/lib/marketotomasyon/keys \
   marketotomasyon
@@ -108,6 +116,28 @@ kimlik doğrulaması konteynerde çalışmadığından kullanıcı adı ve şifr
 kullanılmalıdır.
 
 `ASPNETCORE_ENVIRONMENT=Production` imajda tanımlıdır.
+
+Dockerfile kaynak koddan önce proje dosyasını kopyaladığı için NuGet
+paketleri yalnızca proje bağımlılıkları değiştiğinde yeniden indirilir.
+Uygulama `8080` portunu açıkça dinler. `--cap-drop ALL` Linux yeteneklerini
+kaldırır, `no-new-privileges` ise süreçlerin sonradan ek yetki kazanmasını
+engeller. `--init` kapanış sinyalinin uygulamaya doğru iletilmesini ve
+artık süreçlerin temizlenmesini sağlar.
+
+### Sağlık kontrolleri
+
+Container her 30 saniyede bir `/saglik/canli` adresini kendi içinden
+yoklar. Web süreci yanıt vermezse üç başarısız denemeden sonra Docker
+container'ı `unhealthy` olarak işaretler.
+
+| Adres | Amaç |
+|---|---|
+| `/saglik/canli` | Web uygulaması çalışıyor mu? |
+| `/saglik/hazir` | Uygulama SQL Server'a bağlanabiliyor mu? |
+
+Yük dengeleyicinin trafik vermeden önce `/saglik/hazir`, yalnızca süreç
+canlılığını izleyen Docker'ın ise `/saglik/canli` adresini kullanması
+gerekir. Bu teknik adresler oturum gerektirmez ve veri döndürmez.
 
 ### Oturum anahtarlarının kalıcı tutulması
 

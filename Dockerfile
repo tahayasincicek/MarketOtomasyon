@@ -1,12 +1,18 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build-env
 WORKDIR /App
 
-# Copy everything
-COPY . ./
-# Restore as distinct layers
+# Proje dosyasi once kopyalanir. Kaynak kod degisip paketler degismediginde
+# NuGet restore katmani Docker cache'inden kullanilir.
+COPY MarketOtomasyon/MarketOtomasyon.csproj MarketOtomasyon/
 RUN dotnet restore MarketOtomasyon/MarketOtomasyon.csproj
-# Build and publish a release
-RUN dotnet publish MarketOtomasyon/MarketOtomasyon.csproj -c Release -o out
+
+COPY MarketOtomasyon/ MarketOtomasyon/
+
+ARG BUILD_CONFIGURATION=Release
+RUN dotnet publish MarketOtomasyon/MarketOtomasyon.csproj \
+    -c $BUILD_CONFIGURATION \
+    --no-restore \
+    -o out
 
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
@@ -20,13 +26,18 @@ RUN mkdir -p /var/lib/marketotomasyon/keys \
 # buna bagli. Yanlislikla Development'a dusen bir konteynerde oturum
 # cerezi HTTP uzerinden de gonderilir.
 ENV ASPNETCORE_ENVIRONMENT=Production
+ENV ASPNETCORE_HTTP_PORTS=8080
 ENV VeriKoruma__AnahtarKlasoru=/var/lib/marketotomasyon/keys
 
+EXPOSE 8080
 VOLUME ["/var/lib/marketotomasyon/keys"]
 
 # Baglanti dizesi imaja GOMULMEZ; calistirirken -e ile verilir:
 #   docker run -e "ConnectionStrings__MarketDb=Server=...;..." marketotomasyon
 
 USER app
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD ["dotnet", "MarketOtomasyon.dll", "healthcheck"]
 
 ENTRYPOINT ["dotnet", "MarketOtomasyon.dll"]
