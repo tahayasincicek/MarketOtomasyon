@@ -1,6 +1,7 @@
 using System.Globalization;
 using FluentValidation;
 using MarketOtomasyon.Models.Entities;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -57,6 +58,32 @@ builder.Host.UseSerilog((context, services, config) =>
 // otomatik "required" mesajlari kapali, kurallar FluentValidation'da.
 builder.Services.AddControllersWithViews(o =>
     o.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true);
+
+/* Kimlik doğrulama çerezini şifreleyen Data Protection anahtarları container
+   yeniden oluşturulunca kaybolmamalı. Aynı uygulama adını ve anahtar klasörünü
+   kullanan instance'lar birbirlerinin oluşturduğu oturum çerezini açabilir. */
+var veriKorumaAyarlari = builder.Configuration
+    .GetSection(VeriKorumaAyarlari.Bolum)
+    .Get<VeriKorumaAyarlari>() ?? new VeriKorumaAyarlari();
+var containerdaCalisiyor = string.Equals(
+    Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER"),
+    "true",
+    StringComparison.OrdinalIgnoreCase);
+var veriKorumaHatalari = veriKorumaAyarlari.DogrulamaHatalari(containerdaCalisiyor);
+
+if (veriKorumaHatalari.Count > 0)
+    throw new InvalidOperationException(string.Join(" ", veriKorumaHatalari));
+
+var veriKoruma = builder.Services
+    .AddDataProtection()
+    .SetApplicationName(veriKorumaAyarlari.UygulamaAdi);
+
+if (!string.IsNullOrWhiteSpace(veriKorumaAyarlari.AnahtarKlasoru))
+{
+    var anahtarKlasoru = Path.GetFullPath(veriKorumaAyarlari.AnahtarKlasoru);
+    Directory.CreateDirectory(anahtarKlasoru);
+    veriKoruma.PersistKeysToFileSystem(new DirectoryInfo(anahtarKlasoru));
+}
 
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

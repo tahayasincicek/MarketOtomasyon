@@ -99,6 +99,7 @@ alanına işaret ettiğinden bağlantı dizesi dışarıdan verilir:
 ```bash
 docker run -p 8080:8080 \
   -e "ConnectionStrings__MarketDb=Server=host.docker.internal;Database=MarketOtomasyon;User Id=sa;Password=...;TrustServerCertificate=True" \
+  -v marketotomasyon-keys:/var/lib/marketotomasyon/keys \
   marketotomasyon
 ```
 
@@ -107,6 +108,30 @@ kimlik doğrulaması konteynerde çalışmadığından kullanıcı adı ve şifr
 kullanılmalıdır.
 
 `ASPNETCORE_ENVIRONMENT=Production` imajda tanımlıdır.
+
+### Oturum anahtarlarının kalıcı tutulması
+
+ASP.NET Core, giriş çerezlerini Data Protection anahtarlarıyla şifreler.
+Docker imajı anahtarları `/var/lib/marketotomasyon/keys` klasörüne yazar;
+bu klasör kalıcı bir volume'a bağlanmazsa container yeniden oluşturulduğunda
+mevcut kullanıcı oturumları açılamaz.
+
+Volume ilk çalıştırmadan önce oluşturulur:
+
+```bash
+docker volume create marketotomasyon-keys
+```
+
+Yukarıdaki `docker run` örneği bu volume'u bağlar. Aynı makinedeki birden
+fazla uygulama instance'ı aynı volume'u ve `VeriKoruma__UygulamaAdi`
+değerini kullanmalıdır. Varsayılan uygulama adı `MarketOtomasyon`dur.
+
+Birden fazla Docker sunucusu kullanılıyorsa yerel named volume yeterli
+değildir. Anahtar klasörü bütün sunucuların eriştiği korumalı bir ağ
+dosya sistemine bağlanmalı veya Redis/Azure Blob gibi ortak bir Data
+Protection sağlayıcısı kullanılmalıdır. Anahtar dosyaları oturumları
+çözebildiği için yedeklenmeli, yalnızca uygulama kullanıcısına açık olmalı
+ve sır gibi korunmalıdır.
 
 ---
 
