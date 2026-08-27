@@ -27,6 +27,18 @@ public sealed class DockerGuvenligiTests
     }
 
     [Theory]
+    [InlineData("/var/lib/marketotomasyon/keys")]
+    [InlineData("/App/wwwroot/urun-resim")]
+    [InlineData("/App/Loglar")]
+    public void Dockerfile_UretilenDosyalariKaliciDepolamayaAyirir(string yol)
+    {
+        var dockerfile = DockerDosyasi("Dockerfile");
+
+        Assert.Contains(yol, dockerfile);
+        Assert.Contains("VOLUME", dockerfile);
+    }
+
+    [Theory]
     [InlineData(".git/")]
     [InlineData(".env")]
     [InlineData("**/appsettings.Development.json")]

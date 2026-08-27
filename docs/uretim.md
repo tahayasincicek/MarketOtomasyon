@@ -94,6 +94,8 @@ derleme çıktılarını Docker build context'inin dışında bırakır.
 ```bash
 docker build -t marketotomasyon .
 docker volume create marketotomasyon-keys
+docker volume create marketotomasyon-urun-resimleri
+docker volume create marketotomasyon-loglar
 ```
 
 Veritabanı imajın içinde değildir. Konteyner içinde `localhost` kendi ağ
@@ -108,6 +110,8 @@ docker run -p 8080:8080 \
   --security-opt no-new-privileges:true \
   -e "ConnectionStrings__MarketDb=Server=host.docker.internal;Database=MarketOtomasyon;User Id=sa;Password=...;TrustServerCertificate=True" \
   -v marketotomasyon-keys:/var/lib/marketotomasyon/keys \
+  -v marketotomasyon-urun-resimleri:/App/wwwroot/urun-resim \
+  -v marketotomasyon-loglar:/App/Loglar \
   marketotomasyon
 ```
 
@@ -163,6 +167,25 @@ Protection sağlayıcısı kullanılmalıdır. Anahtar dosyaları oturumları
 çözebildiği için yedeklenmeli, yalnızca uygulama kullanıcısına açık olmalı
 ve sır gibi korunmalıdır.
 
+### Ürün görselleri ve dosya loglarının kalıcı tutulması
+
+Open Food Facts üzerinden indirilen ürün görselleri
+`/App/wwwroot/urun-resim`, Serilog dosyaları ise `/App/Loglar` klasörüne
+yazılır. Bu klasörler container'ın yazılabilir katmanında bırakılırsa
+container silinip yeniden oluşturulduğunda dosyalar kaybolur.
+
+Yukarıdaki `docker run` örneğinde iki klasör ayrı adlandırılmış volume'lara
+bağlanmıştır. Böylece yeni imajla container yeniden oluşturulsa bile ürün
+görselleri ve geçmiş loglar korunur. Veritabanındaki ürün resmi yolu da
+değişmez; uygulama aynı `/urun-resim/...` adresinden dosyayı sunmaya devam
+eder.
+
+Birden fazla Docker sunucusunda uygulama çalıştırılıyorsa yerel volume'lar
+instance'lar arasında paylaşılmaz. Bu durumda ürün görselleri ortak bir ağ
+dosya sistemine veya S3/Azure Blob gibi object storage'a taşınmalıdır.
+Dosya logları için de ortak bir log sistemi kullanılmalı; aynı volume'un
+birden fazla sunucuya bağlanması log toplama çözümü olarak görülmemelidir.
+
 ---
 
 ## Ters proxy ve HTTPS
@@ -213,6 +236,25 @@ Middleware `UseHsts` ve `UseHttpsRedirection` çağrılarından önce çalışı
 Varsayılan topoloji tek proxy kabul eder; proxy zinciri kullanılıyorsa
 `ForwardLimit` kodda bilinçli biçimde artırılmalıdır.
 
+### Giriş denemesi sınırı
+
+`POST /Hesap/Giris` istekleri gerçek istemci IP'sine göre sınırlandırılır.
+Varsayılan olarak bir IP adresinden kayan 60 saniyelik pencere içinde en
+fazla 5 giriş isteği kabul edilir. Sınır aşılırsa uygulama `429 Too Many
+Requests` ve `Retry-After` başlığı döndürür; olay IP adresiyle loglanır.
+
+```bash
+GirisGuvenligi__IzinSayisi=5
+GirisGuvenligi__PencereSaniye=60
+GirisGuvenligi__DilimSayisi=6
+```
+
+Proxy arkasında `TersProxy` ayarı doğru yapılmalıdır; aksi hâlde bütün
+kullanıcılar proxy'nin tek IP adresinden geliyormuş gibi görünür. Bu sınır
+uygulama instance'ının belleğindedir. Birden fazla instance kullanılan
+kurulumlarda aynı sınır ayrıca Nginx/API gateway üzerinde ortak olarak
+uygulanmalı veya dağıtık bir rate limiter kullanılmalıdır.
+
 ---
 
 ## Bilinen eksikler
@@ -223,6 +265,4 @@ Gerçek bir markette kullanılmadan önce şunlar giderilmelidir:
 | Eksik | Risk |
 |---|---|
 | Varsayılan hesap şifreleri | `mudur` / `kasiyer1` şifreleri belgelerde ve kurulum betiğinde yazılı |
-| Giriş deneme sınırı yok | Başarısız denemeler loglanır ancak engellenmez |
 | Yedekleme stratejisi tanımsız | Veri kaybı senaryosu için plan yok |
-| Sağlık kontrolü ucu yok | Yük dengeleyici uygulamanın ayakta olduğunu anlayamaz |
