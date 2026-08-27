@@ -1954,12 +1954,18 @@ table.izgara tbody tr.table-active:hover {
 
 /* ---------- Ana ekran kisayollari ---------- */
 
+/* Ayirici cizgiler izgaranin arka planiyla degil, kartlarin kendi
+   golgesiyle ciziliyor.
+
+   Onceden arka plan gri, kartlar beyazdi ve aradaki 1px bosluk cizgi
+   gibi gorunuyordu. Ama son satir dolmadiginda bos hucrelerde o gri
+   oldugu gibi kaliyor, ekranin sag alt kosesinde aciklanamayan bir
+   blok birakiyordu. Kart sayisi sutun sayisinin tam kati olmadigi
+   surece bu kacinilmazdi. */
 .kisayol-izgara {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
     gap: 1px;
-    background: var(--izgara-cizgi);
-    border-bottom: 1px solid var(--izgara-cizgi);
 }
 
 .kisayol {
@@ -1972,6 +1978,12 @@ table.izgara tbody tr.table-active:hover {
     flex-direction: column;
     align-items: center;
     gap: .4rem;
+
+    /* Cizgiyi kart tasiyor. box-shadow secildi cunku border yer
+       kaplayip hizalamayi kaydirirdi; bu golge yerlesime hic
+       dokunmuyor ve 1px'lik bosluk uzerinde komsu kartla birlesip
+       tek cizgi gibi gorunuyor. */
+    box-shadow: 0 0 0 1px var(--izgara-cizgi);
 }
 
 .kisayol:hover { background: var(--vurgu-zemin); color: #111827; }
