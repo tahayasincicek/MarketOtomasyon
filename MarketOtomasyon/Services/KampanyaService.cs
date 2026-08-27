@@ -1,6 +1,7 @@
 using System.Data;
 using MarketOtomasyon.Data.Repositories;
 using MarketOtomasyon.Models.ViewModels;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace MarketOtomasyon.Services;
 
@@ -13,11 +14,17 @@ public class KampanyaService
 {
     private readonly KampanyaRepository _kampanyaRepository;
     private readonly FisRepository _fisRepository;
+    private readonly IMemoryCache _cache;
+    private const string KasaKampanyaCacheKey = "kasa-kampanya-tanimlari";
 
-    public KampanyaService(KampanyaRepository kampanyaRepository, FisRepository fisRepository)
+    public KampanyaService(
+        KampanyaRepository kampanyaRepository,
+        FisRepository fisRepository,
+        IMemoryCache cache)
     {
         _kampanyaRepository = kampanyaRepository;
         _fisRepository = fisRepository;
+        _cache = cache;
     }
 
     /// <summary>
@@ -30,10 +37,21 @@ public class KampanyaService
         var satirlar = await _fisRepository.SatirlariGetirAsync(conn, tx, fisId, ct);
         if (satirlar.Count == 0) return;
 
-        var kampanyalar = await _kampanyaRepository.GecerliTanimlariGetirAsync(ct);
-        var urunKategorileri = await _kampanyaRepository.UrunKategorileriAsync(ct);
+        // Kampanya tanimlari ve urun-kategori eslesmeleri her barkodda
+        // degismeyen verilerdir. Azure SQL'e her urun tiklamasinda iki ayri
+        // kez gitmek yerine kisa sureli bellek kopyasi kullanilir.
+        var veri = await _cache.GetOrCreateAsync(KasaKampanyaCacheKey, async giris =>
+        {
+            giris.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(30);
+            var kampanyalar = await _kampanyaRepository.GecerliTanimlariGetirAsync(ct);
+            var kategoriler = await _kampanyaRepository.UrunKategorileriAsync(ct);
+            return new KampanyaCacheVerisi(kampanyalar, kategoriler);
+        });
 
-        var sonuc = KampanyaHesaplayici.Hesapla(satirlar, kampanyalar, urunKategorileri, DateTime.UtcNow);
+        if (veri is null) return;
+
+        var sonuc = KampanyaHesaplayici.Hesapla(
+            satirlar, veri.Kampanyalar, veri.UrunKategorileri, DateTime.UtcNow);
         var indirimler = sonuc.SatirIndirimleri.ToDictionary(s => s.SatirId);
 
         foreach (var satir in satirlar)
@@ -55,4 +73,11 @@ public class KampanyaService
                 SepetHesaplayici.SatirToplamHesapla(satir.Miktar, satir.BirimFiyat, yeniIndirim), ct);
         }
     }
+
+    /// <summary>Kampanya kaydedilince kasadaki kisa sureli kopyayi gecersiz kilar.</summary>
+    public void OnbellegiTemizle() => _cache.Remove(KasaKampanyaCacheKey);
+
+    private sealed record KampanyaCacheVerisi(
+        List<KampanyaTanimVm> Kampanyalar,
+        Dictionary<int, int> UrunKategorileri);
 }

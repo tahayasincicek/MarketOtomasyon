@@ -4,6 +4,7 @@ using MarketOtomasyon.Data.Repositories;
 using MarketOtomasyon.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using MarketOtomasyon.Security;
+using MarketOtomasyon.Services;
 using Microsoft.AspNetCore.Authorization;
 
 namespace MarketOtomasyon.Controllers;
@@ -16,19 +17,22 @@ public class KampanyaController : Controller
     private readonly UrunRepository _urunRepository;
     private readonly KategoriRepository _kategoriRepository;
     private readonly IValidator<KampanyaFormVm> _validator;
+    private readonly KampanyaService _kampanyaService;
 
     public KampanyaController(
         IDbConnectionFactory factory,
         KampanyaRepository kampanyaRepository,
         UrunRepository urunRepository,
         KategoriRepository kategoriRepository,
-        IValidator<KampanyaFormVm> validator)
+        IValidator<KampanyaFormVm> validator,
+        KampanyaService kampanyaService)
     {
         _factory = factory;
         _kampanyaRepository = kampanyaRepository;
         _urunRepository = urunRepository;
         _kategoriRepository = kategoriRepository;
         _validator = validator;
+        _kampanyaService = kampanyaService;
     }
 
     public async Task<IActionResult> Index(CancellationToken ct)
@@ -108,6 +112,7 @@ public class KampanyaController : Controller
 
         await _kampanyaRepository.KaydetAsync(conn, tx, form.TanimaCevir(), ct);
         tx.Commit();
+        _kampanyaService.OnbellegiTemizle();
 
         TempData["Mesaj"] = $"{form.Ad} kaydedildi.";
         return RedirectToAction(nameof(Index));

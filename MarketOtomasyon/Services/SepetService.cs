@@ -121,7 +121,19 @@ public class SepetService
         using var conn = await _factory.CreateOpenConnectionAsync(ct);
         using var tx = conn.BeginTransaction();
 
-        var fisId = fis?.Id ?? (await _fisRepository.FisAcAsync(conn, tx, vardiyaId, kullaniciId, ct)).FisId;
+        int fisId;
+        string fisNo;
+        if (fis is null)
+        {
+            var acilanFis = await _fisRepository.FisAcAsync(conn, tx, vardiyaId, kullaniciId, ct);
+            fisId = acilanFis.FisId;
+            fisNo = acilanFis.FisNo;
+        }
+        else
+        {
+            fisId = fis.Id;
+            fisNo = fis.FisNo;
+        }
 
         // Tartili urunlerde her okutma ayri bir tartimdir; miktarlari birlestirmek yaniltici olur.
         var mevcutSatirId = cozum.Birim == "KG"
@@ -150,10 +162,14 @@ public class SepetService
             }, ct);
         }
 
-        await ToplamlariYazAsync(conn, tx, fisId, ct);
+        var sepet = await ToplamlariYazAsync(conn, tx, fisId, ct);
         tx.Commit();
 
-        var sepet = await GetirAsync(vardiyaId, ct);
+        // Toplamlari hesaplarken satirlar zaten okundu. Transaction bittikten
+        // sonra ayni fisi ve satirlari Azure'dan tekrar istemeyiz.
+        sepet.FisId = fisId;
+        sepet.FisNo = fisNo;
+        await SktUyarilariniDoldurAsync(sepet, ct);
         sepet.SonOkutulanUrunId = cozum.UrunId;
         return (sepet, null);
     }
@@ -368,7 +384,7 @@ public class SepetService
     /// baraji asilinca sepete indirim gelir, satir silinince kalkar).
     /// Toplamlar fiste de saklanir; raporlar her seferinde satirlari toplamasin.
     /// </summary>
-    private async Task ToplamlariYazAsync(
+    private async Task<SepetVm> ToplamlariYazAsync(
         System.Data.IDbConnection conn, System.Data.IDbTransaction tx, int fisId, CancellationToken ct)
     {
         await _kampanyaService.UygulaAsync(conn, tx, fisId, ct);
@@ -378,6 +394,8 @@ public class SepetService
 
         await _fisRepository.ToplamlariGuncelleAsync(conn, tx, fisId,
             sepet.AraToplam, sepet.ToplamIndirim, sepet.ToplamKdv, sepet.GenelToplam, ct);
+
+        return sepet;
     }
 
     /// <summary>

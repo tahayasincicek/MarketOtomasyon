@@ -194,6 +194,7 @@ builder.Services.AddRateLimiter(options =>
 
 builder.Services.AddExceptionHandler<GenelHataYakalayici>();
 builder.Services.AddProblemDetails();
+builder.Services.AddMemoryCache();
 builder.Services.AddHealthChecks()
     .AddCheck<VeritabaniSaglikKontrolu>("veritabani", tags: ["hazirlik"]);
 
