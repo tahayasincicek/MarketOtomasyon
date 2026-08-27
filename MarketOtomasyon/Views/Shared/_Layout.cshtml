@@ -116,21 +116,78 @@
                 <button type="button" class="menu-dugmesi" id="menu-dugmesi" aria-label="Menüyü aç/kapat"><i class="ph ph-list"></i></button>
                 <span class="sayfa-basligi">@ViewData["Title"]</span>
 
-                <div class="ms-auto d-flex align-items-center gap-3">
-                    @* Kullanici adi zaten burada duruyordu; hesap ekranina
-                       giden dogal yol bu. Menuye ayri bir oge eklemek sol
-                       seridi uzatirdi. *@
-                    <a class="small text-muted text-decoration-none" asp-controller="Profil"
-                       asp-action="Index" title="Hesabım">
-                        <i class="ph ph-user-circle me-1"></i>@User.Identity?.Name
-                        <span class="badge bg-light text-dark ms-1">@(User.IsInRole("Mudur") ? "Müdür" : "Kasiyer")</span>
-                    </a>
-                    <form asp-controller="Hesap" asp-action="Cikis" method="post" class="m-0">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-sm btn-danger btn-cikis">
-                            <i class="ph ph-sign-out me-1"></i>Çıkış
+                @{
+                    /* Avatar icin ad soyadin bas harfleri. Genel bir kullanici
+                       ikonu herkeste ayni gorunuyordu; bas harf en azindan
+                       hangi hesapla acildigini bir bakista soyler.
+
+                       Buyutme Turkce kulturle yapiliyor: uygulama model
+                       binding icin invariant kulturde calisiyor ve orada
+                       "irfan" -> "IRFAN" olur. Ekranda dogrusu "İRFAN". */
+                    var trKultur = new System.Globalization.CultureInfo("tr-TR");
+                    var kullaniciAdi = User.Identity?.Name ?? "";
+                    var parcalar = kullaniciAdi.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    var basHarfler = parcalar.Length switch
+                    {
+                        0 => "?",
+                        1 => parcalar[0][..1].ToUpper(trKultur),
+                        _ => (parcalar[0][..1] + parcalar[^1][..1]).ToUpper(trKultur)
+                    };
+                }
+
+                <div class="ms-auto">
+                    @* Rol rozeti kaldirildi: rol zaten menudeki ekranlarla
+                       belli oluyor ve her ekranda tekrar etmesi gereksizdi. *@
+                    <div class="dropdown">
+                        <button class="hesap-dugmesi" type="button" data-bs-toggle="dropdown"
+                                aria-expanded="false" aria-label="Hesap menüsü">
+                            <span class="hesap-avatar">@basHarfler</span>
+                            <span class="hesap-ad">@kullaniciAdi</span>
+                            <i class="ph ph-caret-down hesap-ok"></i>
                         </button>
-                    </form>
+
+                        <ul class="dropdown-menu dropdown-menu-end hesap-menu">
+                            <li>
+                                <a class="dropdown-item" asp-controller="Profil" asp-action="Index">
+                                    <i class="ph ph-user"></i> Hesabım
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="Profil" asp-action="Index"
+                                   asp-fragment="sifre">
+                                    <i class="ph ph-key"></i> Şifre değiştir
+                                </a>
+                            </li>
+
+                            @if (User.IsInRole("Mudur"))
+                            {
+                                <li><hr class="dropdown-divider" /></li>
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Personel" asp-action="Index">
+                                        <i class="ph ph-users-three"></i> Personel yönetimi
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-controller="IslemLog" asp-action="Index">
+                                        <i class="ph ph-list-checks"></i> İşlem logları
+                                    </a>
+                                </li>
+                            }
+
+                            <li><hr class="dropdown-divider" /></li>
+                            <li>
+                                @* Cikis POST olmali: GET ile yapilsaydi baska bir
+                                   sitedeki bir resim etiketi kullaniciyi oturumdan
+                                   dusurebilirdi. *@
+                                <form asp-controller="Hesap" asp-action="Cikis" method="post" class="m-0">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="dropdown-item hesap-cikis">
+                                        <i class="ph ph-sign-out"></i> Çıkış
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
 
             </header>

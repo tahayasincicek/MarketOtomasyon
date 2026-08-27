@@ -1026,6 +1026,91 @@ html, body {
     cursor: pointer;
 }
 
+/* ---------- Hesap menusu (ust serit sagi) ----------
+   Onceden burada genel bir kullanici ikonu, ad ve rol rozeti yan yana
+   duruyordu; ikon her hesapta ayni oldugu icin bilgi tasimiyordu. Yerine
+   ad soyadin bas harfleriyle bir avatar geldi. */
+
+.hesap-dugmesi {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .25rem .5rem .25rem .3rem;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 2rem;
+    cursor: pointer;
+    color: #374151;
+    font-size: .86rem;
+    line-height: 1;
+}
+
+.hesap-dugmesi:hover,
+.hesap-dugmesi[aria-expanded="true"] {
+    background: #f3f4f6;
+    border-color: #e3e4e8;
+}
+
+.hesap-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.85rem;
+    height: 1.85rem;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--vurgu);
+    color: #fff;
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .02em;
+}
+
+.hesap-ad {
+    max-width: 11rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.hesap-ok {
+    font-size: .7rem;
+    color: #9ca3af;
+}
+
+.hesap-menu {
+    min-width: 13rem;
+    padding: .3rem;
+    font-size: .875rem;
+    border-color: #e3e4e8;
+    box-shadow: 0 4px 8px rgb(16 24 40 / .05), 0 12px 24px rgb(16 24 40 / .09);
+}
+
+.hesap-menu .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    padding: .45rem .6rem;
+    border-radius: .3rem;
+}
+
+.hesap-menu .dropdown-item i { font-size: 1rem; color: #6b7280; }
+.hesap-menu .dropdown-item:hover i { color: var(--vurgu); }
+
+/* Cikis bir form iceren dropdown-item; buton olarak tam genislik almali
+   ki tiklama alani digerleriyle ayni olsun. */
+.hesap-menu .hesap-cikis {
+    width: 100%;
+    border: none;
+    background: none;
+    text-align: left;
+    color: #b91c1c;
+}
+
+.hesap-menu .hesap-cikis:hover { background: #fef2f2; color: #991b1b; }
+.hesap-menu .hesap-cikis:hover i { color: #b91c1c; }
+
 .sayfa {
     padding: 1.25rem;
     flex: 1;
