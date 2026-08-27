@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace MarketOtomasyon.Controllers;
 
@@ -30,6 +31,7 @@ public sealed class HesapController : Controller
     [AllowAnonymous]
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("giris")]
     public async Task<IActionResult> Giris(GirisVm form, CancellationToken ct)
     {
         form.ReturnUrl = YerelDonusAdresi(form.ReturnUrl);

@@ -136,6 +136,18 @@
                         redirect: "follow"
                     });
 
+                    if (yanit.status === 429) {
+                        const mesaj = await yanit.text();
+                        const ozet = form.querySelector('[data-valmsg-summary="true"]');
+                        if (ozet) {
+                            ozet.classList.remove("validation-summary-valid");
+                            ozet.classList.add("validation-summary-errors");
+                            ozet.innerHTML = `<ul><li>${mesaj}</li></ul>`;
+                        }
+                        if (dugme) dugme.disabled = false;
+                        return;
+                    }
+
                     if (yanit.redirected) {
                         window.location.replace(yanit.url);
                         return;

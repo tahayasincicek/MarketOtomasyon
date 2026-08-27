@@ -7,7 +7,9 @@ using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
+using System.Threading.RateLimiting;
 using MarketOtomasyon.Data;
 using MarketOtomasyon.Data.Repositories;
 using MarketOtomasyon.Services;
@@ -120,6 +122,56 @@ builder.Services.AddAuthorization(options =>
         .Build();
 });
 
+var girisGuvenligi = builder.Configuration
+    .GetSection(GirisGuvenligiAyarlari.Bolum)
+    .Get<GirisGuvenligiAyarlari>() ?? new GirisGuvenligiAyarlari();
+var girisGuvenligiHatalari = girisGuvenligi.DogrulamaHatalari();
+
+if (girisGuvenligiHatalari.Count > 0)
+    throw new InvalidOperationException(string.Join(" ", girisGuvenligiHatalari));
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, ct) =>
+    {
+        var bekleme = TimeSpan.FromSeconds(girisGuvenligi.PencereSaniye);
+        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var onerilenBekleme))
+            bekleme = onerilenBekleme;
+
+        context.HttpContext.Response.Headers.RetryAfter =
+            Math.Max(1, (int)Math.Ceiling(bekleme.TotalSeconds)).ToString(CultureInfo.InvariantCulture);
+        context.HttpContext.Response.ContentType = "text/plain; charset=utf-8";
+
+        var logger = context.HttpContext.RequestServices
+            .GetRequiredService<ILoggerFactory>()
+            .CreateLogger("GirisGuvenligi");
+        logger.LogWarning(
+            "Giris denemesi siniri asildi. IP: {Ip}",
+            context.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "bilinmiyor");
+
+        await context.HttpContext.Response.WriteAsync(
+            "Çok fazla giriş denemesi yapıldı. Lütfen kısa bir süre sonra tekrar deneyin.",
+            ct);
+    };
+
+    options.AddPolicy("giris", httpContext =>
+    {
+        var istemci = httpContext.Connection.RemoteIpAddress?.ToString() ?? "bilinmeyen";
+
+        return RateLimitPartition.GetSlidingWindowLimiter(
+            partitionKey: istemci,
+            factory: _ => new SlidingWindowRateLimiterOptions
+            {
+                PermitLimit = girisGuvenligi.IzinSayisi,
+                Window = TimeSpan.FromSeconds(girisGuvenligi.PencereSaniye),
+                SegmentsPerWindow = girisGuvenligi.DilimSayisi,
+                QueueLimit = 0,
+                AutoReplenishment = true
+            });
+    });
+});
+
 builder.Services.AddExceptionHandler<GenelHataYakalayici>();
 builder.Services.AddProblemDetails();
 builder.Services.AddHealthChecks()
@@ -182,6 +234,7 @@ builder.Services.Configure<SatisAyarlari>(builder.Configuration.GetSection("Sati
 builder.Services.Configure<IadeAyarlari>(builder.Configuration.GetSection("Iade"));
 builder.Services.Configure<UrunResimAyarlari>(builder.Configuration.GetSection("UrunResim"));
 builder.Services.Configure<TersProxyAyarlari>(builder.Configuration.GetSection(TersProxyAyarlari.Bolum));
+builder.Services.Configure<GirisGuvenligiAyarlari>(builder.Configuration.GetSection(GirisGuvenligiAyarlari.Bolum));
 
 // Open Food Facts kimliksiz istekleri bot sayip engelliyor; User-Agent zorunlu.
 builder.Services.AddHttpClient("acikUrunVeritabani", (sp, istemci) =>
@@ -334,6 +387,7 @@ app.UseWhen(
 app.UseStaticFiles();
 
 app.UseRouting();
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();
