@@ -931,18 +931,23 @@ html, body {
     border: none;
 }
 
+/* Grup basliklari, altlarindaki menu ogeleriyle ayni olcekte.
+   Onceden .8rem ve kucuk harflerle yaziliyordu; Ana Sayfa'nin yani
+   sira yarim boyda duruyor ve menunun basligi degil dipnotu gibi
+   gorunuyorlardi.
+
+   Buyuklukleri ayni ama kaliniklari farkli: baslik 600, oge 400.
+   Ayrimi kalinlik ve ok isareti tasiyor, boyut degil. */
 .menu-baslik {
-    padding: .75rem 1.1rem .35rem;
-    font-size: .8rem;
-    text-transform: uppercase;
-    letter-spacing: .08em;
+    padding: .8rem 1.1rem;
+    font-size: 1.15rem;
     font-weight: 600;
-    color: #71717a;
+    color: var(--menu-metin);
     cursor: pointer;
     user-select: none;
     display: flex;
     align-items: center;
-    gap: .4rem;
+    gap: .75rem;
     list-style: none;             /* Firefox */
 }
 
@@ -955,8 +960,9 @@ html, body {
     color: var(--menu-metin-acik);
 }
 
+/* Ok da basligla birlikte buyudu; .7rem'de kaybolmustu. */
 .menu-grup-ok {
-    font-size: .7rem;
+    font-size: .95rem;
     transition: transform 120ms ease;
 }
 
