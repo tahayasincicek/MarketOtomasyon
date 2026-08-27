@@ -257,6 +257,50 @@ uygulanmalı veya dağıtık bir rate limiter kullanılmalıdır.
 
 ---
 
+## Render üzerinde çalıştırma
+
+Render uygulamayı Docker imajından çalıştırır ve dinlenecek portu `PORT`
+ortam değişkeniyle bildirir. Uygulama bu değişkeni tanımlıysa kullanır,
+tanımlı değilse Dockerfile'daki 8080 portunda kalır.
+
+Render TLS'i kendi üzerinde sonlandırıp uygulamaya HTTP ile bağlandığı
+için ters proxy desteği açılmalıdır. Render'ın proxy adresleri önceden
+bilinmediğinden tek tek adres yerine bütün kaynaklar kabul edilir; bu,
+uygulama portuna dışarıdan doğrudan erişilemediği için güvenlidir.
+
+Servis ayarlarındaki ortam değişkenleri:
+
+```
+ConnectionStrings__MarketDb  = Server=<sunucu>.database.windows.net;Database=<ad>;User Id=<kullanici>;Password=<sifre>;Encrypt=True
+ASPNETCORE_ENVIRONMENT       = Production
+TersProxy__Etkin             = true
+TersProxy__TumProxylereGuven = true
+```
+
+Sağlık kontrolü yolu `/saglik/hazir` verilir; bu uç veritabanı
+bağlantısını da sınar.
+
+**Şema Render'da kurulmaz.** `migrate` ayrı bir komuttur, Render ise tek
+komut çalıştırır. Şema ilk yayından önce yerel makineden uygulanır:
+
+```powershell
+$env:ConnectionStrings__MarketDb = "Server=<sunucu>.database.windows.net;..."
+dotnet run --project MarketOtomasyon -- migrate --demo
+```
+
+### Ücretsiz katmanın sınırları
+
+| Konu | Etki |
+|---|---|
+| 15 dakika işlem görmeyen servis uyutulur | Sonraki ilk istek yaklaşık 50 saniye sürer |
+| Kalıcı disk yok | Container yenilendiğinde Data Protection anahtarları kaybolur, açık oturumlar düşer |
+| Ürün görselleri | `wwwroot/urun-gorsel` imajla geldiği için korunur; sonradan indirilenler kaybolur |
+
+Oturumların container yenilenmesine dayanması gerekiyorsa kalıcı disk
+eklenmeli ve `VeriKoruma__AnahtarKlasoru` o diske bağlanmalıdır.
+
+---
+
 ## Bilinen eksikler
 
 Yukarıdaki ayarlar deploy için gerekli minimumdur, yeterli değildir.

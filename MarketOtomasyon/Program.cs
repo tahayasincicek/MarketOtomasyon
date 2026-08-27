@@ -63,6 +63,26 @@ builder.Host.UseSerilog((context, services, config) =>
 
 // Dogrulama tek yerden yonetilsin: MVC'nin non-nullable alanlar icin urettigi
 // otomatik "required" mesajlari kapali, kurallar FluentValidation'da.
+/* Render, Fly.io ve benzeri platformlar dinlenecek portu PORT ortam
+   degiskeniyle bildirir ve baska bir portu dinleyen uygulamaya trafik
+   gondermez; servis "canlanmadi" diye isaretlenir.
+
+   Dockerfile'daki sabit port (8080) yerel calistirmada ve portu kendisi
+   bildirmeyen ortamlarda gecerli kalir; PORT yalnizca tanimliysa devreye
+   girer. Gecersiz bir deger sessizce yok sayilmaz: acilista durmak,
+   ulasilamayan bir servisi saatlerce aramaktan iyidir. */
+var platformPortu = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrWhiteSpace(platformPortu))
+{
+    if (!int.TryParse(platformPortu, out var portNo) || portNo is < 1 or > 65535)
+    {
+        throw new InvalidOperationException(
+            $"PORT ortam değişkeni geçersiz: '{platformPortu}'. 1-65535 arası bir sayı olmalıdır.");
+    }
+
+    builder.WebHost.UseUrls($"http://*:{portNo}");
+}
+
 builder.Services.AddControllersWithViews(o =>
     o.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true);
 
