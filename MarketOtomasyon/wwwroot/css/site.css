@@ -1959,7 +1959,30 @@ table.izgara tbody tr.table-active:hover {
 
    z-index basliktan (2) dusuk, govdeden yuksek: sol ust hucre hem
    dikey hem yatay sabitken baslik seridinin altinda kalmali. */
+/* Dar ekranda gizlenen sutunlarin karsiligi. Genis ekranda o bilgi
+   zaten kendi sutununda duruyor, burada tekrar edilmez. */
+.mobil-detay { display: none; }
+
 @media (max-width: 991.98px) {
+    /* Sekiz sutunlu bir tablo 375px'e sigmaz. Ikincil sutunlar
+       gizleniyor, tasidiklari bilgi ad hucresinin altinda ikinci
+       satir olarak cikiyor - kaydirmadan hepsi gorunur kalsin diye. */
+    table.izgara .mobil-gizle { display: none; }
+
+    .mobil-detay {
+        display: block;
+        margin-top: .15rem;
+        font-size: .72rem;
+        line-height: 1.35;
+        color: var(--metin-soluk, #8b8f97);
+        white-space: normal;
+    }
+
+    .mobil-detay .rozet {
+        font-size: .66rem;
+        padding: 0 .25rem;
+    }
+
     table.izgara thead th:first-child,
     table.izgara tbody td:first-child {
         position: sticky;

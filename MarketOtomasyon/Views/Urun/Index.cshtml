@@ -70,14 +70,17 @@
     <div class="izgara-sarmal">
         <table class="izgara">
             <thead>
+                @* Dar ekranda gizlenen sutunlarin bilgisi Ad hucresinin
+                   altinda ikinci satir olarak cikiyor; boylece sekiz
+                   sutun sigmayan bir ekranda da hicbir bilgi kaybolmuyor. *@
                 <tr>
-                    <th style="width:8rem">Kod</th>
+                    <th class="mobil-gizle" style="width:8rem">Kod</th>
                     <th>Ad</th>
-                    <th style="width:11rem">Kategori</th>
-                    <th style="width:5rem">Birim</th>
-                    <th class="sayi" style="width:5rem">KDV</th>
+                    <th class="mobil-gizle" style="width:11rem">Kategori</th>
+                    <th class="mobil-gizle" style="width:5rem">Birim</th>
+                    <th class="sayi mobil-gizle" style="width:5rem">KDV</th>
                     <th class="sayi" style="width:7rem">Fiyat</th>
-                    <th style="width:6rem">Durum</th>
+                    <th class="mobil-gizle" style="width:6rem">Durum</th>
                     <th class="islem"></th>
                 </tr>
             </thead>
@@ -85,7 +88,7 @@
                 @foreach (var urun in Model.Satirlar)
                 {
                     <tr class="@(urun.Aktif ? "" : "pasif")">
-                        <td class="kod">@urun.Kod</td>
+                        <td class="kod mobil-gizle">@urun.Kod</td>
                         <td>
                             <span class="urun-hucre">
                                 <partial name="_UrunResmi"
@@ -96,14 +99,27 @@
                                     {
                                         <span class="rozet rozet-notr ms-1">tartılı</span>
                                     }
+
+                                    @* Yalnizca dar ekranda gorunur: gizlenen
+                                       sutunlarin karsiligi. *@
+                                    <span class="mobil-detay">
+                                        <span class="font-monospace">@urun.Kod</span>
+                                        · @urun.KategoriAd
+                                        · @urun.Birim
+                                        · %@urun.KdvOrani.ToString("0.##")
+                                        @if (!urun.Aktif)
+                                        {
+                                            <span class="rozet rozet-olumsuz">pasif</span>
+                                        }
+                                    </span>
                                 </span>
                             </span>
                         </td>
-                        <td>@urun.KategoriAd</td>
-                        <td>@urun.Birim</td>
-                        <td class="sayi">%@urun.KdvOrani.ToString("0.##")</td>
+                        <td class="mobil-gizle">@urun.KategoriAd</td>
+                        <td class="mobil-gizle">@urun.Birim</td>
+                        <td class="sayi mobil-gizle">%@urun.KdvOrani.ToString("0.##")</td>
                         <td class="sayi">@(urun.GuncelFiyat?.ToString("N2") ?? "—")</td>
-                        <td>
+                        <td class="mobil-gizle">
                             @if (urun.Aktif)
                             {
                                 <span class="rozet rozet-olumlu">aktif</span>
