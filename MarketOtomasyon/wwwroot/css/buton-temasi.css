@@ -1,0 +1,57 @@
+/* Butonlar görevlerini renkleriyle anlatır; outline butonlar da boş beyaz kalmaz. */
+
+.btn-outline-secondary {
+    --bs-btn-color: #374151;
+    --bs-btn-bg: #eef0f3;
+    --bs-btn-border-color: #d5d9e0;
+    --bs-btn-hover-color: #1f2937;
+    --bs-btn-hover-bg: #dfe3e8;
+    --bs-btn-hover-border-color: #c8cdd5;
+    --bs-btn-active-color: #111827;
+    --bs-btn-active-bg: #d4d8de;
+    --bs-btn-active-border-color: #c3c8d0;
+}
+
+.btn-outline-primary {
+    --bs-btn-color: #3730a3;
+    --bs-btn-bg: #eef2ff;
+    --bs-btn-border-color: #c7d2fe;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #4f46e5;
+    --bs-btn-hover-border-color: #4f46e5;
+}
+
+.btn-outline-danger {
+    --bs-btn-color: #b91c1c;
+    --bs-btn-bg: #fef2f2;
+    --bs-btn-border-color: #fecaca;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #dc2626;
+    --bs-btn-hover-border-color: #dc2626;
+}
+
+.btn-info {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: #0891b2;
+    --bs-btn-border-color: #0891b2;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #0e7490;
+    --bs-btn-hover-border-color: #0e7490;
+}
+
+.btn-danger,
+.btn-cikis {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: #dc2626;
+    --bs-btn-border-color: #dc2626;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #b91c1c;
+    --bs-btn-hover-border-color: #b91c1c;
+}
+
+.btn-success {
+    --bs-btn-bg: #16a34a;
+    --bs-btn-border-color: #16a34a;
+    --bs-btn-hover-bg: #15803d;
+    --bs-btn-hover-border-color: #15803d;
+}

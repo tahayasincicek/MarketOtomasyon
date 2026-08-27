@@ -1,4 +1,4 @@
-@model MarketOtomasyon.Models.ViewModels.SayimEkranVm
+﻿@model MarketOtomasyon.Models.ViewModels.SayimEkranVm
 @{
     ViewData["Title"] = "Sayım ve Zayi";
 }
@@ -6,7 +6,7 @@
 <div class="ekran">
     <div class="arac-cubugu">
         <a class="btn btn-primary" asp-action="Index"><i class="ph ph-list-checks"></i> Sayım</a>
-        <a class="btn btn-outline-secondary" asp-action="Zayi"><i class="ph ph-trash"></i> Zayi / Fire</a>
+        <a class="btn btn-secondary" asp-action="Zayi"><i class="ph ph-trash"></i> Zayi / Fire</a>
         <span class="arac-ayrac"></span>
         <span class="ipucu">Boş bıraktığınız ürünler bu sayıma dahil edilmez.</span>
     </div>
@@ -37,7 +37,7 @@
                         <option value="@depo.Id" selected="@(Model.DepoId == depo.Id)">@depo.Ad</option>
                     }
                 </select>
-                <noscript><button class="btn btn-outline-secondary" type="submit">Yükle</button></noscript>
+                <noscript><button class="btn btn-secondary" type="submit">Yükle</button></noscript>
             </form>
         </div>
     </div>
@@ -50,7 +50,7 @@
             <div class="panel mt-3">
                 <div class="panel-baslik">
                     <span><i class="ph ph-list-checks"></i> Sayım satırları</span>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" id="sistemle-doldur">
+                    <button type="button" class="btn btn-sm btn-primary" id="sistemle-doldur">
                         Sistem miktarlarını doldur
                     </button>
                 </div>

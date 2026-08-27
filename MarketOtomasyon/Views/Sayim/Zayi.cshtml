@@ -1,11 +1,11 @@
-@model MarketOtomasyon.Models.ViewModels.ZayiEkranVm
+﻿@model MarketOtomasyon.Models.ViewModels.ZayiEkranVm
 @{
     ViewData["Title"] = "Zayi / Fire Girişi";
 }
 
 <div class="ekran">
     <div class="arac-cubugu">
-        <a class="btn btn-outline-secondary" asp-action="Index"><i class="ph ph-list-checks"></i> Sayım</a>
+        <a class="btn btn-secondary" asp-action="Index"><i class="ph ph-list-checks"></i> Sayım</a>
         <a class="btn btn-primary" asp-action="Zayi"><i class="ph ph-trash"></i> Zayi / Fire</a>
         <span class="arac-ayrac"></span>
         <span class="ipucu">Zayi kaydı stoktan çıkış yapar; sebep alanı zorunludur.</span>
@@ -45,7 +45,7 @@
 
                                 <button type="button"
                                         id="btn-kamera"
-                                        class="btn btn-outline-secondary">
+                                        class="btn btn-secondary">
                                     <i class="ph ph-video-camera"></i> Kamera
                                 </button>
                             </div>

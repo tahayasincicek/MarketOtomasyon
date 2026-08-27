@@ -13,7 +13,7 @@
             <a class="btn btn-primary" asp-action="Giris">
                 <i class="ph ph-tray-arrow-down"></i> Mal Kabul
             </a>
-            <a class="btn btn-outline-secondary" asp-controller="Sayim" asp-action="Index">
+            <a class="btn btn-secondary" asp-controller="Sayim" asp-action="Index">
                 <i class="ph ph-list-checks"></i> Sayım ve Zayi
             </a>
 
@@ -32,7 +32,7 @@
             <label class="form-check-label small" for="sadeceKritik">Sadece kritik seviye</label>
         </div>
 
-        <button type="submit" class="btn btn-outline-secondary">Uygula</button>
+        <button type="submit" class="btn btn-primary">Uygula</button>
 
         @if (!string.IsNullOrWhiteSpace(Model.Arama) || Model.SadeceKritik)
         {

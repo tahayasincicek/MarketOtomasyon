@@ -773,18 +773,74 @@ html, body {
    ========================================================= */
 
 :root {
-    --menu-genislik: 16.5rem;
-    --menu-zemin: #27272a;
-    --menu-zemin-hover: #323235;
-    --menu-metin: #a1a1aa;
-    --menu-metin-acik: #fafafa;
-    --menu-vurgu: #3b82f6;
-    --menu-vurgu-zemin: #3b82f61f;
-    --menu-cizgi: #3f3f46;
+    /* ---------- Vurgu rengi ----------
+       Onceki ton (#3b82f6) Bootstrap'in varsayilan mavisiydi ve ekrana
+       "sablon" hissi veriyordu. Indigo ayni kurumsal agirligi tasir,
+       daha ozel durur.
 
-    /* Icerik tarafi: izgara cizgileri ve baslik zemini */
-    --izgara-cizgi: #dfe3e8;
-    --izgara-baslik: #eef1f4;
+       Teal/yesil bilerek secilmedi: bu ekranlarda yesil zaten "islem
+       basarili" anlamina geliyor (.rozet-olumlu, .bildirim-olumlu) ve
+       vurgu rengi ayni aileden olsaydi durum bildirimleriyle karisirdi.
+
+       Icerik ve menu icin iki ayri ton var: koyu menu zemininde koyu
+       indigo okunmuyor, beyaz zeminde acik indigo soluk kaliyor. */
+    --vurgu: #4f46e5;
+    --vurgu-koyu: #4338ca;
+    --vurgu-zemin: #eef2ff;
+    --vurgu-kenar: #c7d2fe;
+
+    --menu-genislik: 16.5rem;
+    --menu-zemin: #1c1d21;
+    --menu-zemin-hover: #292a2f;
+    --menu-metin: #a4a7ae;
+    --menu-metin-acik: #fafafa;
+    --menu-vurgu: #818cf8;
+    --menu-vurgu-zemin: #818cf824;
+    --menu-cizgi: #35363c;
+
+    /* Icerik tarafi: izgara cizgileri ve baslik zemini.
+       Onceki griler mavimsiydi (#dfe3e8, #eef1f4); vurgu mavisiyle ayni
+       aileden olduklari icin ekran tek tona caliyordu. Bunlar gercek
+       notr tonlar - indigo uzerlerinde net ayrisir. */
+    --izgara-cizgi: #e3e4e8;
+    --izgara-baslik: #f2f2f4;
+}
+
+/* Bootstrap'in kendi mavisi ezilmezse btn-primary, form odagi ve
+   baglantilar eski tonda kalir; ekranin yarisi indigo, yarisi mavi
+   gorunurdu. */
+:root {
+    --bs-primary: #4f46e5;
+    --bs-primary-rgb: 79, 70, 229;
+    --bs-link-color: #4338ca;
+    --bs-link-hover-color: #3730a3;
+    --bs-link-color-rgb: 67, 56, 202;
+}
+
+.btn-primary {
+    --bs-btn-bg: var(--vurgu);
+    --bs-btn-border-color: var(--vurgu);
+    --bs-btn-hover-bg: var(--vurgu-koyu);
+    --bs-btn-hover-border-color: var(--vurgu-koyu);
+    --bs-btn-active-bg: var(--vurgu-koyu);
+    --bs-btn-active-border-color: var(--vurgu-koyu);
+    --bs-btn-disabled-bg: var(--vurgu);
+    --bs-btn-disabled-border-color: var(--vurgu);
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--vurgu-koyu);
+    --bs-btn-border-color: var(--vurgu-kenar);
+    --bs-btn-hover-bg: var(--vurgu);
+    --bs-btn-hover-border-color: var(--vurgu);
+    --bs-btn-active-bg: var(--vurgu-koyu);
+    --bs-btn-active-border-color: var(--vurgu-koyu);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--vurgu-kenar);
+    box-shadow: 0 0 0 .2rem #4f46e526;
 }
 
 .yerlesim {
@@ -1109,7 +1165,7 @@ table.izgara thead th {
     top: 0;
     z-index: 2;
     background: var(--izgara-baslik);
-    border-bottom: 1px solid #cbd2d9;
+    border-bottom: 1px solid #d5d6db;
     padding: .38rem .6rem;
     font-size: .73rem;
     font-weight: 600;
@@ -1122,13 +1178,13 @@ table.izgara thead th {
 
 table.izgara tbody td {
     padding: .32rem .6rem;
-    border-bottom: 1px solid #f0f2f5;
+    border-bottom: 1px solid #eeeef1;
     white-space: nowrap;
     vertical-align: middle;
 }
 
-table.izgara tbody tr:nth-child(even) { background: #fafbfc; }
-table.izgara tbody tr:hover { background: #eaf2fe; }
+table.izgara tbody tr:nth-child(even) { background: #fafafa; }
+table.izgara tbody tr:hover { background: var(--vurgu-zemin); }
 
 /* Sayi sutunlari sagda ve sabit genislikte rakamla dizilir:
    fiyat kolonu satirdan satira kaymasin. */
@@ -1182,7 +1238,7 @@ table.izgara tbody tr.pasif td { color: #9ca3af; }
    Sol kenardaki cizgi, zemin rengini secemeyenler icin ikinci isarettir. */
 table.izgara tbody tr.table-active,
 table.izgara tbody tr.table-active:hover {
-    background: #dbeafe;
+    background: #e0e7ff;
     box-shadow: inset .2rem 0 0 var(--menu-vurgu);
 }
 
@@ -1213,7 +1269,7 @@ table.izgara tbody tr.table-active:hover {
 .rozet-notr    { color: #4b5563; border-color: #d1d5db; background: #f9fafb; }
 /* Durum degil, ayricalik bildirir: mudur yetkisi gibi. Olumlu/olumsuz
    yesil-kirmizi ekseninden ayri dursun diye menuyle ayni mavi. */
-.rozet-vurgu   { color: #1d4ed8; border-color: #bfdbfe; background: #eff6ff; }
+.rozet-vurgu   { color: var(--vurgu-koyu); border-color: var(--vurgu-kenar); background: var(--vurgu-zemin); }
 
 /* ---------- Alt durum cubugu ---------- */
 
@@ -1254,7 +1310,7 @@ table.izgara tbody tr.table-active:hover {
 
 .fkey b {
     background: #fff;
-    border: 1px solid #cbd2d9;
+    border: 1px solid #d5d6db;
     border-bottom-width: 2px;
     border-radius: .2rem;
     padding: 0 .28rem;
@@ -1312,7 +1368,7 @@ table.izgara tbody tr.table-active:hover {
     color: #6b7280;
     margin-bottom: .6rem;
     padding-bottom: .3rem;
-    border-bottom: 1px solid #f0f2f5;
+    border-bottom: 1px solid #eeeef1;
 }
 
 .alan {
@@ -1360,7 +1416,7 @@ table.izgara tbody tr.table-active:hover {
 
 .kunye-oge {
     padding: .3rem 0;
-    border-bottom: 1px solid #f0f2f5;
+    border-bottom: 1px solid #eeeef1;
 }
 
 .kunye-etiket {
@@ -1470,8 +1526,8 @@ table.izgara tbody tr.table-active:hover {
 }
 
 .hizli-urun:hover {
-    background: #eff6ff;
-    border-color: #60a5fa;
+    background: var(--vurgu-zemin);
+    border-color: var(--vurgu-kenar);
 }
 
 .hizli-urun:focus-visible {
@@ -1677,7 +1733,7 @@ table.izgara tbody tr.table-active:hover {
 .sayim-adet:focus {
     outline: none;
     border-color: var(--menu-vurgu);
-    box-shadow: 0 0 0 .15rem #3b82f633;
+    box-shadow: 0 0 0 .15rem #4f46e540;
 }
 
 /* ---------- Fark gostergesi ---------- */
@@ -1778,7 +1834,7 @@ table.izgara tbody tr.table-active:hover {
     gap: .4rem;
 }
 
-.kisayol:hover { background: #eaf2fe; color: #111827; }
+.kisayol:hover { background: var(--vurgu-zemin); color: #111827; }
 
 .kisayol i { font-size: 1.9rem; color: var(--menu-vurgu); line-height: 1; }
 

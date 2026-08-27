@@ -22,6 +22,7 @@
        Yazi tipiyle ayni gerekce: CDN degil, projeye gomulu. *@
     <link rel="stylesheet" href="~/lib/phosphor-icons/phosphor.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/buton-temasi.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/MarketOtomasyon.styles.css" asp-append-version="true" />
 </head>
 <body>
@@ -122,7 +123,7 @@
                     </span>
                     <form asp-controller="Hesap" asp-action="Cikis" method="post" class="m-0">
                         @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-sm btn-outline-secondary">
+                        <button type="submit" class="btn btn-sm btn-danger btn-cikis">
                             <i class="ph ph-sign-out me-1"></i>Çıkış
                         </button>
                     </form>

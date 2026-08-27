@@ -1,4 +1,4 @@
-@model MarketOtomasyon.Models.ViewModels.UrunFormVm
+﻿@model MarketOtomasyon.Models.ViewModels.UrunFormVm
 @{
     var yeniKayit = Model.Id == 0;
     ViewData["Title"] = yeniKayit ? "Yeni Ürün" : "Ürün Düzenle";
@@ -14,13 +14,13 @@
         <button type="submit" class="btn btn-primary">
             <i class="ph ph-check"></i> Kaydet
         </button>
-        <a class="btn btn-outline-secondary" asp-action="Index">
+        <a class="btn btn-secondary" asp-action="Index">
             <i class="ph ph-x"></i> Vazgeç
         </a>
         @if (!yeniKayit)
         {
             <span class="arac-ayrac"></span>
-            <a class="btn btn-outline-secondary" asp-action="Detay" asp-route-id="@Model.Id">
+            <a class="btn btn-secondary" asp-action="Detay" asp-route-id="@Model.Id">
                 <i class="ph ph-list-bullets"></i> Detay
             </a>
         }

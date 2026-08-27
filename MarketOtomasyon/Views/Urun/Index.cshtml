@@ -28,7 +28,7 @@
             </a>
 
             <form method="post" asp-action="ResimleriCek" class="form-seffaf">
-                <button type="submit" class="btn btn-outline-secondary"
+                <button type="submit" class="btn btn-secondary"
                         title="Barkodu olan ürünlerin fotoğrafını Open Food Facts'ten çeker">
                     <i class="ph ph-image"></i> Resimleri Çek
                 </button>
@@ -58,7 +58,7 @@
                 <label class="form-check-label small" for="sadeceAktif">Sadece aktif</label>
             </div>
 
-            <button type="submit" class="btn btn-outline-secondary">Uygula</button>
+            <button type="submit" class="btn btn-primary">Uygula</button>
         </form>
 
         @if (!string.IsNullOrWhiteSpace(Model.Arama) || Model.KategoriId is not null)
@@ -114,7 +114,7 @@
                             }
                         </td>
                         <td class="islem">
-                            <a class="btn btn-outline-secondary" asp-action="Detay" asp-route-id="@urun.Id"
+                            <a class="btn btn-secondary" asp-action="Detay" asp-route-id="@urun.Id"
                                title="Detay"><i class="ph ph-list-bullets"></i></a>
                             @if (mudur)
                             {
