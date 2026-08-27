@@ -1289,7 +1289,21 @@ html, body {
     min-height: 0;
     min-width: 0;
     overflow: auto;
-    background: #fff;
+
+    /* Kaydirma golgesi. Dar ekranda tablo tasiyor ve yatay kaydirma
+       zaten calisiyordu, ama sagda devami oldugunu gosteren hicbir
+       isaret yoktu; kullanici tablonun kesildigini saniyordu.
+
+       Iki katman: beyaz ortuler kenarda dururken golgeyi gizler,
+       kaydirinca yerlerinden kayip golgeyi ortaya cikarir. "local"
+       ve "scroll" farki bunu tarayiciya yaptirir, JavaScript
+       gerekmez. */
+    background:
+        linear-gradient(to right, #fff 40%, rgba(255, 255, 255, 0)) left center / 2rem 100% no-repeat local,
+        linear-gradient(to left, #fff 40%, rgba(255, 255, 255, 0)) right center / 2rem 100% no-repeat local,
+        radial-gradient(farthest-side at 0 50%, rgba(16, 24, 40, .14), rgba(16, 24, 40, 0)) left center / .6rem 100% no-repeat scroll,
+        radial-gradient(farthest-side at 100% 50%, rgba(16, 24, 40, .14), rgba(16, 24, 40, 0)) right center / .6rem 100% no-repeat scroll,
+        #fff;
 }
 
 table.izgara {
@@ -1938,6 +1952,36 @@ table.izgara tbody tr.table-active:hover {
 
 /* Dar ekranda ust serit tasmasin: once saat, sonra kasiyer adi dusurulur.
    Vazgecilmez olan vardiya gostergesidir, o hep kalir. */
+/* Dar ekranda tablo yatay kayarken ilk sutun yerinde kalir.
+   Kaymadan once bu kuralin bir etkisi yok; kaydiginda ise hangi
+   satirda oldugun gorunur kalir - aksi halde sagdaki fiyati gorup
+   hangi urune ait oldugunu bilemezsin.
+
+   z-index basliktan (2) dusuk, govdeden yuksek: sol ust hucre hem
+   dikey hem yatay sabitken baslik seridinin altinda kalmali. */
+@media (max-width: 991.98px) {
+    table.izgara thead th:first-child,
+    table.izgara tbody td:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 1;
+        background: inherit;
+    }
+
+    table.izgara thead th:first-child {
+        z-index: 3;
+        background: var(--izgara-baslik);
+    }
+
+    /* Govde hucresi seffaf kalirsa altindaki satir kayarken gorunur.
+       Zebra ve hover renkleri satirdan miras alinsin diye tr'ye
+       degil td'ye yaziliyor. */
+    table.izgara tbody tr td:first-child { background: #fff; }
+    table.izgara tbody tr:nth-child(even) td:first-child { background: #fafafa; }
+    table.izgara tbody tr:hover td:first-child { background: var(--vurgu-zemin); }
+    table.izgara tbody tr.kritik td:first-child { background: #fff7e6; }
+}
+
 @media (max-width: 767.98px) {
     .serit-saat-grup,
     .serit-kasiyer-grup {
