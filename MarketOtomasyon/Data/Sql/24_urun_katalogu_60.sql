@@ -74,7 +74,7 @@ INSERT INTO Urun
     (Kod, Ad, KategoriId, Birim, KdvOrani, MinStokSeviyesi, Tartili, Aktif,
      ResimYolu, ResimKaynagi, ResimTarihi)
 SELECT y.Kod, y.Ad, k.Id, y.Birim, y.KdvOrani, y.MinStok, y.Tartili, 1,
-       N'/urun-gorsel/' + y.Kod + N'.webp', N'Yapay zekâ ile oluşturulan katalog görseli', SYSUTCDATETIME()
+       N'/urun-gorsel/' + y.Kod + N'.webp', NULL, SYSUTCDATETIME()
 FROM #YeniUrun y
 JOIN Kategori k ON k.Kod = y.KategoriKod
 WHERE NOT EXISTS (SELECT 1 FROM Urun u WHERE u.Kod = y.Kod);
@@ -82,7 +82,7 @@ WHERE NOT EXISTS (SELECT 1 FROM Urun u WHERE u.Kod = y.Kod);
 /* Betik daha önce çalışmışsa görsel yollarını da doğru tut. */
 UPDATE u
 SET u.ResimYolu = N'/urun-gorsel/' + u.Kod + N'.webp',
-    u.ResimKaynagi = N'Yapay zekâ ile oluşturulan katalog görseli',
+    u.ResimKaynagi = NULL,
     u.ResimTarihi = COALESCE(u.ResimTarihi, SYSUTCDATETIME())
 FROM Urun u
 JOIN #YeniUrun y ON y.Kod = u.Kod;
