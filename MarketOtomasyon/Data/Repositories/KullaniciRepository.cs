@@ -52,6 +52,20 @@ SELECT CASE WHEN EXISTS (
     SELECT 1 FROM Kullanici WHERE KullaniciAdi = @kullaniciAdi
 ) THEN 1 ELSE 0 END;";
 
+    /// <summary>
+    /// Ayni adi kullanan BASKA bir hesap var mi? Kullanici kendi adini
+    /// duzenlerken kullanilir; disarida birakilmasaydi kisi kendi adini
+    /// degistirmeden kaydettiginde "zaten kayitli" hatasi alirdi.
+    /// </summary>
+    private const string SqlKullaniciAdiBaskasindaVarMi = @"
+SELECT CASE WHEN EXISTS (
+    SELECT 1 FROM Kullanici WHERE KullaniciAdi = @kullaniciAdi AND Id <> @kullaniciId
+) THEN 1 ELSE 0 END;";
+
+    /// <summary>Aktif sarti var: pasife alinmis hesap kendi kaydini degistirememeli.</summary>
+    private const string SqlKullaniciAdiGuncelle = @"
+UPDATE Kullanici SET KullaniciAdi = @kullaniciAdi WHERE Id = @kullaniciId AND Aktif = 1;";
+
     /// <summary>Pasif mudur sayilmaz: kural aktif mudur sayisina bakar.</summary>
     private const string SqlAktifMudurSayisi = @"
 SELECT COUNT(*) FROM Kullanici WHERE Rol = @mudurKodu AND Aktif = 1;";
@@ -194,4 +208,16 @@ UPDATE Kullanici SET SifreHash = @sifreHash WHERE Id = @kullaniciId;";
         IDbConnection conn, IDbTransaction tx, int kullaniciId, string adSoyad, CancellationToken ct = default)
         => await conn.ExecuteAsync(new CommandDefinition(
             SqlAdSoyadGuncelle, new { kullaniciId, adSoyad }, tx, cancellationToken: ct));
+
+    public async Task<bool> KullaniciAdiBaskasindaVarMiAsync(
+        IDbConnection conn, IDbTransaction tx, string kullaniciAdi, int kullaniciId,
+        CancellationToken ct = default)
+        => await conn.ExecuteScalarAsync<bool>(new CommandDefinition(
+            SqlKullaniciAdiBaskasindaVarMi, new { kullaniciAdi, kullaniciId }, tx, cancellationToken: ct));
+
+    public async Task<int> KullaniciAdiGuncelleAsync(
+        IDbConnection conn, IDbTransaction tx, int kullaniciId, string kullaniciAdi,
+        CancellationToken ct = default)
+        => await conn.ExecuteAsync(new CommandDefinition(
+            SqlKullaniciAdiGuncelle, new { kullaniciId, kullaniciAdi }, tx, cancellationToken: ct));
 }

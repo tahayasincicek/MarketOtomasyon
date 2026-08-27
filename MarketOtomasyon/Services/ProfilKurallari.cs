@@ -40,6 +40,44 @@ public static class ProfilKurallari
         return (true, null);
     }
 
+    public const int KullaniciAdiEnAz = 3;
+    public const int KullaniciAdiEnFazla = 50;
+
+    /// <summary>
+    /// Kullanici adi kurallari. Benzersizlik BURADA bakilmaz; o
+    /// veritabani sorgusu gerektirir ve servise aittir.
+    ///
+    /// Bosluk ve buyuk harf kabul edilmiyor: giris ekraninda yazilan ad
+    /// birebir eslesmek zorunda. "Ali Veli" ile "ali veli" arasindaki
+    /// farki kullanicinin hatirlamasini beklemek, gun basinda giris
+    /// yapamayan bir kasiyer demek.
+    /// </summary>
+    public static (bool Gecerli, string? Hata) KullaniciAdiGecerliMi(string? kullaniciAdi)
+    {
+        var temiz = kullaniciAdi?.Trim();
+
+        if (string.IsNullOrWhiteSpace(temiz))
+            return (false, "Kullanıcı adı zorunludur.");
+
+        if (temiz.Length < KullaniciAdiEnAz)
+            return (false, $"Kullanıcı adı en az {KullaniciAdiEnAz} karakter olmalıdır.");
+
+        if (temiz.Length > KullaniciAdiEnFazla)
+            return (false, $"Kullanıcı adı en fazla {KullaniciAdiEnFazla} karakter olabilir.");
+
+        if (temiz.Any(char.IsWhiteSpace))
+            return (false, "Kullanıcı adı boşluk içeremez.");
+
+        /* Yalnizca ASCII harf, rakam, nokta, tire ve alt cizgi.
+           Turkce karakterler disarida: klavye duzeni farkli bir makinede
+           "cicek" yazip giremeyen bir kullanici, sorunun kaynagini
+           bulamaz. Ad soyad alani zaten Turkce karakter kabul ediyor. */
+        if (!temiz.All(k => char.IsAsciiLetterOrDigit(k) || k is '.' or '-' or '_'))
+            return (false, "Kullanıcı adı yalnızca harf, rakam, nokta, tire ve alt çizgi içerebilir.");
+
+        return (true, null);
+    }
+
     public static (bool Gecerli, string? Hata) AdSoyadGecerliMi(string? adSoyad)
     {
         var temiz = adSoyad?.Trim();

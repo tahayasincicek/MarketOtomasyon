@@ -86,6 +86,56 @@ public class ProfilKurallariTests
         Assert.DoesNotContain("tekrarı", hata);
     }
 
+    /* ---------- Kullanıcı adı ---------- */
+
+    [Theory]
+    [InlineData("kasiyer1")]
+    [InlineData("ali.veli")]
+    [InlineData("mehmet-can")]
+    [InlineData("depo_sorumlu")]
+    [InlineData("abc")]
+    public void KullaniciAdi_GecerliDegerlerKabulEdilir(string ad)
+        => Assert.True(ProfilKurallari.KullaniciAdiGecerliMi(ad).Gecerli);
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void KullaniciAdi_BosOlamaz(string? ad)
+        => Assert.False(ProfilKurallari.KullaniciAdiGecerliMi(ad).Gecerli);
+
+    [Fact]
+    public void KullaniciAdi_BoslukIceremez()
+    {
+        // Giris ekraninda yazilan ad birebir eslesmek zorunda; bosluklu
+        // bir ad, gun basinda giris yapamayan bir kasiyer demek.
+        var (gecerli, hata) = ProfilKurallari.KullaniciAdiGecerliMi("ali veli");
+
+        Assert.False(gecerli);
+        Assert.Contains("boşluk", hata);
+    }
+
+    [Theory]
+    [InlineData("çiçek")]     // Turkce karakter
+    [InlineData("ali@veli")]  // izin verilmeyen isaret
+    [InlineData("ali+veli")]
+    public void KullaniciAdi_IzinsizKarakterReddedilir(string ad)
+        => Assert.False(ProfilKurallari.KullaniciAdiGecerliMi(ad).Gecerli);
+
+    [Fact]
+    public void KullaniciAdi_UzunlukSinirlari()
+    {
+        Assert.False(ProfilKurallari.KullaniciAdiGecerliMi("ab").Gecerli);
+        Assert.True(ProfilKurallari.KullaniciAdiGecerliMi(
+            new string('a', ProfilKurallari.KullaniciAdiEnFazla)).Gecerli);
+        Assert.False(ProfilKurallari.KullaniciAdiGecerliMi(
+            new string('a', ProfilKurallari.KullaniciAdiEnFazla + 1)).Gecerli);
+    }
+
+    [Fact]
+    public void KullaniciAdi_BosluklarKirpilarakOlculur()
+        => Assert.True(ProfilKurallari.KullaniciAdiGecerliMi("  kasiyer1  ").Gecerli);
+
     /* ---------- Ad soyad ---------- */
 
     [Fact]

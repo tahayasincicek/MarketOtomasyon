@@ -50,6 +50,8 @@ public sealed class ProfilService
             KullaniciAdi = kullanici.KullaniciAdi,
             AdSoyad = kullanici.AdSoyad,
             YeniAdSoyad = kullanici.AdSoyad,
+            YeniKullaniciAdi = kullanici.KullaniciAdi,
+            RolKodu = kullanici.Rol,
             RolAdi = kullanici.Rol == Roller.MudurKodu ? "Müdür" : "Kasiyer",
             AcikVardiyaAcilisUtc = acikVardiya?.AcilisTarihi
         };
@@ -115,9 +117,65 @@ public sealed class ProfilService
     }
 
     /// <summary>
-    /// Ad soyad guncelleme. Kullanici adi ve rol BILEREK degistirilemez:
-    /// kullanici adi gecmis loglarin okunabilirligini bozar, rol ise
-    /// kullanicinin kendini mudur yapmasi anlamina gelirdi.
+    /// Kullanici adi degistirme.
+    ///
+    /// Gecmis kayitlar etkilenmez: IslemLog, Fis ve Vardiya kullaniciya
+    /// KullaniciId ile bagli, adi JOIN ile okuyor. Eski kayitlar da yeni
+    /// adi gosterir.
+    ///
+    /// Rol BILEREK disarida: kullanicinin kendini mudur yapmasi
+    /// anlamina gelirdi. O, mudurun personel ekraninda kaliyor.
+    /// </summary>
+    public async Task<string?> KullaniciAdiGuncelleAsync(
+        int kullaniciId, string? yeniKullaniciAdi, CancellationToken ct = default)
+    {
+        var (gecerli, hata) = ProfilKurallari.KullaniciAdiGecerliMi(yeniKullaniciAdi);
+        if (!gecerli) return hata;
+
+        var temiz = yeniKullaniciAdi!.Trim();
+
+        var kullanici = await _kullaniciRepository.GetirAsync(kullaniciId, ct);
+        if (kullanici is null) return "Hesap bulunamadı.";
+        if (!kullanici.Aktif) return "Hesabınız pasif durumda.";
+        if (kullanici.KullaniciAdi == temiz) return null;
+
+        using var conn = await _factory.CreateOpenConnectionAsync(ct);
+        using var tx = conn.BeginTransaction();
+
+        /* Benzersizlik kontrolu transaction ICINDE: kontrol ile guncelleme
+           arasinda baska biri ayni adi alabilir. Veritabanindaki benzersiz
+           index son savunma hatti; buradaki kontrol kullaniciya anlamli
+           bir mesaj vermek icin. */
+        if (await _kullaniciRepository.KullaniciAdiBaskasindaVarMiAsync(conn, tx, temiz, kullaniciId, ct))
+        {
+            tx.Rollback();
+            return $"'{temiz}' kullanıcı adı başka bir hesapta kayıtlı.";
+        }
+
+        var etkilenen = await _kullaniciRepository.KullaniciAdiGuncelleAsync(conn, tx, kullaniciId, temiz, ct);
+        if (etkilenen != 1)
+        {
+            tx.Rollback();
+            return "Kullanıcı adı güncellenemedi.";
+        }
+
+        await _islemLogRepository.EkleAsync(conn, tx, new IslemLog
+        {
+            KullaniciId = kullaniciId,
+            IslemTipi = "ProfilKullaniciAdiDegistir",
+            HedefTipi = "Kullanici",
+            HedefId = kullaniciId,
+            EskiDeger = kullanici.KullaniciAdi,
+            YeniDeger = temiz,
+            Aciklama = $"Kullanıcı adı '{kullanici.KullaniciAdi}' -> '{temiz}' olarak değiştirildi"
+        }, ct);
+
+        tx.Commit();
+        return null;
+    }
+
+    /// <summary>
+    /// Ad soyad guncelleme. Rol ve kullanici adi bu metotta degismez.
     /// </summary>
     public async Task<string?> AdSoyadGuncelleAsync(
         int kullaniciId, string? yeniAdSoyad, CancellationToken ct = default)
