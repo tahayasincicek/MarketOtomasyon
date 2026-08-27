@@ -17,12 +17,9 @@
   <!-- Kurulum betikleri derlemeye gomulur; VeritabaniKurucu onlari
        oradan okur. Dosya olarak dagitilsalardi yayin klasorunde
        eksik ya da elle degistirilmis olabilirlerdi ve uygulanan
-       surum ile diskteki icerik birbirini tutmazdi.
-
-       92_ ile baslayan dosya bilerek disarida: yarim kalmis bir
-       taslak, kurulumun parcasi degil. -->
+       surum ile diskteki icerik birbirini tutmazdi. -->
   <ItemGroup>
-    <EmbeddedResource Include="Data\Sql\*.sql" Exclude="Data\Sql\92_*.sql" />
+    <EmbeddedResource Include="Data\Sql\*.sql" />
   </ItemGroup>
 
 </Project>
