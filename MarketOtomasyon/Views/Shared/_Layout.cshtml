@@ -116,33 +116,14 @@
                 <button type="button" class="menu-dugmesi" id="menu-dugmesi" aria-label="Menüyü aç/kapat"><i class="ph ph-list"></i></button>
                 <span class="sayfa-basligi">@ViewData["Title"]</span>
 
-                @{
-                    /* Avatar icin ad soyadin bas harfleri. Genel bir kullanici
-                       ikonu herkeste ayni gorunuyordu; bas harf en azindan
-                       hangi hesapla acildigini bir bakista soyler.
-
-                       Buyutme Turkce kulturle yapiliyor: uygulama model
-                       binding icin invariant kulturde calisiyor ve orada
-                       "irfan" -> "IRFAN" olur. Ekranda dogrusu "İRFAN". */
-                    var trKultur = new System.Globalization.CultureInfo("tr-TR");
-                    var kullaniciAdi = User.Identity?.Name ?? "";
-                    var parcalar = kullaniciAdi.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                    var basHarfler = parcalar.Length switch
-                    {
-                        0 => "?",
-                        1 => parcalar[0][..1].ToUpper(trKultur),
-                        _ => (parcalar[0][..1] + parcalar[^1][..1]).ToUpper(trKultur)
-                    };
-                }
-
                 <div class="ms-auto">
                     @* Rol rozeti kaldirildi: rol zaten menudeki ekranlarla
                        belli oluyor ve her ekranda tekrar etmesi gereksizdi. *@
                     <div class="dropdown">
                         <button class="hesap-dugmesi" type="button" data-bs-toggle="dropdown"
                                 aria-expanded="false" aria-label="Hesap menüsü">
-                            <span class="hesap-avatar">@basHarfler</span>
-                            <span class="hesap-ad">@kullaniciAdi</span>
+                            <span class="hesap-avatar"><i class="ph ph-user"></i></span>
+                            <span class="hesap-ad">@User.Identity?.Name</span>
                             <i class="ph ph-caret-down hesap-ok"></i>
                         </button>
 

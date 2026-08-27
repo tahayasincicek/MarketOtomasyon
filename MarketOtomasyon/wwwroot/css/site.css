@@ -1061,9 +1061,8 @@ html, body {
     border-radius: 50%;
     background: var(--vurgu);
     color: #fff;
-    font-size: .72rem;
-    font-weight: 600;
-    letter-spacing: .02em;
+    font-size: 1.05rem;
+    line-height: 1;
 }
 
 .hesap-ad {
