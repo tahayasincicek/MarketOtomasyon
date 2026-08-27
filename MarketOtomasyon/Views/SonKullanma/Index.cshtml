@@ -1,12 +1,19 @@
-﻿@model MarketOtomasyon.Models.ViewModels.SonKullanmaEkranVm
+@model MarketOtomasyon.Models.ViewModels.SonKullanmaEkranVm
+@using System.Globalization
 @{
     ViewData["Title"] = "Son Kullanma Takibi";
+    var tr = new CultureInfo("tr-TR");
+    string Sayi(decimal d) => d.ToString("0.##", tr);
+    string Para(decimal d) => d.ToString("N2", tr);
+
+    var gecmisler = Model.SuresiGecmisler.ToList();
+    var yaklasanlar = Model.Yaklasanlar.ToList();
 }
 
 @*
-    Iki ayri tablo, tek listede birlestirilmedi: suresi gecmis mal
+    Iki ayri panel, tek listede birlestirilmedi: suresi gecmis mal
     "bugun raftan cek" isi, yaklasan mal "planla" isi. Ayni tabloda
-    satir rengiyle ayirmak, uzun listede aciliyeti gorunmez kilardi.
+    satir rengiyle ayirmak uzun listede aciliyeti gorunmez kilardi.
 *@
 <div class="ekran">
     @if (TempData["Mesaj"] is string mesaj)
@@ -19,149 +26,152 @@
         <div class="bildirim bildirim-olumsuz"><i class="ph ph-warning"></i> @hata</div>
     }
 
-    <div class="arac-cubugu">
-        <form method="get" asp-action="Index" class="form-seffaf">
-            <div class="arac-alan">
-                <label class="form-label small mb-0 me-1" for="depoId">Depo</label>
-                <select name="depoId" id="depoId" class="form-select" style="width:12rem">
-                    <option value="">Tüm depolar</option>
-                    @foreach (var depo in Model.Depolar)
+    <form method="get" asp-action="Index" class="arac-cubugu">
+        <span class="arac-etiket">Depo</span>
+        <select name="depoId" class="form-select" style="width:11rem" aria-label="Depo">
+            <option value="">Tümü</option>
+            @foreach (var depo in Model.Depolar)
+            {
+                <option value="@depo.Id" selected="@(Model.DepoId == depo.Id)">@depo.Ad</option>
+            }
+        </select>
+
+        <span class="arac-etiket">İleri</span>
+        <div class="arac-alan">
+            <input type="number" name="gunSayisi" min="0" max="365" value="@Model.GunSayisi"
+                   class="form-control" style="width:5.5rem" aria-label="Gün sayısı" />
+            <span class="ipucu">gün</span>
+        </div>
+
+        <button type="submit" class="btn btn-outline-secondary">
+            <i class="ph ph-funnel"></i> Uygula
+        </button>
+
+        <span class="ipucu arac-sag">
+            Süresi geçmiş ürünler kasada satılamaz; zayi olarak düşülmelidir.
+        </span>
+    </form>
+
+    @* ---------- Süresi geçmiş ---------- *@
+    <div class="panel" style="margin-top:.7rem">
+        <div class="panel-baslik">
+            <span><i class="ph ph-warning-octagon"></i> Süresi geçmiş</span>
+            <span class="arac-sag">
+                @gecmisler.Count parti · @Para(Model.SuresiGecmisTutar) ₺
+            </span>
+        </div>
+
+        <div class="izgara-sarmal">
+            <table class="izgara">
+                <thead>
+                    <tr>
+                        <th style="width:7rem">Kod</th>
+                        <th>Ürün</th>
+                        <th style="width:9rem">Depo</th>
+                        <th style="width:7rem">Lot</th>
+                        <th style="width:11rem">Son kullanma</th>
+                        <th class="sayi" style="width:8rem">Kalan</th>
+                        <th class="sayi" style="width:8rem">Maliyet</th>
+                        <th class="islem" style="width:7rem"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var satir in gecmisler)
                     {
-                        <option value="@depo.Id" selected="@(Model.DepoId == depo.Id)">@depo.Ad</option>
+                        <tr class="kritik">
+                            <td class="kod">@satir.Kod</td>
+                            <td><span class="urun-hucre-metin">@satir.Ad</span></td>
+                            <td>@satir.DepoAd</td>
+                            <td class="kod">@(satir.LotNo ?? "—")</td>
+                            <td>
+                                @satir.SonKullanmaTarihi.ToString("dd.MM.yyyy")
+                                <span class="rozet rozet-olumsuz">@(-satir.KalanGun) gün</span>
+                            </td>
+                            <td class="sayi">@Sayi(satir.KalanMiktar) @satir.Birim</td>
+                            <td class="sayi">@Para(satir.RiskTutari) ₺</td>
+                            <td class="islem">
+                                @* Her satir kendi formu: tek tikla o partinin kalani duser. *@
+                                <form method="post" asp-action="ZayiyeAl">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="stokPartiId" value="@satir.StokPartiId" />
+                                    <input type="hidden" name="gunSayisi" value="@Model.GunSayisi" />
+                                    <input type="hidden" name="depoId" value="@Model.DepoId" />
+                                    <input type="hidden" name="sebep" value="Son kullanma tarihi geçti" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                            title="Zayi'ye al"
+                                            onclick="return confirm('@satir.Ad — @Sayi(satir.KalanMiktar) @satir.Birim zayi\'ye alınacak. Onaylıyor musunuz?');">
+                                        <i class="ph ph-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
                     }
-                </select>
-            </div>
+                </tbody>
+            </table>
 
-            <div class="arac-alan">
-                <label class="form-label small mb-0 me-1" for="gunSayisi">İleri</label>
-                <input type="number" name="gunSayisi" id="gunSayisi" min="0" max="365"
-                       value="@Model.GunSayisi" class="form-control" style="width:6rem" />
-                <span class="text-muted small">gün</span>
-            </div>
-
-            <button type="submit" class="btn btn-primary">Uygula</button>
-        </form>
-    </div>
-
-    <div class="d-flex gap-3 flex-wrap mb-3">
-        <div class="card flex-fill" style="min-width:14rem">
-            <div class="card-body py-2">
-                <div class="text-muted small">Süresi geçmiş</div>
-                <div class="fs-5 text-danger">@Model.SuresiGecmisler.Count() parti</div>
-                <div class="text-muted small">@Model.SuresiGecmisTutar.ToString("N2") ₺ maliyet</div>
-            </div>
-        </div>
-        <div class="card flex-fill" style="min-width:14rem">
-            <div class="card-body py-2">
-                <div class="text-muted small">Yaklaşan (@Model.GunSayisi gün)</div>
-                <div class="fs-5 text-warning">@Model.Yaklasanlar.Count() parti</div>
-                <div class="text-muted small">@Model.YaklasanTutar.ToString("N2") ₺ maliyet</div>
-            </div>
+            @if (gecmisler.Count == 0)
+            {
+                <p class="veri-yok">Süresi geçmiş parti yok.</p>
+            }
         </div>
     </div>
 
-    @if (Model.SuresiGecmisler.Any())
-    {
-        <h2 class="h6 mt-4">
-            <span class="rozet rozet-olumsuz">Süresi geçmiş</span>
-            <span class="text-muted small ms-2">Bu partiler satılamaz; raftan çekilip zayi'ye alınmalı.</span>
-        </h2>
+    @* ---------- Yaklaşan ---------- *@
+    <div class="panel" style="margin-top:.7rem">
+        <div class="panel-baslik">
+            <span><i class="ph ph-clock-countdown"></i> Yaklaşan (@Model.GunSayisi gün)</span>
+            <span class="arac-sag">
+                @yaklasanlar.Count parti · @Para(Model.YaklasanTutar) ₺
+            </span>
+        </div>
 
-        <table class="table table-sm align-middle">
-            <thead>
-                <tr>
-                    <th>Ürün</th>
-                    <th>Depo</th>
-                    <th>Lot</th>
-                    <th>SKT</th>
-                    <th class="text-end">Kalan</th>
-                    <th class="text-end">Maliyet</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var satir in Model.SuresiGecmisler)
-                {
+        <div class="izgara-sarmal">
+            <table class="izgara">
+                <thead>
                     <tr>
-                        <td>
-                            <div>@satir.Ad</div>
-                            <div class="text-muted small">@satir.Kod</div>
-                        </td>
-                        <td>@satir.DepoAd</td>
-                        <td class="text-muted small">@(satir.LotNo ?? "—")</td>
-                        <td>
-                            @satir.SonKullanmaTarihi.ToString("dd.MM.yyyy")
-                            <span class="rozet rozet-olumsuz ms-1">@(-satir.KalanGun) gün geçti</span>
-                        </td>
-                        <td class="text-end">@satir.KalanMiktar.ToString("0.###") @satir.Birim</td>
-                        <td class="text-end">@satir.RiskTutari.ToString("N2") ₺</td>
-                        <td class="text-end">
-                            @* Her satir kendi formu: tek tikla o partinin kalani duser. *@
-                            <form method="post" asp-action="ZayiyeAl" class="d-inline">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="stokPartiId" value="@satir.StokPartiId" />
-                                <input type="hidden" name="gunSayisi" value="@Model.GunSayisi" />
-                                <input type="hidden" name="depoId" value="@Model.DepoId" />
-                                <input type="hidden" name="sebep" value="Son kullanma tarihi geçti" />
-                                <button type="submit" class="btn btn-sm btn-outline-danger"
-                                        onclick="return confirm('@satir.Ad — @satir.KalanMiktar.ToString("0.###") @satir.Birim zayi\'ye alınacak. Onaylıyor musunuz?');">
-                                    <i class="ph ph-trash"></i> Zayi'ye al
-                                </button>
-                            </form>
-                        </td>
+                        <th style="width:7rem">Kod</th>
+                        <th>Ürün</th>
+                        <th style="width:9rem">Depo</th>
+                        <th style="width:7rem">Lot</th>
+                        <th style="width:11rem">Son kullanma</th>
+                        <th class="sayi" style="width:8rem">Kalan</th>
+                        <th class="sayi" style="width:8rem">Maliyet</th>
+                        <th style="width:13rem">Tedarikçi</th>
                     </tr>
-                }
-            </tbody>
-        </table>
-    }
+                </thead>
+                <tbody>
+                    @foreach (var satir in yaklasanlar)
+                    {
+                        <tr>
+                            <td class="kod">@satir.Kod</td>
+                            <td><span class="urun-hucre-metin">@satir.Ad</span></td>
+                            <td>@satir.DepoAd</td>
+                            <td class="kod">@(satir.LotNo ?? "—")</td>
+                            <td>
+                                @satir.SonKullanmaTarihi.ToString("dd.MM.yyyy")
+                                <span class="rozet rozet-uyari">@satir.KalanGun gün</span>
+                            </td>
+                            <td class="sayi">@Sayi(satir.KalanMiktar) @satir.Birim</td>
+                            <td class="sayi">@Para(satir.RiskTutari) ₺</td>
+                            <td>@(satir.TedarikciUnvan ?? "—")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
 
-    @if (Model.Yaklasanlar.Any())
-    {
-        <h2 class="h6 mt-4">
-            <span class="rozet rozet-uyari">Yaklaşan</span>
-            <span class="text-muted small ms-2">Hâlâ satılabilir; öne alın veya indirime çıkarın.</span>
-        </h2>
+            @if (yaklasanlar.Count == 0)
+            {
+                <p class="veri-yok">Seçilen aralıkta süresi yaklaşan parti yok.</p>
+            }
+        </div>
+    </div>
 
-        <table class="table table-sm align-middle">
-            <thead>
-                <tr>
-                    <th>Ürün</th>
-                    <th>Depo</th>
-                    <th>Lot</th>
-                    <th>SKT</th>
-                    <th class="text-end">Kalan</th>
-                    <th class="text-end">Maliyet</th>
-                    <th>Tedarikçi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var satir in Model.Yaklasanlar)
-                {
-                    <tr>
-                        <td>
-                            <div>@satir.Ad</div>
-                            <div class="text-muted small">@satir.Kod</div>
-                        </td>
-                        <td>@satir.DepoAd</td>
-                        <td class="text-muted small">@(satir.LotNo ?? "—")</td>
-                        <td>
-                            @satir.SonKullanmaTarihi.ToString("dd.MM.yyyy")
-                            <span class="rozet rozet-uyari ms-1">@satir.KalanGun gün</span>
-                        </td>
-                        <td class="text-end">@satir.KalanMiktar.ToString("0.###") @satir.Birim</td>
-                        <td class="text-end">@satir.RiskTutari.ToString("N2") ₺</td>
-                        <td class="text-muted small">@(satir.TedarikciUnvan ?? "—")</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
-
-    @if (!Model.Satirlar.Any())
-    {
-        <p class="veri-yok">
-            <i class="ph ph-check-circle"></i>
-            Seçilen aralıkta son kullanma tarihi yaklaşan parti yok.
-        </p>
-    }
+    <div class="durum-cubugu">
+        <span>Süresi geçmiş <strong>@gecmisler.Count</strong></span>
+        <span>Yaklaşan <strong>@yaklasanlar.Count</strong></span>
+        <span>Toplam risk <strong>@Para(Model.SuresiGecmisTutar + Model.YaklasanTutar) ₺</strong></span>
+        <span class="arac-sag">
+            Yaklaşan ürünler hâlâ satılabilir; öne alın veya indirime çıkarın.
+        </span>
+    </div>
 </div>
