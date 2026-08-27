@@ -21,6 +21,7 @@ public class VeritabaniKurucuTests
     [InlineData("13_tedarikci_fatura.sql")]
     [InlineData("20_ornek_veri.sql")]
     [InlineData("23_hizli_urun.sql")]
+    [InlineData("24_urun_katalogu_60.sql")]
     public void Sema_DemoKapaliOlsaBileSecilir(string dosya)
         => Assert.True(VeritabaniKurucu.BetikSecilsinMi(Onek + dosya, demoVerisiDahil: false));
 
