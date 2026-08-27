@@ -1,0 +1,113 @@
+@model MarketOtomasyon.Models.ViewModels.ProfilVm
+@{
+    ViewData["Title"] = "Hesabım";
+}
+
+<div class="ekran">
+    @if (TempData["Mesaj"] is string mesaj)
+    {
+        <div class="bildirim bildirim-olumlu"><i class="ph ph-check-circle"></i> @mesaj</div>
+    }
+
+    <div class="arac-cubugu">
+        <span class="arac-etiket">Hesap bilgileri</span>
+        <span class="ipucu arac-sag">
+            Kullanıcı adı ve rol yalnızca müdür tarafından değiştirilebilir.
+        </span>
+    </div>
+
+    <div style="padding:.7rem">
+        <div class="kunye">
+            <div class="kunye-oge">
+                <div class="kunye-etiket">Kullanıcı adı</div>
+                <div class="kunye-deger font-monospace">@Model.KullaniciAdi</div>
+            </div>
+            <div class="kunye-oge">
+                <div class="kunye-etiket">Ad soyad</div>
+                <div class="kunye-deger">@Model.AdSoyad</div>
+            </div>
+            <div class="kunye-oge">
+                <div class="kunye-etiket">Rol</div>
+                <div class="kunye-deger">
+                    <span class="rozet rozet-vurgu">@Model.RolAdi</span>
+                </div>
+            </div>
+            <div class="kunye-oge">
+                <div class="kunye-etiket">Açık vardiya</div>
+                <div class="kunye-deger">
+                    @if (Model.AcikVardiyaAcilisUtc is DateTime acilis)
+                    {
+                        @* Tarihler UTC saklanir; ekranda yerel saate cevrilir. *@
+                        <span class="rozet rozet-olumlu">
+                            @TimeZoneInfo.ConvertTimeFromUtc(
+                                acilis,
+                                TimeZoneInfo.FindSystemTimeZoneById("Turkey Standard Time")
+                              ).ToString("dd.MM.yyyy HH:mm")
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="text-muted">Açık vardiya yok</span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* ---------- Ad soyad ---------- *@
+    <div class="arac-cubugu">
+        <span class="arac-etiket">Ad soyad değiştir</span>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Hata))
+    {
+        <div class="bildirim bildirim-olumsuz"><i class="ph ph-warning"></i> @Model.Hata</div>
+    }
+
+    <form method="post" asp-action="AdSoyadGuncelle" class="arac-cubugu">
+        @Html.AntiForgeryToken()
+
+        <input class="form-control" style="width:18rem" name="yeniAdSoyad"
+               value="@Model.YeniAdSoyad" maxlength="100"
+               placeholder="Ad soyad" aria-label="Ad soyad" />
+
+        <button type="submit" class="btn btn-primary">
+            <i class="ph ph-check"></i> Kaydet
+        </button>
+    </form>
+
+    @* ---------- Şifre ---------- *@
+    <div class="arac-cubugu">
+        <span class="arac-etiket">Şifre değiştir</span>
+        <span class="ipucu arac-sag">
+            En az 8 karakter, harf ve rakam içermeli.
+        </span>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.SifreHatasi))
+    {
+        <div class="bildirim bildirim-olumsuz"><i class="ph ph-warning"></i> @Model.SifreHatasi</div>
+    }
+
+    @* Alanlar bilerek bos donuyor: hata sonrasi sifreleri ekrana geri
+       yazmak, onlari HTML kaynaginda gorunur kilardi. *@
+    <form method="post" asp-action="SifreDegistir" class="arac-cubugu">
+        @Html.AntiForgeryToken()
+
+        <input class="form-control" style="width:12rem" type="password"
+               name="MevcutSifre" autocomplete="current-password"
+               placeholder="Mevcut şifre" aria-label="Mevcut şifre" />
+
+        <input class="form-control" style="width:12rem" type="password"
+               name="YeniSifre" autocomplete="new-password"
+               placeholder="Yeni şifre" aria-label="Yeni şifre" />
+
+        <input class="form-control" style="width:12rem" type="password"
+               name="YeniSifreTekrar" autocomplete="new-password"
+               placeholder="Yeni şifre (tekrar)" aria-label="Yeni şifre tekrar" />
+
+        <button type="submit" class="btn btn-warning">
+            <i class="ph ph-key"></i> Şifreyi değiştir
+        </button>
+    </form>
+</div>

@@ -117,10 +117,14 @@
                 <span class="sayfa-basligi">@ViewData["Title"]</span>
 
                 <div class="ms-auto d-flex align-items-center gap-3">
-                    <span class="small text-muted">
+                    @* Kullanici adi zaten burada duruyordu; hesap ekranina
+                       giden dogal yol bu. Menuye ayri bir oge eklemek sol
+                       seridi uzatirdi. *@
+                    <a class="small text-muted text-decoration-none" asp-controller="Profil"
+                       asp-action="Index" title="Hesabım">
                         <i class="ph ph-user-circle me-1"></i>@User.Identity?.Name
                         <span class="badge bg-light text-dark ms-1">@(User.IsInRole("Mudur") ? "Müdür" : "Kasiyer")</span>
-                    </span>
+                    </a>
                     <form asp-controller="Hesap" asp-action="Cikis" method="post" class="m-0">
                         @Html.AntiForgeryToken()
                         <button type="submit" class="btn btn-sm btn-danger btn-cikis">

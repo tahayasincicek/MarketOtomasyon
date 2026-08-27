@@ -68,6 +68,22 @@ UPDATE Kullanici SET Aktif = @aktif WHERE Id = @kullaniciId;";
 UPDATE Kullanici SET Rol = @rol WHERE Id = @kullaniciId;";
 
     /// <summary>
+    /// Kullanicinin kendi ad soyadini guncellemesi. Aktif sarti var:
+    /// pasife alinmis bir hesap kendi kaydini degistirememeli.
+    /// </summary>
+    private const string SqlAdSoyadGuncelle = @"
+UPDATE Kullanici SET AdSoyad = @adSoyad WHERE Id = @kullaniciId AND Aktif = 1;";
+
+    /// <summary>
+    /// Sifre degistirmede hash yalnizca AKTIF hesap icin yazilir ve
+    /// kullanicinin kendi Id'siyle sinirlidir. Mudurun sifirlama
+    /// sorgusundan (SqlSifreSifirla) bilerek ayri: orada Aktif sarti
+    /// yok, cunku mudur pasif bir hesabin sifresini de sifirlayabilmeli.
+    /// </summary>
+    private const string SqlKendiSifresiniGuncelle = @"
+UPDATE Kullanici SET SifreHash = @sifreHash WHERE Id = @kullaniciId AND Aktif = 1;";
+
+    /// <summary>
     /// Sifirlamada Aktif sarti YOK. SifreHashGuncelleAsync girisin kendi
     /// rehash akisi icin yazildi ve yalnizca aktif kullaniciyi gunceller;
     /// mudur ise pasif bir hesabin sifresini de sifirlayabilmeli
@@ -168,4 +184,14 @@ UPDATE Kullanici SET SifreHash = @sifreHash WHERE Id = @kullaniciId;";
         IDbConnection conn, IDbTransaction tx, int kullaniciId, string sifreHash, CancellationToken ct = default)
         => await conn.ExecuteAsync(new CommandDefinition(
             SqlSifreSifirla, new { kullaniciId, sifreHash }, tx, cancellationToken: ct));
+
+    public async Task<int> KendiSifresiniGuncelleAsync(
+        IDbConnection conn, IDbTransaction tx, int kullaniciId, string sifreHash, CancellationToken ct = default)
+        => await conn.ExecuteAsync(new CommandDefinition(
+            SqlKendiSifresiniGuncelle, new { kullaniciId, sifreHash }, tx, cancellationToken: ct));
+
+    public async Task<int> AdSoyadGuncelleAsync(
+        IDbConnection conn, IDbTransaction tx, int kullaniciId, string adSoyad, CancellationToken ct = default)
+        => await conn.ExecuteAsync(new CommandDefinition(
+            SqlAdSoyadGuncelle, new { kullaniciId, adSoyad }, tx, cancellationToken: ct));
 }

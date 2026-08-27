@@ -221,6 +221,7 @@ builder.Services.AddScoped<UrunResimService>();
 builder.Services.AddScoped<RaporRepository>();
 builder.Services.AddScoped<SayimService>();
 builder.Services.AddScoped<PersonelService>();
+builder.Services.AddScoped<ProfilService>();
 builder.Services.AddScoped<MudurOnayService>();
 builder.Services.AddScoped<TransferService>();
 builder.Services.AddScoped<SonKullanmaService>();
