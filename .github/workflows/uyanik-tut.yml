@@ -7,6 +7,11 @@
 # servis ay sonuna kadar tamamen kapanir. 08:00-24:00 araligi ~480 saat
 # eder, marj rahat kalir.
 #
+# GitHub Actions'in schedule tetikleyicisi garanti degildir: yogun
+# saatlerde geciktirilir, bazen atlanir. Bu is tek basina yeterli
+# olmayabilir; kesintisiz uyanik kalmasi gerekiyorsa harici bir izleme
+# servisi (UptimeRobot vb.) daha guvenilirdir.
+#
 # Yalnizca /saglik/canli isteniyor. /saglik/hazir veritabanina da
 # baglanir ve Azure SQL'in ucretsiz katmanindaki islemci kotasini
 # yakardi; veritabaninin gerektiginde uyanmasi yeterli.
@@ -16,7 +21,7 @@ name: Uygulamayi uyanik tut
 on:
   schedule:
     # UTC. Turkiye UTC+3 oldugundan 05:00-20:59 UTC = 08:00-23:59 TSI.
-    - cron: '*/10 5-20 * * *'
+    - cron: '*/5 5-20 * * *'
   workflow_dispatch:
 
 jobs:
