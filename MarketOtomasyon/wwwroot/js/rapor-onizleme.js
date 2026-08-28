@@ -110,6 +110,14 @@
 
     yazdirDugmesi.addEventListener("click", yazdir);
 
+    /* Vardiya kapatildiktan sonra sunucu bu isareti birakiyor; rapor
+       kendiliginden aciliyor. Kasiyerin kapanis raporunu listeden
+       aramasi gerekmesin diye. */
+    const otomatik = document.getElementById("otomatik-rapor");
+    if (otomatik?.dataset.vardiyaId) {
+        raporAc(otomatik.dataset.vardiyaId);
+    }
+
     modalOge.addEventListener("hidden.bs.modal", () => {
         istekKontrolcusu?.abort();
         sifirla();

@@ -58,7 +58,13 @@ public class VardiyaController : Controller
         return returnUrl is not null ? LocalRedirect(returnUrl) : RedirectToAction(nameof(Index));
     }
 
-    // Kapanistan sonra dogrudan Z raporuna gidilir: kasiyerin gormesi gereken sayfa odur.
+    /* Kapanistan sonra vardiya ekranina donulur ve Z raporu orada
+       onizleme penceresinde acilir.
+
+       Onceden dogrudan rapor sayfasina yonlendiriliyordu; kasiyer
+       raporu gorup vardiya ekranina donmek icin geri tusuna basmak
+       zorunda kaliyordu. Rapor yine gorulmesi gereken sey, ama ayri
+       bir sayfa olmasi gerekmiyor. */
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Kapat(decimal sayilanTutar, CancellationToken ct)
@@ -85,7 +91,9 @@ public class VardiyaController : Controller
             return View(nameof(Index), vm);
         }
 
-        return RedirectToAction(nameof(Rapor), new { id = rapor!.VardiyaId });
+        TempData["Mesaj"] = "Vardiya kapatıldı.";
+        TempData["RaporVardiyaId"] = rapor!.VardiyaId;
+        return RedirectToAction(nameof(Index));
     }
 
     /// <summary>

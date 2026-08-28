@@ -20,6 +20,14 @@
         <div class="bildirim bildirim-olumlu"><i class="ph ph-check-circle"></i> @mesaj</div>
     }
 
+    @* Vardiya kapatildiginda Z raporu kendiliginden acilir. Kapanis
+       raporu kasiyerin gormesi gereken sey; aramasini beklemek yerine
+       once o gosteriliyor. *@
+    @if (TempData["RaporVardiyaId"] is int otomatikRaporId)
+    {
+        <div id="otomatik-rapor" data-vardiya-id="@otomatikRaporId" hidden></div>
+    }
+
     @if (!string.IsNullOrWhiteSpace(Model.Hata))
     {
         <div class="bildirim bildirim-olumsuz"><i class="ph ph-warning"></i> @Model.Hata</div>
