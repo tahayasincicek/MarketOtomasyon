@@ -2284,6 +2284,27 @@ table.izgara tbody tr.table-active:hover {
 .termal-fis .baslik { font-size: 14px; font-weight: 700; letter-spacing: .05em; }
 .termal-fis .kucuk { font-size: 11px; }
 
+/* Vardiya raporunun tipi (Z/X) rulonun tepesinde ters zeminle basilir;
+   kasiyer rulo yiginindan Z raporunu bakmadan ayirabilsin.
+
+   Kural burada, cunku rapor hem tam sayfada hem vardiya ekranindaki
+   onizleme penceresinde gosteriliyor. Yalnizca Rapor.cshtml'in style
+   blogunda kalsaydi pencerede duz metin gorunurdu. */
+.termal-fis .rapor-tipi {
+    background: #000;
+    color: #fff;
+    text-align: center;
+    font-weight: 700;
+    letter-spacing: .18em;
+    padding: 3px 0;
+    margin: 4px 0;
+
+    /* Yazicilar arka plani varsayilan olarak basmaz; bu satir olmadan
+       kagitta beyaz zemin uzerine beyaz yazi cikar. */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
 .termal-fis hr {
     border: 0;
     border-top: 1px dashed #000;

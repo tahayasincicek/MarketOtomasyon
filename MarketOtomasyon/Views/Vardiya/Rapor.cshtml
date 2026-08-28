@@ -53,6 +53,11 @@
             letter-spacing: .18em;
             padding: 3px 0;
             margin: 4px 0;
+
+            /* Yazicilar arka plani varsayilan olarak basmaz; bu satir
+               olmadan kagitta beyaz zemin uzerine beyaz yazi cikar. */
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
 
         hr {
