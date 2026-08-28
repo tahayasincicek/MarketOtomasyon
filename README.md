@@ -4,6 +4,15 @@ Küçük ölçekli bir market için kasa, stok, iade ve raporlama uygulaması.
 
 **ASP.NET Core MVC (.NET 8) · Dapper · SQL Server**
 
+### Canlı demo
+
+**https://marketotomasyon-z0yo.onrender.com**
+
+Giriş bilgileri açılış ekranında yazılıdır; tıklayınca alanlar dolar.
+
+> Ücretsiz sunucuda çalışıyor: 15 dakika işlem görmezse uykuya geçiyor,
+> o durumda ilk açılış bir dakikayı bulabilir. Sonraki sayfalar hızlıdır.
+
 ---
 
 ## Kurulum
@@ -58,8 +67,10 @@ içindeki bağlantı dizesi düzenlenir.
 | Alış Faturaları | `/AlisFaturasi` | Fatura girişi, otomatik mal kabul |
 | Personel | `/Personel` | Kullanıcı ve rol yönetimi |
 | İşlem Logları | `/IslemLog` | Denetim kaydı |
+| Hesabım | `/Profil` | Kendi bilgileri, şifre değiştirme |
 
-Barkod hem USB okuyucuyla hem kamerayla okunur.
+Barkod hem USB okuyucuyla hem kamerayla okunur. Dar ekranlarda tablolar
+ikincil sütunlarını gizler; o bilgi satırın altında görünür.
 
 ---
 
@@ -69,7 +80,7 @@ Barkod hem USB okuyucuyla hem kamerayla okunur.
 dotnet test
 ```
 
-255 test. Veritabanı gerektirmez.
+329 test. Veritabanı gerektirmez.
 
 ---
 

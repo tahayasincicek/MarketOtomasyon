@@ -34,11 +34,17 @@ nedenle doğrudan birim testi yazılabilir.
 | `PartiKurallari` | Son kullanma tarihi ve lot doğrulaması |
 | `BarkodCozumleyici` | Terazi barkodundan ürün kodu ve gramaj |
 | `FaturaHesaplayici` | Alış faturası satır ve KDV hesabı |
+| `ProfilKurallari` | Kullanıcı adı, ad soyad ve şifre değişikliği |
+| `SonKullanmaKurallari` | Tarama penceresinin sınırları |
+| `TransferKurallari` | Depo ve satır doğrulaması |
+| `TedarikciKurallari` | Tedarikçi kartı alanları |
+| `MudurOnayiKurallari` | Limit aşan işlemde onay gerekliliği |
+| `KullaniciKurallari` | Şifre karmaşıklığı, rol geçerliliği |
 
 **Orkestrasyon servisleri** transaction açar, saf hesaplayıcıları çağırır
 ve repository'lere yazar: `SatisService`, `IadeService`, `SayimService`,
 `VardiyaService`, `MaliyetService`, `OdemeService`, `TransferService`,
-`AlisFaturasiService`.
+`AlisFaturasiService`, `ProfilService`.
 
 Ayrımın nedeni, para hesabı yapan kodun veritabanı olmadan test
 edilebilmesidir.
@@ -199,6 +205,38 @@ Bootstrap, jQuery, Phosphor Icons, ZXing ve Chart.js `wwwroot/lib/`
 altındadır; CDN kullanılmaz. Kasa bilgisayarının internet bağlantısı
 koptuğunda uygulama çalışmaya devam etmelidir.
 
+### Kullanıcı kendi hesabını yönetir
+
+`/Profil` ekranında kullanıcı adı, ad soyad ve şifre değiştirilir. Hedef
+kullanıcı hiçbir uçtan parametre olarak alınmaz; her zaman
+`User.KullaniciId()` kullanılır — id dışarıdan gelseydi bir kasiyer formu
+değiştirip başkasının kaydını düzenleyebilirdi.
+
+Şifre değiştirmede mevcut şifre sorulur. Müdürün sıfırlama akışında
+sorulmaz, çünkü orada yetkiyi rol sağlar; burada tek doğrulama oturumun
+kendisidir. İstenmeseydi açık bırakılmış bir kasa ekranından geçen biri
+hesabı kalıcı olarak ele geçirebilirdi.
+
+Rol bu ekrandan değiştirilemez — kullanıcının kendini müdür yapması
+anlamına gelirdi.
+
+Kullanıcı adı veya ad soyad değişince oturum çerezi yeniden yazılır;
+çerez bu iki alanı kopya olarak taşıdığından tazelenmezse ekranda eski
+ad görünmeye devam ederdi. Tazelemede rol veritabanından yeniden okunur,
+çerezden kopyalanmaz: yetkisi düşürülmüş bir kullanıcı eskisini oturum
+boyunca taşıyabilirdi.
+
+### Dar ekranda tablolar sütun gizler
+
+Sekiz sütunlu bir tablo 375 piksele sığmaz. `991.98px` altında ikincil
+sütunlar gizlenir ve taşıdıkları bilgi satırın ilk hücresinin altında
+ikinci satır olarak çıkar; böylece yatay kaydırma gerekmez ve hiçbir
+bilgi kaybolmaz.
+
+Gizlenecek sütunlar `mobil-gizle`, alt satır ise `mobil-detay` sınıfıyla
+işaretlenir. Geniş ekranda `mobil-detay` gizlidir — aynı bilgi iki kez
+görünmez.
+
 ---
 
 ## Klasör yapısı
@@ -236,7 +274,7 @@ Dockerfile                Konteyner imajı
 dotnet test
 ```
 
-255 test, `MarketOtomasyon.Tests/` altındadır. Hiçbiri veritabanı
+329 test, `MarketOtomasyon.Tests/` altındadır. Hiçbiri veritabanı
 gerektirmez; tamamı saf kural ve hesaplayıcı sınıflarını hedefler.
 
 Kapsanan alanlar: sepet toplamları ve KDV, kampanya seçimi, iade

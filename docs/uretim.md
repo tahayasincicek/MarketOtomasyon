@@ -271,11 +271,25 @@ uygulama portuna dışarıdan doğrudan erişilemediği için güvenlidir.
 Servis ayarlarındaki ortam değişkenleri:
 
 ```
-ConnectionStrings__MarketDb  = Server=<sunucu>.database.windows.net;Database=<ad>;User Id=<kullanici>;Password=<sifre>;Encrypt=True
+ConnectionStrings__MarketDb  = Server=<sunucu>.database.windows.net;Database=<ad>;User Id=<kullanici>;Password=<sifre>;Encrypt=True;Connection Timeout=90
 ASPNETCORE_ENVIRONMENT       = Production
 TersProxy__Etkin             = true
 TersProxy__TumProxylereGuven = true
 ```
+
+`Connection Timeout` uzun tutulur: Azure SQL'in ücretsiz katmanı
+kullanılmayan veritabanını duraklatır, ilk istek onu uyandırırken yarım
+dakikayı bulabilir.
+
+Tanıtım amaçlı bir yayında giriş ekranında deneme hesapları gösterilmek
+isteniyorsa bir değişken daha eklenir:
+
+```
+DemoGiris__Goster = true
+```
+
+Varsayılan kapalıdır; gerçek bir işletmeye kurulunca ekranda şifre
+göstermek doğrudan güvenlik açığıdır.
 
 Sağlık kontrolü yolu `/saglik/hazir` verilir; bu uç veritabanı
 bağlantısını da sınar.

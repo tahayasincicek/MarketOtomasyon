@@ -97,10 +97,10 @@ ihtiyacını ortadan kaldırır.
 | `12_depo_transfer.sql` | `StokTransfer` / `StokTransferSatir` |
 | `13_tedarikci_fatura.sql` | `Tedarikci`, `AlisFaturasi` / `AlisFaturasiSatir` |
 
-### Örnek veri (`20`–`23`)
+### Örnek veri (`20`–`24`)
 
-`20_ornek_veri.sql` kataloğu kurar; `21`–`23` onu zenginleştirir ve
-mutlaka sonrasında çalışır.
+`20_ornek_veri.sql` kataloğu kurar; sonrakiler onu zenginleştirir ve
+mutlaka ondan sonra çalışır.
 
 | Dosya | İçerik |
 |---|---|
@@ -108,6 +108,12 @@ mutlaka sonrasında çalışır.
 | `21_gercek_barkodlar.sql` | Barkodları Open Food Facts karşılıklarıyla değiştirir |
 | `22_urun_gorselleri.sql` | Ürünleri `wwwroot/urun-gorsel/*.webp` dosyalarına bağlar |
 | `23_hizli_urun.sql` | Kasa ekranındaki hızlı ürün tuşları |
+| `24_urun_katalogu_60.sql` | Kataloğu 60 ürüne tamamlar; barkod, fiyat ve görsel birlikte |
+
+`24_` tekrar çalıştırılabilir: yeni ürünler geçici bir tabloda toplanıp
+yalnızca kodu bulunmayanlar eklenir. Her ürün için barkod, açılış fiyatı
+ve görsel yolu birlikte yazılır — biri eksik kalsaydı ürün kasada
+okutulamaz ya da fiyatsız görünürdü.
 
 ### Demo verisi (`30`–`31`)
 
