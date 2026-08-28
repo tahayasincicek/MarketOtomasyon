@@ -6,7 +6,7 @@ Küçük ölçekli bir market için kasa, stok, iade ve raporlama uygulaması.
 
 ### Canlı demo
 
-**https://marketotomasyon-z0yo.onrender.com**
+**https://marketotomasyon.onrender.com**
 
 Giriş bilgileri açılış ekranında yazılıdır; tıklayınca alanlar dolar.
 
