@@ -786,24 +786,41 @@ table.table td.text-end, .font-monospace {
 
 /* Girişten sonraki ortak uygulama arayüzünü 2K/2560 px ekranlarda
    topluca ölçekle. Giriş sayfasının html etiketinde bu sınıf yoktur. */
+/* Olcek kademeli buyur: 14 -> 15 -> 17 -> 19.
+
+   Onceden 1900px'te dogrudan 26px'e ciliyordu; 15px'ten tek adimda
+   %73 artis demek. Butun rem olculeri temel boyuta bagli oldugu icin
+   menu, butonlar ve tablolar birlikte sisiyor - 1920px'lik siradan bir
+   masaustunde menu basliklari 30 piksele ulasiyordu.
+
+   1900px cogunlukla 1920x1080, yani ozel bir "buyuk ekran" degil,
+   en yaygin masaustu cozunurlugu. Gercek olcek artisi 2560px ve
+   uzerinde anlamli. */
 @media (min-width: 1900px) {
     html.uygulama-html {
-        font-size: 26px;
+        font-size: 17px;
     }
 
     .uygulama-html .ust-serit {
-        min-height: 3.55rem;
+        min-height: 3.2rem;
     }
 
     .uygulama-html .form-control,
     .uygulama-html .form-select,
     .uygulama-html .btn {
-        min-height: 2.45rem;
+        min-height: 2.2rem;
     }
 
     .uygulama-html .table > :not(caption) > * > * {
-        padding-top: .52rem;
-        padding-bottom: .52rem;
+        padding-top: .45rem;
+        padding-bottom: .45rem;
+    }
+}
+
+/* 2K ve uzeri: kasa terminali uzaktan okunacaksa asil kazanc burada. */
+@media (min-width: 2560px) {
+    html.uygulama-html {
+        font-size: 19px;
     }
 }
 
