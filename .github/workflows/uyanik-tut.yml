@@ -1,0 +1,35 @@
+# Render'in ucretsiz plani 15 dakika istek gelmezse servisi durduruyor;
+# sonraki ziyaretci konteyner yeniden ayaga kalkarken ~50 saniye bekliyor.
+# Bu is belirli saatlerde duzenli istek atarak servisi uyanik tutuyor.
+#
+# Neden gun boyu degil: ucretsiz planin aylik 750 saat kotasi var ve bir
+# ay ~720 saat. Kesintisiz uyanik tutmak kotayi sinira dayar; dolarsa
+# servis ay sonuna kadar tamamen kapanir. 08:00-24:00 araligi ~480 saat
+# eder, marj rahat kalir.
+#
+# Yalnizca /saglik/canli isteniyor. /saglik/hazir veritabanina da
+# baglanir ve Azure SQL'in ucretsiz katmanindaki islemci kotasini
+# yakardi; veritabaninin gerektiginde uyanmasi yeterli.
+
+name: Uygulamayi uyanik tut
+
+on:
+  schedule:
+    # UTC. Turkiye UTC+3 oldugundan 05:00-20:59 UTC = 08:00-23:59 TSI.
+    - cron: '*/10 5-20 * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Canlilik ucunu yokla
+        run: |
+          kod=$(curl -s -o /dev/null -w '%{http_code}' --max-time 120 \
+            https://marketotomasyon.onrender.com/saglik/canli)
+          echo "HTTP $kod"
+          # Uyanma sirasinda gecici hata donebilir; is basarisiz
+          # sayilmasin, bir sonraki tetikleme zaten dener.
+          if [ "$kod" != "200" ]; then
+            echo "::warning::Beklenen 200 yerine $kod dondu"
+          fi
