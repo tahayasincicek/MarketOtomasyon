@@ -45,13 +45,23 @@ JOIN Fis f ON f.Id = fs.FisId
 WHERE f.FisNo = @fisNo
 ORDER BY fs.SatirNo;";
 
+    /* Yerel degiskenin adi bilerek @uretilenNo; @iadeNo OLAMAZ.
+       Dapper parametre nesnesinin ozelliklerini SQL metninde arar ve
+       eslesenleri parametre olarak ekler. Iade entity'sinde IadeNo
+       ozelligi var, dolayisiyla metinde @iadeNo gecerse Dapper ayni
+       adla bir parametre daha gonderir. SQL Server degisken adlarinda
+       buyuk/kucuk harf ayrimi yapmadigi icin bu "The variable name
+       '@iadeNo' has already been declared" hatasina yol acar.
+
+       Numara burada uretiliyor cunku sequence ile bicimlendirmenin ayni
+       ifadede kalmasi, iki iadenin ayni numarayi almasini engelliyor. */
     private const string SqlIadeEkle = @"
-DECLARE @no INT = NEXT VALUE FOR IadeNoSeq;
-DECLARE @iadeNo NVARCHAR(20) = FORMAT(SYSUTCDATETIME(), 'yyyyMMdd') + '-I-' + FORMAT(@no, '00000');
+DECLARE @siraNo INT = NEXT VALUE FOR IadeNoSeq;
+DECLARE @uretilenNo NVARCHAR(20) = FORMAT(SYSUTCDATETIME(), 'yyyyMMdd') + '-I-' + FORMAT(@siraNo, '00000');
 
 INSERT INTO Iade (IadeNo, FisId, VardiyaId, KullaniciId, ToplamTutar, OdemeTipi, Aciklama)
 OUTPUT INSERTED.Id, INSERTED.IadeNo
-VALUES (@iadeNo, @FisId, @VardiyaId, @KullaniciId, @ToplamTutar, @OdemeTipi, @Aciklama);";
+VALUES (@uretilenNo, @FisId, @VardiyaId, @KullaniciId, @ToplamTutar, @OdemeTipi, @Aciklama);";
 
     private const string SqlIadeSatirEkle = @"
 INSERT INTO IadeSatir
