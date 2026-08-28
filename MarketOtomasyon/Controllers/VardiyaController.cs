@@ -88,11 +88,20 @@ public class VardiyaController : Controller
         return RedirectToAction(nameof(Rapor), new { id = rapor!.VardiyaId });
     }
 
+    /// <summary>
+    /// Z (ya da vardiya acikken X) raporu.
+    ///
+    /// gomulu=true yalnizca rapor govdesini dondurur; vardiya ekrani
+    /// bunu onizleme penceresinde gosteriyor. Fisin yazdirma akisiyla
+    /// ayni desen: kasiyer rapora bakmak icin sayfadan ayrilmasin.
+    /// </summary>
     [HttpGet]
-    public async Task<IActionResult> Rapor(int id, CancellationToken ct)
+    public async Task<IActionResult> Rapor(int id, [FromQuery] bool gomulu, CancellationToken ct)
     {
         var rapor = await _vardiyaService.RaporAsync(id, ct);
-        return rapor is null ? NotFound() : View(rapor);
+        if (rapor is null) return NotFound();
+
+        return gomulu ? PartialView("_RaporIcerik", rapor) : View(rapor);
     }
 
     /// <summary>

@@ -1,0 +1,147 @@
+@model MarketOtomasyon.Models.ViewModels.ZRaporVm
+@{
+    /* Z raporunun govdesi. Iki yerden kullaniliyor:
+       - Rapor.cshtml (tam sayfa, dogrudan adresle acilinca)
+       - Vardiya ekranindaki onizleme penceresi (AJAX ile cekilir)
+
+       Fisle ayni desen: gercek kasalarda ikisi de ayni termal ruloya
+       basildigi icin 80 mm duzenini paylasiyorlar. */
+    var tr = new System.Globalization.CultureInfo("tr-TR");
+    string Para(decimal d) => d.ToString("N2", tr);
+
+    var fark = Model.Fark ?? 0;
+    var raporTipi = Model.Acik ? "X RAPORU" : "Z RAPORU";
+    var farkEtiketi = fark > 0 ? "KASA FAZLASI" : fark < 0 ? "KASA ACIGI" : "KASA DENK";
+}
+
+    <div class="termal-fis">
+        <div class="orta baslik">MARKET OTOMASYONU</div>
+        <div class="orta kucuk">Örnek Mah. Test Cad. No:1</div>
+        <div class="orta kucuk">Tel: 0212 000 00 00</div>
+
+        <div class="rapor-tipi">@raporTipi</div>
+
+        <table class="kucuk">
+            <tr>
+                <td>Vardiya No</td>
+                <td class="sag kalin">@Model.VardiyaId</td>
+            </tr>
+            <tr>
+                <td>Kasiyer</td>
+                <td class="sag">@Model.KasiyerAdi</td>
+            </tr>
+            <tr>
+                <td>Açılış</td>
+                <td class="sag">@Model.AcilisTarihi.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+            </tr>
+            <tr>
+                <td>Kapanış</td>
+                <td class="sag">
+                    @(Model.KapanisTarihi?.ToLocalTime().ToString("dd.MM.yyyy HH:mm") ?? "— (açık)")
+                </td>
+            </tr>
+        </table>
+
+        <hr />
+        <div class="bolum">SATIŞ ÖZETİ</div>
+        <table>
+            <tr>
+                <td>Fiş adedi</td>
+                <td class="sag">@Model.FisSayisi</td>
+            </tr>
+            <tr>
+                <td>Brüt ciro</td>
+                <td class="sag">@Para(Model.Ciro)</td>
+            </tr>
+            <tr>
+                <td>Toplam indirim</td>
+                <td class="sag">@Para(Model.ToplamIndirim)</td>
+            </tr>
+            <tr>
+                <td>Toplam KDV</td>
+                <td class="sag">@Para(Model.ToplamKdv)</td>
+            </tr>
+            <tr>
+                <td>İade (@Model.IadeSayisi adet)</td>
+                <td class="sag">-@Para(Model.IadeToplam)</td>
+            </tr>
+        </table>
+        <hr class="cift-cizgi" />
+        <table>
+            <tr class="kalin buyuk">
+                <td>NET CİRO</td>
+                <td class="sag">@Para(Model.NetCiro)</td>
+            </tr>
+        </table>
+
+        <hr />
+        <div class="bolum">ÖDEME DAĞILIMI</div>
+        <table>
+            <tr>
+                <td>NAKİT</td>
+                <td class="sag">@Para(Model.NakitSatis)</td>
+            </tr>
+            <tr>
+                <td>KART</td>
+                <td class="sag">@Para(Model.KartSatis)</td>
+            </tr>
+            <tr>
+                <td>PUAN</td>
+                <td class="sag">@Para(Model.PuanSatis)</td>
+            </tr>
+        </table>
+
+        <hr />
+        <div class="bolum">KASA MUTABAKATI</div>
+        @* Kart tahsilati cekmeceye para koymaz; beklenen tutara girmez. *@
+        <table>
+            <tr>
+                <td>Açılış tutarı</td>
+                <td class="sag">@Para(Model.AcilisTutari)</td>
+            </tr>
+            <tr>
+                <td>+ Nakit satış</td>
+                <td class="sag">@Para(Model.NakitSatis)</td>
+            </tr>
+            <tr>
+                <td>- Nakit iade</td>
+                <td class="sag">@Para(Model.NakitIade)</td>
+            </tr>
+        </table>
+        <hr />
+        <table>
+            <tr class="kalin">
+                <td>BEKLENEN TUTAR</td>
+                <td class="sag">@Para(Model.BeklenenTutar)</td>
+            </tr>
+            @if (Model.SayilanTutar is not null)
+            {
+                <tr class="kalin">
+                    <td>SAYILAN TUTAR</td>
+                    <td class="sag">@Para(Model.SayilanTutar.Value)</td>
+                </tr>
+            }
+        </table>
+
+        @if (Model.SayilanTutar is not null)
+        {
+            <div class="fark-satiri">
+                <span>@farkEtiketi</span>
+                <span>@Para(fark)</span>
+            </div>
+        }
+        else
+        {
+            <hr />
+            <div class="orta kucuk">
+                Vardiya henüz açık. Kapanış sayımı yapılmadı,<br />
+                bu bir ara rapordur (X).
+            </div>
+        }
+
+        <hr />
+        <div class="orta kucuk">
+            Rapor tarihi: @DateTime.UtcNow.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+        </div>
+        <div class="orta kucuk">Mali değeri yoktur.</div>
+    </div>

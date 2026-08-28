@@ -213,7 +213,13 @@
                                 }
                             </td>
                             <td class="islem">
-                                <a class="btn btn-secondary" asp-action="Rapor" asp-route-id="@vardiya.Id">
+                                @* Baglanti olarak kaliyor: JavaScript calismazsa ya da
+                                   kullanici yeni sekmede acmak isterse rapor yine
+                                   adresinden erisilebilir olmali. Tiklama JS
+                                   tarafindan yakalanip onizleme penceresine
+                                   ceviriliyor. *@
+                                <a class="btn btn-secondary rapor-ac" asp-action="Rapor"
+                                   asp-route-id="@vardiya.Id" data-vardiya-id="@vardiya.Id">
                                     <i class="ph ph-printer"></i> Z raporu
                                 </a>
                             </td>
@@ -238,6 +244,40 @@
     </div>
 </div>
 
+@* Rapor onizleme penceresi. Kasadaki fis onizlemesiyle ayni yapi:
+   rapor AJAX ile cekilip burada gosteriliyor, boylece kullanici
+   vardiya ekranindan ayrilmiyor. *@
+<div class="modal fade" id="rapor-onizleme-modal" tabindex="-1"
+     aria-labelledby="rapor-onizleme-baslik" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered fis-onizleme-dialog">
+        <div class="modal-content">
+            <div class="modal-header py-2">
+                <h5 class="modal-title" id="rapor-onizleme-baslik">
+                    <i class="ph ph-printer me-1"></i> Vardiya Raporu
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+
+            <div class="modal-body fis-onizleme-govde">
+                <div id="rapor-onizleme-yukleniyor" class="fis-onizleme-durum" role="status">
+                    <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                    Rapor hazırlanıyor…
+                </div>
+                <div id="rapor-onizleme-hata" class="bildirim bildirim-olumsuz d-none" role="alert"></div>
+                <div id="rapor-onizleme-icerik" class="fis-onizleme-icerik d-none"></div>
+            </div>
+
+            <div class="modal-footer py-2">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                <button type="button" id="btn-rapor-yazdir" class="btn btn-primary" disabled>
+                    <i class="ph ph-printer"></i> Yazdır
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script src="~/js/vardiya.js" asp-append-version="true"></script>
+    <script src="~/js/rapor-onizleme.js" asp-append-version="true"></script>
 }
