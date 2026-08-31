@@ -1651,8 +1651,8 @@ table.izgara tbody tr.table-active:hover {
     justify-content: space-between;
     gap: 1rem;
     padding: .7rem .85rem;
-    background: linear-gradient(90deg, var(--vurgu-zemin), #fff 58%);
-    border-bottom: 1px solid var(--vurgu-kenar);
+    background: #f8f9fa;
+    border-bottom: 1px solid var(--izgara-cizgi);
 }
 
 .mal-kabul-ozet-baslik {
@@ -1679,8 +1679,9 @@ table.izgara tbody tr.table-active:hover {
     height: 2.45rem;
     flex: 0 0 2.45rem;
     border-radius: .45rem;
-    background: var(--vurgu);
-    color: #fff;
+    background: #e8f5ec;
+    border: 1px solid #bbdfc5;
+    color: #16713a;
     font-size: 1.25rem;
 }
 
@@ -1702,12 +1703,12 @@ table.izgara tbody tr.table-active:hover {
     height: 1.35rem;
     border-radius: 50%;
     background: #fff;
-    border: 1px solid var(--vurgu-kenar);
-    color: var(--vurgu-koyu);
+    border: 1px solid #d5d7dc;
+    color: #374151;
     font-size: .68rem;
 }
 
-.mal-kabul-adimlar > i { color: #a5b4fc; }
+.mal-kabul-adimlar > i { color: #b6bac2; }
 
 .mal-kabul-calisma-alani {
     flex: 1;
@@ -1724,7 +1725,7 @@ table.izgara tbody tr.table-active:hover {
     border-bottom: 1px solid var(--izgara-cizgi);
 }
 
-.mal-kabul-barkod-bolum { background: #fafaff; }
+.mal-kabul-barkod-bolum { background: #fafafa; }
 
 .mal-kabul-bolum-baslik {
     display: flex;
@@ -1745,7 +1746,7 @@ table.izgara tbody tr.table-active:hover {
     letter-spacing: .055em;
 }
 
-.mal-kabul-bolum-baslik > span i { color: var(--vurgu); font-size: 1rem; }
+.mal-kabul-bolum-baslik > span i { color: #4b5563; font-size: 1rem; }
 .mal-kabul-bolum-baslik small { color: #9ca3af; font-size: .7rem; text-align: right; }
 
 .mal-kabul-barkod-girdi .form-control {
@@ -1756,7 +1757,7 @@ table.izgara tbody tr.table-active:hover {
 
 .mal-kabul-barkod-girdi .input-group-text {
     background: #fff;
-    color: var(--vurgu);
+    color: #16713a;
     border-right: 0;
     font-size: 1.05rem;
 }
@@ -1860,7 +1861,7 @@ table.izgara tbody tr.table-active:hover {
     text-align: center;
 }
 
-.mal-kabul-bos i { font-size: 2.8rem; color: #c7d2fe; }
+.mal-kabul-bos i { font-size: 2.8rem; color: #c8ccd2; }
 .mal-kabul-bos strong { color: #6b7280; font-size: .9rem; }
 .mal-kabul-bos span { font-size: .78rem; }
 
