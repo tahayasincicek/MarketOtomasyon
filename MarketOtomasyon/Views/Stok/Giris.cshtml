@@ -1,16 +1,19 @@
-﻿@model MarketOtomasyon.Models.ViewModels.MalKabulVm
+@model MarketOtomasyon.Models.ViewModels.MalKabulVm
 @{
     ViewData["Title"] = "Mal Kabul";
 }
 
-<div class="ekran">
+<div class="ekran" id="mal-kabul-ekrani">
     <div class="arac-cubugu">
         <a class="btn btn-secondary" asp-action="Index">
             <i class="ph ph-arrow-left"></i> Stok Durumu
         </a>
         <span class="arac-ayrac"></span>
         <span class="ipucu">
-            Her giriş bir stok hareketi olarak yazılır; bakiye hareketlerin toplamından okunur.
+            Her kabul stok hareketi ve maliyet partisi olarak güvenle kaydedilir.
+        </span>
+        <span class="rozet rozet-vurgu arac-sag">
+            <i class="ph ph-shield-check"></i> Transaction korumalı
         </span>
     </div>
 
@@ -27,178 +30,177 @@
         </div>
     }
 
-    <div class="panel-serit" style="flex:1; min-height:0; align-items:stretch">
+    <div class="mal-kabul-ozet">
+        <div class="mal-kabul-ozet-baslik">
+            <span class="mal-kabul-ozet-ikon"><i class="ph ph-package"></i></span>
+            <div>
+                <strong>Yeni Stok Girişi</strong>
+                <span>Barkodu okutun, teslimat bilgilerini girin ve stoğa ekleyin.</span>
+            </div>
+        </div>
+        <div class="mal-kabul-adimlar" aria-label="Mal kabul adımları">
+            <span><b>1</b> Ürünü Bul</span>
+            <i class="ph ph-caret-right"></i>
+            <span><b>2</b> Miktarı Gir</span>
+            <i class="ph ph-caret-right"></i>
+            <span><b>3</b> Partiyi Kaydet</span>
+        </div>
+    </div>
 
-        <!-- Giris formu -->
-        <div class="panel" style="flex:1 1 24rem">
-            <div class="panel-baslik"><span><i class="ph ph-tray-arrow-down"></i> Giriş</span></div>
-            <div class="panel-govde">
+    <div class="panel-serit mal-kabul-calisma-alani">
+        <div class="panel mal-kabul-form-panel">
+            <div class="panel-baslik">
+                <span><i class="ph ph-tray-arrow-down"></i> Mal Kabul Formu</span>
+                <span class="rozet rozet-olumlu">Yeni Kayıt</span>
+            </div>
+
+            <div class="panel-govde sifir">
                 <form id="mal-kabul-form"
                       method="post"
                       asp-action="Giris"
                       data-barkod-coz-url="@Url.Action("Coz", "Barkod")">
-                    <div class="alan">
-                        <label asp-for="Barkod">Barkod</label>
-                        <div class="deger">
-                            <div class="input-group">
-                                <input id="barkod"
-                                       class="form-control font-monospace"
-                                       asp-for="Barkod"
-                                       autocomplete="off"
-                                       autofocus
-                                       placeholder="Okutun, yazın veya kamerayı kullanın" />
 
-                                <button type="button"
-                                        id="btn-kamera"
-                                        class="btn btn-secondary">
-                                    <i class="ph ph-video-camera"></i> Kamera
-                                </button>
-                            </div>
-
-                            <span class="hata" asp-validation-for="Barkod"></span>
-
-                            <input asp-for="UrunId" type="hidden" />
-
-                            <div id="mal-kabul-urun-bilgi"
-                                 class="bildirim bildirim-bilgi d-none mt-2"
-                                 role="status"
-                                 aria-live="polite"></div>
-                        </div>
-                    </div>
-
-                    <div id="kamera-paneli"
-                         class="arac-cubugu d-none mb-3"
-                         style="background:#f8fafc">
-
-                        <video id="kamera-video"
-                               playsinline
-                               muted
-                               style="width:22rem;max-width:100%;height:12rem;object-fit:cover;background:#111827;border-radius:.25rem">
-                        </video>
-
-                        <div class="d-flex flex-column gap-1" style="min-width:0">
-                            <span class="arac-etiket">Kamera</span>
-
-                            <select id="kamera-secim"
-                                    class="form-select"
-                                    style="width:15rem"
-                                    aria-label="Kamera seç">
-                            </select>
-
-                            <div id="kamera-durum" class="ipucu">Kamera kapalı.</div>
-                            <div id="kamera-son" class="ipucu"></div>
+                    <section class="mal-kabul-bolum mal-kabul-barkod-bolum">
+                        <div class="mal-kabul-bolum-baslik">
+                            <span><i class="ph ph-barcode"></i> Ürün Seçimi</span>
+                            <small>USB okuyucu, kamera veya manuel giriş</small>
                         </div>
 
-                    </div>
-
-                    <div class="alan">
-                        <label asp-for="DepoId">Depo</label>
-                        <div class="deger">
-                            <select class="form-select orta-genislik" asp-for="DepoId">
-                                <option value="0">(seçiniz)</option>
-                                @foreach (var depo in Model.Depolar)
-                                {
-                                    <option value="@depo.Id" selected="@(Model.DepoId == depo.Id)">@depo.Ad</option>
-                                }
-                            </select>
-                            <span class="hata" asp-validation-for="DepoId"></span>
-                        </div>
-                    </div>
-
-                    <div class="alan">
-                        <label asp-for="Miktar">Miktar</label>
-                        <div class="deger">
-                            <input class="form-control dar text-end" asp-for="Miktar"
-                                   type="number" step="0.001" min="0" />
-                            <span class="hata" asp-validation-for="Miktar"></span>
-                        </div>
-                    </div>
-
-                    <div class="alan">
-                        <label></label>
-                        <div class="deger ipucu">Koli barkodu okutulsa da miktar buradan girilir.</div>
-                    </div>
-
-                    <div class="alan">
-                        <label asp-for="BirimMaliyet">Birim maliyet</label>
-                        <div class="deger">
-                            <div class="input-group dar">
-                                <input class="form-control text-end" asp-for="BirimMaliyet"
-                                       type="number" step="0.01" min="0.01" />
-                                <span class="input-group-text">₺</span>
-                            </div>
-                            <span class="hata" asp-validation-for="BirimMaliyet"></span>
-                            <div class="ipucu mt-1">KDV hariç alış birim maliyetini girin.</div>
-                        </div>
-                    </div>
-                    @* Parti bilgileri. Son kullanma tarihi FEFO sirasini belirler:
-                       bos birakilan tarih partiyi siranin SONUNA atar, yani urun
-                       en son satilir. Gida urunlerinde bu yuzden zorunludur
-                       (Urun.SonKullanmaZorunlu). *@
-                    <div class="alan">
-                        <label asp-for="SonKullanmaTarihi">Son kullanma tarihi</label>
-                        <div class="deger">
-                            <input class="form-control dar" asp-for="SonKullanmaTarihi" type="date" />
-                            <span class="hata" asp-validation-for="SonKullanmaTarihi"></span>
-                            <div class="ipucu mt-1">
-                                Raftan önce tarihi en yakın parti çıkar. Gıda ürünlerinde zorunludur;
-                                kırtasiye gibi raf ömrü olmayan ürünlerde boş bırakılabilir.
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="alan">
-                        <label asp-for="LotNo">Lot no</label>
-                        <div class="deger">
-                            <input class="form-control dar" asp-for="LotNo" autocomplete="off"
-                                   placeholder="Tedarikçi lot numarası" />
-                            <span class="hata" asp-validation-for="LotNo"></span>
-                            <div class="ipucu mt-1">
-                                Bir lot geri çağrıldığında hangi fişlerde satıldığını bulmayı sağlar.
-                            </div>
-                        </div>
-                    </div>
-
-                    @* Isteğe bağlı: her mal kabul faturayla gelmez (numune,
-                       devir, düzeltme). Faturalı alım için Alış Faturaları
-                       ekranını kullanın; oradan girilen mal kabul otomatiktir. *@
-                    <div class="alan">
-                        <label asp-for="TedarikciId">Tedarikçi</label>
-                        <div class="deger">
-                            <select class="form-select" asp-for="TedarikciId">
-                                <option value="">Seçilmedi</option>
-                                @foreach (var tedarikci in Model.Tedarikciler)
-                                {
-                                    <option value="@tedarikci.Id">@tedarikci.Unvan</option>
-                                }
-                            </select>
-                        </div>
-                    </div>
-
-
-                    <div class="alan">
-                        <label asp-for="Aciklama">Açıklama</label>
-                        <div class="deger">
-                            <input class="form-control" asp-for="Aciklama"
-                                   placeholder="İrsaliye no, tedarikçi vb." />
-                        </div>
-                    </div>
-
-                    <div class="alan">
-                        <label></label>
-                        <div class="deger">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="ph ph-check"></i> Girişi Kaydet
+                        <label class="form-label" asp-for="Barkod">Barkod</label>
+                        <div class="input-group mal-kabul-barkod-girdi">
+                            <span class="input-group-text"><i class="ph ph-barcode"></i></span>
+                            <input id="barkod"
+                                   class="form-control font-monospace"
+                                   asp-for="Barkod"
+                                   autocomplete="off"
+                                   autofocus
+                                   placeholder="Barkodu okutun veya yazıp Enter'a basın" />
+                            <button type="button" id="btn-kamera" class="btn btn-secondary">
+                                <i class="ph ph-video-camera"></i> Kamera
                             </button>
                         </div>
+                        <span class="hata" asp-validation-for="Barkod"></span>
+                        <input asp-for="UrunId" type="hidden" />
+
+                        <div id="mal-kabul-urun-bilgi"
+                             class="bildirim bildirim-bilgi d-none mal-kabul-urun-bilgi"
+                             role="status"
+                             aria-live="polite"></div>
+
+                        <div id="kamera-paneli" class="mal-kabul-kamera d-none">
+                            <video id="kamera-video" playsinline muted></video>
+                            <div class="mal-kabul-kamera-bilgi">
+                                <span class="arac-etiket">Kamera Kaynağı</span>
+                                <select id="kamera-secim" class="form-select" aria-label="Kamera seç"></select>
+                                <div id="kamera-durum" class="ipucu">Kamera kapalı.</div>
+                                <div id="kamera-son" class="ipucu"></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="mal-kabul-bolum">
+                        <div class="mal-kabul-bolum-baslik">
+                            <span><i class="ph ph-warehouse"></i> Stok ve Maliyet</span>
+                            <small>Stoğa girecek gerçek teslimat bilgileri</small>
+                        </div>
+
+                        <div class="mal-kabul-form-grid">
+                            <div class="mal-kabul-alan">
+                                <label class="form-label" asp-for="DepoId">Hedef Depo</label>
+                                <select class="form-select" asp-for="DepoId">
+                                    <option value="0">Depo seçiniz</option>
+                                    @foreach (var depo in Model.Depolar)
+                                    {
+                                        <option value="@depo.Id" selected="@(Model.DepoId == depo.Id)">@depo.Ad</option>
+                                    }
+                                </select>
+                                <span class="hata" asp-validation-for="DepoId"></span>
+                            </div>
+
+                            <div class="mal-kabul-alan">
+                                <label class="form-label" asp-for="Miktar">Teslim Alınan Miktar</label>
+                                <div class="input-group">
+                                    <input class="form-control text-end" asp-for="Miktar"
+                                           type="number" step="0.001" min="0" />
+                                    <span class="input-group-text">Birim</span>
+                                </div>
+                                <span class="hata" asp-validation-for="Miktar"></span>
+                            </div>
+
+                            <div class="mal-kabul-alan mal-kabul-alan-genis">
+                                <label class="form-label" asp-for="BirimMaliyet">KDV Hariç Birim Maliyet</label>
+                                <div class="input-group mal-kabul-para-girdi">
+                                    <input class="form-control text-end" asp-for="BirimMaliyet"
+                                           type="number" step="0.01" min="0.01" />
+                                    <span class="input-group-text">₺</span>
+                                </div>
+                                <span class="hata" asp-validation-for="BirimMaliyet"></span>
+                                <span class="ipucu">FIFO maliyet hesabında bu tutar kullanılacaktır.</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="mal-kabul-bolum">
+                        <div class="mal-kabul-bolum-baslik">
+                            <span><i class="ph ph-tag"></i> Parti ve Kaynak</span>
+                            <small>İzlenebilirlik için isteğe bağlı teslimat bilgileri</small>
+                        </div>
+
+                        <div class="mal-kabul-form-grid">
+                            <div class="mal-kabul-alan">
+                                <label class="form-label" asp-for="SonKullanmaTarihi">Son Kullanma Tarihi</label>
+                                <input class="form-control" asp-for="SonKullanmaTarihi" type="date" />
+                                <span class="hata" asp-validation-for="SonKullanmaTarihi"></span>
+                                <span class="ipucu">Gıdalarda zorunludur ve FEFO sırasını belirler.</span>
+                            </div>
+
+                            <div class="mal-kabul-alan">
+                                <label class="form-label" asp-for="LotNo">Lot Numarası</label>
+                                <input class="form-control font-monospace" asp-for="LotNo"
+                                       autocomplete="off" placeholder="Örn. LOT-2026-084" />
+                                <span class="hata" asp-validation-for="LotNo"></span>
+                                <span class="ipucu">Geri çağırmalarda partinin izlenmesini sağlar.</span>
+                            </div>
+
+                            <div class="mal-kabul-alan mal-kabul-alan-genis">
+                                <label class="form-label" asp-for="TedarikciId">Tedarikçi</label>
+                                <select class="form-select" asp-for="TedarikciId">
+                                    <option value="">Tedarikçi seçilmedi</option>
+                                    @foreach (var tedarikci in Model.Tedarikciler)
+                                    {
+                                        <option value="@tedarikci.Id">@tedarikci.Unvan</option>
+                                    }
+                                </select>
+                                <span class="ipucu">
+                                    Faturalı alımlar için <a asp-controller="AlisFaturasi" asp-action="Index">Alış Faturaları</a> ekranını kullanın.
+                                </span>
+                            </div>
+
+                            <div class="mal-kabul-alan mal-kabul-alan-genis">
+                                <label class="form-label" asp-for="Aciklama">Açıklama</label>
+                                <input class="form-control" asp-for="Aciklama"
+                                       autocomplete="off" placeholder="İrsaliye numarası veya teslimat notu" />
+                            </div>
+                        </div>
+                    </section>
+
+                    <div class="mal-kabul-form-alt">
+                        <span class="ipucu">
+                            <i class="ph ph-info"></i> Koli barkodu okutulsa da teslim alınan gerçek miktarı girin.
+                        </span>
+                        <button type="submit" class="btn btn-success mal-kabul-kaydet">
+                            <i class="ph ph-check-circle"></i> Stok Girişini Kaydet
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- Son hareketler -->
-        <div class="panel" style="flex:2 1 32rem">
-            <div class="panel-baslik"><span><i class="ph ph-list-bullets"></i> Son hareketler</span></div>
+        <div class="panel mal-kabul-hareket-panel">
+            <div class="panel-baslik">
+                <span><i class="ph ph-clock-counter-clockwise"></i> Son Stok Hareketleri</span>
+                <span class="rozet rozet-notr">@Model.SonHareketler.Count Kayıt</span>
+            </div>
 
             <div class="izgara-sarmal">
                 <table class="izgara">
@@ -216,18 +218,19 @@
                         {
                             <tr>
                                 <td class="text-muted">@hareket.Tarih.ToLocalTime().ToString("dd.MM HH:mm")</td>
-                                <td style="white-space:normal">
-                                    <span class="kod">@hareket.UrunKod</span> @hareket.UrunAd
+                                <td class="mal-kabul-urun-hucre">
+                                    <span class="kod">@hareket.UrunKod</span>
+                                    <strong>@hareket.UrunAd</strong>
                                     @if (!string.IsNullOrWhiteSpace(hareket.Aciklama))
                                     {
-                                        <span class="ipucu">· @hareket.Aciklama</span>
+                                        <small>@hareket.Aciklama</small>
                                     }
                                 </td>
                                 <td>@hareket.DepoAd</td>
                                 <td><span class="rozet rozet-notr">@hareket.KaynakAdi</span></td>
-                                @* Giris/cikis yonu isaretle de belirtilir: renge bagimli kalinmasin. *@
                                 <td class="sayi @(hareket.Yon == 1 ? "text-success" : "text-danger")">
-                                    @(hareket.Yon == 1 ? "+" : "−")@hareket.Miktar.ToString("0.###") @hareket.Birim
+                                    <strong>@(hareket.Yon == 1 ? "+" : "−")@hareket.Miktar.ToString("0.###")</strong>
+                                    @hareket.Birim
                                 </td>
                             </tr>
                         }
@@ -236,20 +239,24 @@
 
                 @if (Model.SonHareketler.Count == 0)
                 {
-                    <p class="veri-yok">Henüz stok hareketi yok.</p>
+                    <div class="mal-kabul-bos">
+                        <i class="ph ph-package"></i>
+                        <strong>Henüz stok hareketi yok</strong>
+                        <span>İlk mal kabul kaydınız burada görüntülenecek.</span>
+                    </div>
                 }
             </div>
-        </div>
-    </div>
 
-    <div class="durum-cubugu">
-        <span>Son <strong>@Model.SonHareketler.Count</strong> hareket listeleniyor</span>
+            <div class="durum-cubugu">
+                <span>Son <strong>@Model.SonHareketler.Count</strong> hareket gösteriliyor</span>
+                <span class="arac-sag"><i class="ph ph-arrows-down-up"></i> En yeni kayıt üstte</span>
+            </div>
+        </div>
     </div>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-
     <script src="~/lib/zxing/index.min.js" asp-append-version="true"></script>
     <script src="~/js/mal-kabul.js" asp-append-version="true"></script>
     <script src="~/js/kamera.js" asp-append-version="true"></script>

@@ -1640,6 +1640,260 @@ table.izgara tbody tr.table-active:hover {
 .panel-govde { padding: .7rem; flex: 1; }
 .panel-govde.sifir { padding: 0; }
 
+/* ---------- Mal kabul ----------
+   Uzun tek kolonlu form yerine is akisini urun, stok/maliyet ve parti
+   adimlarina ayirir. Form ve hareket gecmisi ayni ekranda kalir; masaustu
+   terminalinde yatay, dar ekranda dikey calisir. */
+
+.mal-kabul-ozet {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .7rem .85rem;
+    background: linear-gradient(90deg, var(--vurgu-zemin), #fff 58%);
+    border-bottom: 1px solid var(--vurgu-kenar);
+}
+
+.mal-kabul-ozet-baslik {
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+    min-width: 0;
+}
+
+.mal-kabul-ozet-baslik > div {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.mal-kabul-ozet-baslik strong { color: #1f2937; font-size: .95rem; }
+.mal-kabul-ozet-baslik span:not(.mal-kabul-ozet-ikon) { color: #6b7280; font-size: .78rem; }
+
+.mal-kabul-ozet-ikon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.45rem;
+    height: 2.45rem;
+    flex: 0 0 2.45rem;
+    border-radius: .45rem;
+    background: var(--vurgu);
+    color: #fff;
+    font-size: 1.25rem;
+}
+
+.mal-kabul-adimlar {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    color: #6b7280;
+    font-size: .76rem;
+    white-space: nowrap;
+}
+
+.mal-kabul-adimlar span { display: inline-flex; align-items: center; gap: .3rem; }
+.mal-kabul-adimlar b {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid var(--vurgu-kenar);
+    color: var(--vurgu-koyu);
+    font-size: .68rem;
+}
+
+.mal-kabul-adimlar > i { color: #a5b4fc; }
+
+.mal-kabul-calisma-alani {
+    flex: 1;
+    min-height: 0;
+    align-items: stretch;
+    flex-wrap: nowrap;
+}
+
+.mal-kabul-form-panel { flex: 0 1 33rem; min-width: 29rem; }
+.mal-kabul-hareket-panel { flex: 1 1 40rem; min-width: 32rem; }
+
+.mal-kabul-bolum {
+    padding: .75rem .85rem .85rem;
+    border-bottom: 1px solid var(--izgara-cizgi);
+}
+
+.mal-kabul-barkod-bolum { background: #fafaff; }
+
+.mal-kabul-bolum-baslik {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    margin-bottom: .65rem;
+    color: #374151;
+}
+
+.mal-kabul-bolum-baslik > span {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    font-size: .77rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .055em;
+}
+
+.mal-kabul-bolum-baslik > span i { color: var(--vurgu); font-size: 1rem; }
+.mal-kabul-bolum-baslik small { color: #9ca3af; font-size: .7rem; text-align: right; }
+
+.mal-kabul-barkod-girdi .form-control {
+    min-height: 2.55rem;
+    font-size: .95rem;
+    border-left: 0;
+}
+
+.mal-kabul-barkod-girdi .input-group-text {
+    background: #fff;
+    color: var(--vurgu);
+    border-right: 0;
+    font-size: 1.05rem;
+}
+
+.mal-kabul-barkod-girdi .btn { min-width: 6.6rem; }
+
+#mal-kabul-urun-bilgi {
+    margin-top: .55rem;
+    border: 1px solid;
+    border-radius: .3rem;
+}
+
+.mal-kabul-kamera {
+    display: grid;
+    grid-template-columns: minmax(13rem, 1.4fr) minmax(10rem, 1fr);
+    gap: .75rem;
+    margin-top: .65rem;
+    padding: .65rem;
+    background: #fff;
+    border: 1px solid var(--izgara-cizgi);
+    border-radius: .35rem;
+}
+
+.mal-kabul-kamera video {
+    width: 100%;
+    height: 11rem;
+    object-fit: cover;
+    background: #111827;
+    border-radius: .3rem;
+}
+
+.mal-kabul-kamera-bilgi {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: .4rem;
+    min-width: 0;
+}
+
+.mal-kabul-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .65rem .75rem;
+}
+
+.mal-kabul-alan {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    min-width: 0;
+}
+
+.mal-kabul-alan-genis { grid-column: 1 / -1; }
+
+.mal-kabul-alan .form-label,
+.mal-kabul-barkod-bolum > .form-label {
+    margin-bottom: .25rem;
+    color: #374151;
+    font-size: .78rem;
+    font-weight: 600;
+}
+
+.mal-kabul-alan .form-control,
+.mal-kabul-alan .form-select,
+.mal-kabul-kamera .form-select {
+    min-height: 2.2rem;
+    padding: .34rem .55rem;
+    font-size: .84rem;
+}
+
+.mal-kabul-alan .ipucu { margin-top: .22rem; line-height: 1.3; }
+.mal-kabul-para-girdi { max-width: 15rem; }
+
+.mal-kabul-form-alt {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .7rem .85rem;
+    background: #f8f9fb;
+}
+
+.mal-kabul-kaydet {
+    min-width: 12.5rem;
+    min-height: 2.45rem;
+    font-weight: 600;
+}
+
+.mal-kabul-urun-hucre { white-space: normal !important; }
+.mal-kabul-urun-hucre strong { display: block; color: #1f2937; font-size: .86rem; }
+.mal-kabul-urun-hucre small { display: block; margin-top: .1rem; color: #6b7280; font-size: .72rem; }
+
+.mal-kabul-bos {
+    display: flex;
+    min-height: 18rem;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .3rem;
+    color: #9ca3af;
+    text-align: center;
+}
+
+.mal-kabul-bos i { font-size: 2.8rem; color: #c7d2fe; }
+.mal-kabul-bos strong { color: #6b7280; font-size: .9rem; }
+.mal-kabul-bos span { font-size: .78rem; }
+
+@media (max-width: 1199.98px) {
+    .mal-kabul-calisma-alani { flex-wrap: wrap; }
+    .mal-kabul-form-panel,
+    .mal-kabul-hareket-panel {
+        flex: 1 1 100%;
+        min-width: 0;
+        border-right: 0;
+    }
+
+    .mal-kabul-hareket-panel { min-height: 24rem; }
+}
+
+@media (max-width: 767.98px) {
+    .mal-kabul-ozet { align-items: flex-start; }
+    .mal-kabul-adimlar { display: none; }
+    .mal-kabul-form-grid { grid-template-columns: 1fr; }
+    .mal-kabul-alan-genis { grid-column: auto; }
+    .mal-kabul-bolum-baslik small { display: none; }
+    .mal-kabul-kamera { grid-template-columns: 1fr; }
+    .mal-kabul-form-alt { align-items: stretch; flex-direction: column; }
+    .mal-kabul-kaydet { width: 100%; }
+}
+
+@media (max-width: 420px) {
+    .mal-kabul-barkod-girdi { flex-wrap: wrap; }
+    .mal-kabul-barkod-girdi .form-control { border-left: 1px solid var(--bs-border-color); }
+    .mal-kabul-barkod-girdi .input-group-text { display: none; }
+    .mal-kabul-barkod-girdi .btn { width: 100%; border-radius: .25rem !important; }
+}
+
 /* Ana ekran dikkat ozeti: genel .alan form duzeni burada kullanilmaz.
    Ikon, aciklama ve sonuc her satirda ayni kolonda durur. */
 .dikkat-listesi {
