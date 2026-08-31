@@ -1645,71 +1645,6 @@ table.izgara tbody tr.table-active:hover {
    adimlarina ayirir. Form ve hareket gecmisi ayni ekranda kalir; masaustu
    terminalinde yatay, dar ekranda dikey calisir. */
 
-.mal-kabul-ozet {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: .7rem .85rem;
-    background: #f8f9fa;
-    border-bottom: 1px solid var(--izgara-cizgi);
-}
-
-.mal-kabul-ozet-baslik {
-    display: flex;
-    align-items: center;
-    gap: .7rem;
-    min-width: 0;
-}
-
-.mal-kabul-ozet-baslik > div {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-}
-
-.mal-kabul-ozet-baslik strong { color: #1f2937; font-size: .95rem; }
-.mal-kabul-ozet-baslik span:not(.mal-kabul-ozet-ikon) { color: #6b7280; font-size: .78rem; }
-
-.mal-kabul-ozet-ikon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.45rem;
-    height: 2.45rem;
-    flex: 0 0 2.45rem;
-    border-radius: .45rem;
-    background: #e8f5ec;
-    border: 1px solid #bbdfc5;
-    color: #16713a;
-    font-size: 1.25rem;
-}
-
-.mal-kabul-adimlar {
-    display: flex;
-    align-items: center;
-    gap: .45rem;
-    color: #6b7280;
-    font-size: .76rem;
-    white-space: nowrap;
-}
-
-.mal-kabul-adimlar span { display: inline-flex; align-items: center; gap: .3rem; }
-.mal-kabul-adimlar b {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.35rem;
-    height: 1.35rem;
-    border-radius: 50%;
-    background: #fff;
-    border: 1px solid #d5d7dc;
-    color: #374151;
-    font-size: .68rem;
-}
-
-.mal-kabul-adimlar > i { color: #b6bac2; }
-
 .mal-kabul-calisma-alani {
     flex: 1;
     min-height: 0;
@@ -1878,8 +1813,6 @@ table.izgara tbody tr.table-active:hover {
 }
 
 @media (max-width: 767.98px) {
-    .mal-kabul-ozet { align-items: flex-start; }
-    .mal-kabul-adimlar { display: none; }
     .mal-kabul-form-grid { grid-template-columns: 1fr; }
     .mal-kabul-alan-genis { grid-column: auto; }
     .mal-kabul-bolum-baslik small { display: none; }
