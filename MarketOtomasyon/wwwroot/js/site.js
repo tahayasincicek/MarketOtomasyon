@@ -1,3 +1,36 @@
+// Ayni kaynaktan gelen veri degistirici fetch isteklerine CSRF belirtecini
+// otomatik ekle. Boylece kasa, odeme ve askida fis kodlari her istekte ayni
+// guvenlik ayrintisini tekrar etmek zorunda kalmaz.
+(function () {
+    "use strict";
+
+    if (!window.fetch || !window.Headers || !window.URL) return;
+
+    const asilFetch = window.fetch.bind(window);
+
+    window.fetch = function (girdi, secenekler) {
+        const ayarlar = Object.assign({}, secenekler || {});
+        const metot = String(
+            ayarlar.method || (girdi instanceof Request ? girdi.method : "GET")
+        ).toUpperCase();
+        const guvenliMetot = metot === "GET" || metot === "HEAD" || metot === "OPTIONS";
+        const adres = new URL(typeof girdi === "string" ? girdi : girdi.url, window.location.href);
+
+        if (!guvenliMetot && adres.origin === window.location.origin) {
+            const belirtec = document.querySelector('input[name="__RequestVerificationToken"]');
+            if (belirtec && belirtec.value) {
+                const basliklar = new Headers(
+                    ayarlar.headers || (girdi instanceof Request ? girdi.headers : undefined)
+                );
+                basliklar.set("X-CSRF-TOKEN", belirtec.value);
+                ayarlar.headers = basliklar;
+            }
+        }
+
+        return asilFetch(girdi, ayarlar);
+    };
+})();
+
 // Ust seritteki tarih/saat. Kasa terminalinde duvarda saat olmaz;
 // fis saatiyle ekrandaki saat ayni kaynaktan okunsun diye hep gorunur.
 (function () {

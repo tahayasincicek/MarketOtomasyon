@@ -26,6 +26,10 @@
     <link rel="stylesheet" href="~/MarketOtomasyon.styles.css" asp-append-version="true" />
 </head>
 <body>
+    @* AJAX istekleri, site.js tarafindan bu belirteci X-CSRF-TOKEN
+       basligina ekler. Normal POST formlari kendi belirtecini uretir. *@
+    <div hidden aria-hidden="true">@Html.AntiForgeryToken()</div>
+
     <div class="yerlesim">
         <aside class="yan-menu" id="yan-menu">
             <nav class="menu">

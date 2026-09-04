@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using System.Threading.RateLimiting;
 using MarketOtomasyon.Data;
@@ -84,7 +85,25 @@ if (!string.IsNullOrWhiteSpace(platformPortu))
 }
 
 builder.Services.AddControllersWithViews(o =>
-    o.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true);
+{
+    o.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+
+    // GET/HEAD/OPTIONS disindaki tum MVC isteklerinde CSRF belirteci zorunlu.
+    // Boylece yeni bir POST action'i eklenirken attribute unutulsa bile koruma
+    // uygulama genelinde devam eder.
+    o.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+});
+
+builder.Services.AddAntiforgery(options =>
+{
+    options.HeaderName = "X-CSRF-TOKEN";
+    options.Cookie.Name = "MarketOtomasyon.Csrf";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+        ? CookieSecurePolicy.SameAsRequest
+        : CookieSecurePolicy.Always;
+});
 
 /* Kimlik doğrulama çerezini şifreleyen Data Protection anahtarları container
    yeniden oluşturulunca kaybolmamalı. Aynı uygulama adını ve anahtar klasörünü
@@ -414,6 +433,11 @@ app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// CSP, tiklama kacirma ve gereksiz tarayici izinleri gibi istemci tarafi
+// risklerini merkezi olarak sinirlar. Dinamik cevaplar tarayici onbelleginde
+// tutulmaz; kasa ve rapor bilgileri geri tusuyla baska kullaniciya gorunmez.
+app.UseMiddleware<GuvenlikBasliklariMiddleware>();
 
 // Kullanici ve istek kimligi, o istek boyunca yazilan TUM log satirlarina
 // otomatik eklenir; her cagriya elle parametre gecmeye gerek kalmaz.
