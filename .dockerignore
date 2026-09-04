@@ -3,6 +3,7 @@
 .github/
 .gitignore
 .vs/
+.vs-backup/
 .vscode/
 .idea/
 .claude/
