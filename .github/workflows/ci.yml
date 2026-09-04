@@ -20,10 +20,10 @@ jobs:
 
     steps:
       - name: Kaynak kodu indir
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: .NET 8 kur
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 8.0.x
 
