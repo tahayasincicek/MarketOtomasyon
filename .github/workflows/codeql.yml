@@ -1,0 +1,38 @@
+name: CodeQL Güvenlik Taraması
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "23 3 * * 1"
+
+permissions:
+  contents: read
+  security-events: write
+  packages: read
+
+jobs:
+  analyze:
+    name: C# analizi
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Kaynak kodu indir
+        uses: actions/checkout@v4
+
+      - name: CodeQL başlat
+        uses: github/codeql-action/init@v3
+        with:
+          languages: csharp
+          queries: security-extended
+
+      - name: Projeyi derle
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Güvenlik analizini tamamla
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:csharp

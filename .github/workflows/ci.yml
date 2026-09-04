@@ -1,0 +1,40 @@
+name: Build ve Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Kaynak kodu indir
+        uses: actions/checkout@v4
+
+      - name: .NET 8 kur
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Bağımlılıkları yükle
+        run: dotnet restore MarketOtomasyon.sln
+
+      - name: Release derlemesi yap
+        run: dotnet build MarketOtomasyon.sln --configuration Release --no-restore
+
+      - name: Testleri çalıştır
+        run: dotnet test MarketOtomasyon.sln --configuration Release --no-build --verbosity normal
+
+      - name: Güvenlik açığı bulunan paketleri denetle
+        run: dotnet list MarketOtomasyon.sln package --vulnerable --include-transitive
